@@ -1,0 +1,2 @@
+CREATE DATABASE financia;
+CREATE DATABASE financia_it;
