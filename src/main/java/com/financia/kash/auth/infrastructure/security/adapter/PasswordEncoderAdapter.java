@@ -1,4 +1,4 @@
-package com.financia.kash.usuario.infrastructure.adapter.database;
+package com.financia.kash.auth.infrastructure.security.adapter;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

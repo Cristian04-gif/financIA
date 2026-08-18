@@ -55,6 +55,9 @@ public class UserEntity implements UserDetails {
     @Column(name = "rol")
     private RoleUser role;
 
+    private String secret2fa;
+    private boolean enable2fa;
+
     public UserEntity(String name, String lastName, String email, String password, EstadoUsuario status,
             RoleUser role) {
         this.name = name;

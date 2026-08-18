@@ -12,7 +12,7 @@ public class UserBeanConfiguration {
 
     @Bean
     public UserService userService(UserRepositoryPort userRepositoryPort,
-            PasswordEncoderForUserPort encoderForUserPort) {
-        return new UserService(userRepositoryPort, encoderForUserPort);
+            PasswordEncoderForUserPort passwordEncoderForUserPort) {
+        return new UserService(userRepositoryPort, passwordEncoderForUserPort);
     }
 }

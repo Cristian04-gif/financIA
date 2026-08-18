@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.usuario.domain.exception.User2FAEnabledException;
 import com.financia.kash.usuario.domain.exception.UserStateNotFoundException;
 
 import lombok.AllArgsConstructor;
@@ -23,6 +24,8 @@ public class User {
     private LocalDate updateDate;
     private EstadoUsuario status;
     private RoleUser role;
+    private String secret2fa;
+    private boolean enable2fa;
 
     private boolean existStatus(String estado) {
         if (estado == null)
@@ -43,6 +46,20 @@ public class User {
 
     public void userUpdateDate() {
         this.updateDate = LocalDate.now();
+    }
+
+    public void setSecret2fa(String secret) {
+        if (this.enable2fa) {
+            throw new User2FAEnabledException(this.id);
+        }
+        this.secret2fa = secret;
+    }
+
+    public void enable2fa() {
+        if (this.enable2fa) {
+            throw new User2FAEnabledException(this.id);
+        }
+        this.enable2fa = true;
     }
 
 }

@@ -6,6 +6,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.financia.kash.auth.infrastructure.adapter.event.Activation2FAEvent;
+import com.financia.kash.auth.infrastructure.adapter.event.Request2faEvent;
 import com.financia.kash.auth.infrastructure.adapter.event.UserRegistrarionEvent;
 import com.financia.kash.usuario.domain.exception.UserRoleNotfoundException;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
@@ -42,5 +44,21 @@ public class UserEventListener {
 
         userRepository.save(userEntity);
         log.info("usuario guardado");
+    }
+
+    @EventListener
+    @Transactional
+    public void handleRequest2faEvent(Request2faEvent event) {
+        UserEntity user = userRepository.findById(event.userId()).orElseThrow();
+        user.setSecret2fa(event.secret());
+        userRepository.save(user);
+    }
+
+    @EventListener
+    @Transactional
+    public void handleActivation2FAEvent(Activation2FAEvent event) {
+        UserEntity user = userRepository.findById(event.userId()).orElseThrow();
+        user.setEnable2fa(true);
+        userRepository.save(user);
     }
 }

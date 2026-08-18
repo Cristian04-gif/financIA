@@ -1,6 +1,7 @@
 package com.financia.kash.auth.infrastructure.security.filters;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,7 +38,9 @@ public class JwtFilter extends OncePerRequestFilter {
         String authorization = request.getHeader("Authorization");
         String path = request.getRequestURI();
 
-        if (path.startsWith("/api/v1/auth/")) {
+        if (path.contains("/api/v1/auth/login") ||
+                path.contains("/api/v1/auth/register") ||
+                path.contains("/api/v1/auth/verify-2fa")) {
 
             filterChain.doFilter(request, response);
             return;
@@ -52,9 +55,15 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             boolean isTokenExpired = jwtService.isTokenExpired(token);
             boolean canByTokenRenewed = jwtService.canByTokenRenewed(token);
-
             if (isTokenExpired && !canByTokenRenewed) {
                 throw new JwtException("Token no válido o usuario ya autenticado");
+            }
+
+            Boolean isPreAuth = jwtService.isPreAuthToken(token);
+            if (isPreAuth != null && isPreAuth) {
+                if (!path.contains("/api/v1/auth/verify-2fa")) {
+                    throw new JwtException("Acceso denegado: Se requiere completar la verificación de dos pasos (2FA)");
+                }
             }
 
             String username = jwtService.getUsername(token);
@@ -79,6 +88,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception e) {
+            log.error("error de autenticacion, {}", e.getMessage());
             SecurityContextHolder.clearContext();
 
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);

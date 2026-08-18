@@ -1,7 +1,7 @@
 package com.financia.kash.auth.application.port.input;
 
-import com.financia.kash.auth.domain.model.AuthResponse;
+import java.util.Map;
 
 public interface LoginUserUseCase {
-    AuthResponse loginUser(String email, String password);
+    Map<String, Object> loginUser(String email, String password);
 }

@@ -10,8 +10,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.financia.kash.usuario.application.port.output.JwtForUsersPort;
-import com.financia.kash.usuario.domain.model.User;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import io.jsonwebtoken.Claims;
@@ -21,16 +19,17 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
-
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Service
-public class JwtService implements JwtForUsersPort {
+public class JwtService {
 
     private final String SECRECT_KEY = "404E6352165564586E3272357538782F413F4428472848625064536756685970";
     private final long TOKEN_EXPIRATION = 1000 * 60 * 60 * 24;
     private final long REFRESH_WINDOW = 1000 * 60 * 60 * 24 * 7;
+
+    private final long PRE_TOKEN_EXPIRATION = 1000 * 60 * 5;
 
     private String generateToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
@@ -52,6 +51,22 @@ public class JwtService implements JwtForUsersPort {
                 "authorities", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList(),
                 "userId", id);
         return generateToken(claims, userDetails.getUsername());
+    }
+
+    public String generatePreToken(UserDetails userDetails) {
+        Map<String, Boolean> claimPreAuth = Map.of("preAuth", true);
+        return Jwts.builder()
+                .setClaims(claimPreAuth)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + PRE_TOKEN_EXPIRATION))
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Boolean isPreAuthToken(String token) {
+        Claims claims = getAllClaims(token); // Tu método interno que extrae los claims
+        return claims.get("preAuth", Boolean.class);
     }
 
     private Key getSignKey() {

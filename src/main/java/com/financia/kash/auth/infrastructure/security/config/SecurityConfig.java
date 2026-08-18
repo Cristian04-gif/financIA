@@ -21,20 +21,23 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
-    private final AuthenticationProvider authenticationProvider;
+        private final JwtFilter jwtFilter;
+        private final AuthenticationProvider authenticationProvider;
 
-    private final String ENDPOINTS_FREE[] = { "/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui/**",
-            "/swagger-ui.html" };
+        private final String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
+                        "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html" };
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-        return http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers(ENDPOINTS_FREE).permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+                return http.csrf(AbstractHttpConfigurer::disable)
+                                .authorizeHttpRequests(auth -> auth.requestMatchers(ENDPOINTS_FREE).permitAll()
+                                                .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                                .build();
+        }
 }

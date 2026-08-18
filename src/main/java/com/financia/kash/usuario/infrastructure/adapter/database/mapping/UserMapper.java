@@ -22,6 +22,8 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "creationDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "secret2fa", ignore = true)
+    @Mapping(target = "enable2fa", ignore = true)
     User mapToProject(ProjectUser projectUser);
 
     UserResponseDTO mapToDTO(User user);
