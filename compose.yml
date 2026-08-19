@@ -4,6 +4,10 @@ services:
   spring-boot:
     build: ./
     mem_reservation: 512M
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/financia
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
     ports:
       - "8080:8080"
     depends_on:
