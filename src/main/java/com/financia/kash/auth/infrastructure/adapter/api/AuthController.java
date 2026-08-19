@@ -65,7 +65,7 @@ public class AuthController {
 
     @Operation(summary = "Verificacion en dos pasos")
     @PostMapping("/verify-2fa")
-    public ResponseEntity<AuthResponse> verify2fa(@RequestBody Verify2faRequest request) {
+    public ResponseEntity<AuthResponse> verify2fa(@RequestBody @Valid Verify2faRequest request) {
         AuthResponse authResponse = authService.verify2fa(request.getPreToken(), request.getCode());
         return ResponseEntity.ok(authResponse);
     }
