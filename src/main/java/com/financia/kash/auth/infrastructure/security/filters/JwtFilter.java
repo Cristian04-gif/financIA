@@ -1,7 +1,6 @@
 package com.financia.kash.auth.infrastructure.security.filters;
 
 import java.io.IOException;
-import java.util.Date;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

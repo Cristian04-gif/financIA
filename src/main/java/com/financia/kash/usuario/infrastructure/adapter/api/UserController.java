@@ -3,7 +3,9 @@ package com.financia.kash.usuario.infrastructure.adapter.api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.financia.kash.usuario.application.service.UserService;
+import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
+import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
+import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
 import com.financia.kash.usuario.domain.model.User;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.NewPasswordRequestDTO;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.UserResponseDTO;
@@ -31,34 +33,36 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Usuarios", description = "Operaciones de la API de Usuarios")
 public class UserController {
 
-    private final UserService userService;
+    private final MyInformationUseCase informationUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
+    private final DeleteUserUseCase deleteUserUseCase;
     private final UserMapper userMapper;
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Informacion personal", description = "Devuelve la informacion de usuario logeado")
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> myInfo(@AuthenticationPrincipal UserEntity user) {
         UUID id = user.getId();
-        User user2 = userService.findMe(id);
+        User user2 = informationUseCase.findMe(id);
         return ResponseEntity.ok(userMapper.mapToDTO(user2));
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Actualizar contraseña")
     @PutMapping("/me/password")
     public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid NewPasswordRequestDTO dto) {
         UUID id = user.getId();
-        userService.changePassword(id, dto.newPassword());
+        changePasswordUseCase.changePassword(id, dto.newPassword());
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Suspender usuario", description = "Suspende al usuario por 30 dias antes de ser eliminado")
     @DeleteMapping("/me")
     public ResponseEntity<Void> suspendUser(@AuthenticationPrincipal UserEntity user) {
         UUID id = user.getId();
-        userService.deleteMe(id);
+        deleteUserUseCase.deleteMe(id);
         return ResponseEntity.noContent().build();
     }
 

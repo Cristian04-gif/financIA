@@ -39,7 +39,7 @@ public class UserEventListener {
         log.info("rol existente, {}", existRole);
         UserEntity userEntity = new UserEntity(event.auth().getName(), event.auth().getLastName(),
                 event.auth().getEmail(),
-                event.auth().getPassword(), EstadoUsuario.PENDIENTE,
+                event.auth().getPassword(), EstadoUsuario.ACTIVO,
                 RoleUser.valueOf(event.auth().getRole().toUpperCase()));
 
         userRepository.save(userEntity);
