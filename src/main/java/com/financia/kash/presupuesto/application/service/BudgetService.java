@@ -1,5 +1,6 @@
 package com.financia.kash.presupuesto.application.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +31,54 @@ public class BudgetService implements ManageBudgetsUseCase {
     }
 
     @Override
-    public void delete(UUID id) {
-        budgetRepositoryPort.delete(id);
+    public Budget updateLimit(
+            UUID id,
+            BigDecimal limitAmount
+    ) {
+
+        Budget budget = budgetRepositoryPort.findById(id);
+
+        budget.updateLimit(limitAmount);
+
+        return budgetRepositoryPort.save(budget);
+    }
+
+    @Override
+    public Budget addExpense(
+            UUID id,
+            BigDecimal amount
+    ) {
+
+        Budget budget = budgetRepositoryPort.findById(id);
+
+        budget.addExpense(amount);
+
+        return budgetRepositoryPort.save(budget);
+    }
+
+    @Override
+    public BigDecimal remainingAmount(UUID id) {
+
+        Budget budget = budgetRepositoryPort.findById(id);
+
+        return budget.remainingAmount();
+    }
+
+    @Override
+    public boolean isExceeded(UUID id) {
+
+        Budget budget = budgetRepositoryPort.findById(id);
+
+        return budget.isExceeded();
+    }
+
+    @Override
+    public void deactivate(UUID id) {
+
+        Budget budget = budgetRepositoryPort.findById(id);
+
+        budget.deactivate();
+
+        budgetRepositoryPort.save(budget);
     }
 }
