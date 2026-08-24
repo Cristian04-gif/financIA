@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.financia.kash.categoria.application.port.input.ManageCategoriesUseCase;
 import com.financia.kash.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.categoria.domain.model.Category;
+import com.financia.kash.categoria.domain.model.CategoryType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +31,32 @@ public class CategoryService implements ManageCategoriesUseCase {
     }
 
     @Override
-    public void delete(UUID id) {
-        categoryRepositoryPort.delete(id);
+    public Category rename(UUID id, String name) {
+
+        Category category = categoryRepositoryPort.findById(id);
+
+        category.rename(name);
+
+        return categoryRepositoryPort.save(category);
+    }
+
+    @Override
+    public Category changeType(UUID id, CategoryType type) {
+
+        Category category = categoryRepositoryPort.findById(id);
+
+        category.changeType(type);
+
+        return categoryRepositoryPort.save(category);
+    }
+
+    @Override
+    public void deactivate(UUID id) {
+
+        Category category = categoryRepositoryPort.findById(id);
+
+        category.deactivate();
+
+        categoryRepositoryPort.save(category);
     }
 }
