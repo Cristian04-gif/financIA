@@ -1,5 +1,7 @@
 package com.financia.kash.meta.application.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +32,47 @@ public class FinancialGoalService implements ManageFinancialGoalsUseCase {
     }
 
     @Override
-    public void delete(UUID id) {
-        financialGoalRepositoryPort.delete(id);
+    public FinancialGoal updateTarget(
+            UUID id,
+            BigDecimal targetAmount,
+            LocalDate targetDate
+    ) {
+
+        FinancialGoal goal = financialGoalRepositoryPort.findById(id);
+
+        goal.updateTarget(targetAmount, targetDate);
+
+        return financialGoalRepositoryPort.save(goal);
+    }
+
+    @Override
+    public FinancialGoal addContribution(
+            UUID id,
+            BigDecimal amount
+    ) {
+
+        FinancialGoal goal = financialGoalRepositoryPort.findById(id);
+
+        goal.addContribution(amount);
+
+        return financialGoalRepositoryPort.save(goal);
+    }
+
+    @Override
+    public BigDecimal remainingAmount(UUID id) {
+
+        FinancialGoal goal = financialGoalRepositoryPort.findById(id);
+
+        return goal.remainingAmount();
+    }
+
+    @Override
+    public void cancel(UUID id) {
+
+        FinancialGoal goal = financialGoalRepositoryPort.findById(id);
+
+        goal.cancel();
+
+        financialGoalRepositoryPort.save(goal);
     }
 }
