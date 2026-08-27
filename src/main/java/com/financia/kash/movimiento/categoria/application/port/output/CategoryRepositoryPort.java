@@ -6,7 +6,7 @@ import java.util.UUID;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 
 public interface CategoryRepositoryPort {
-    List<Category> findAll();
+    List<Category> findGlobalCategories();
 
     List<Category> findAllMyCategories(UUID userId);
 

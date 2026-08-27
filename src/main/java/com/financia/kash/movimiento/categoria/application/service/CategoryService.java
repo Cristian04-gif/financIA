@@ -25,7 +25,7 @@ public class CategoryService
 
     @Override
     public List<Category> getGlobalCategories() {
-        return categoryRepositoryPort.findAll();
+        return categoryRepositoryPort.findGlobalCategories();
     }
 
     @Override

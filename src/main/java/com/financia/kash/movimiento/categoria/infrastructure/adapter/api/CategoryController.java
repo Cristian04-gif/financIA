@@ -12,7 +12,6 @@ import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.Cat
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryGlobalRequest;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryResponse;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.project.ProjectCategory;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,76 +39,84 @@ import org.springframework.web.bind.annotation.PutMapping;
 @Tag(name = "Categorias", description = "Operaciones de la API de Categoria")
 public class CategoryController {
 
-    private final GetCategoriesUseCase getCategoriesUseCase;
-    private final CreateCategoryUseCase createCategoryUseCase;
-    private final UpdateCategoryUseCase updateCategoryUseCase;
-    private final DeleteMyCategoryUseCase deleteMyCategoryUseCase;
-    private final CategoryMapper categoryMapper;
+        private final GetCategoriesUseCase getCategoriesUseCase;
+        private final CreateCategoryUseCase createCategoryUseCase;
+        private final UpdateCategoryUseCase updateCategoryUseCase;
+        private final DeleteMyCategoryUseCase deleteMyCategoryUseCase;
+        private final CategoryMapper categoryMapper;
 
-    @Operation(summary = "Todas las categorias", description = "Devuelve las categorias globales y del usuario logeado")
-    @GetMapping("")
-    public ResponseEntity<CategoryResponse> getAll(@AuthenticationPrincipal UserEntity user) {
-        UUID userId = user.getId();
-        List<ProjectCategory> globalCategories = getCategoriesUseCase.getGlobalCategories().stream()
-                .map(categoryMapper::mapToProject).toList();
-        List<ProjectCategory> userCategories = getCategoriesUseCase.getAllMyCategory(userId).stream()
-                .map(categoryMapper::mapToProject).toList();
-        return ResponseEntity.ok(new CategoryResponse(globalCategories, userCategories));
-    }
+        @Operation(summary = "Categorias globales", description = "Devuelve las categorias globales")
+        @GetMapping("/global")
+        public ResponseEntity<List<CategoryResponse>> getGlobalCategories() {
+                List<CategoryResponse> globalCategories = getCategoriesUseCase.getGlobalCategories().stream()
+                                .map(categoryMapper::mapToResponse).toList();
+                return ResponseEntity.ok(globalCategories);
+        }
 
-    @PreAuthorize("""
-                hasAuthority('ADMIN') or
-                (hasAuthority('USER') and
-                 @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity)))
-            """)
-    @Operation(summary = "Categoria", description = "Devuelve la informacion por su ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<Category> getById(@PathVariable UUID id) {
-        Category category = getCategoriesUseCase.getById(id);
-        return ResponseEntity.ok(category);
-    }
+        @Operation(summary = "Categorias del usuario", description = "Devuelve las categorias creadas por el usuario logeado")
+        @GetMapping("/of-user")
+        public ResponseEntity<List<CategoryResponse>> getGlobalCategories(@AuthenticationPrincipal UserEntity user) {
+                UUID userId = user.getId();
+                List<CategoryResponse> userCategories = getCategoriesUseCase.getAllMyCategory(userId).stream()
+                                .map(categoryMapper::mapToResponse).toList();
+                return ResponseEntity.ok(userCategories);
+        }
 
-    @PreAuthorize("hasAuthority('USER')")
-    @Operation(summary = "Sub-categoria", description = "Crea una categoria que necesite usuario")
-    @PostMapping("/for-user")
-    public ResponseEntity<Category> createUserCategory(@AuthenticationPrincipal UserEntity user,
-            @RequestBody CategoryForUserRequest request) {
-        Category category = createCategoryUseCase.createCategoryForUser(user.getId(), request.name(), request.type(),
-                request.parentCategoryId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(category);
-    }
+        @PreAuthorize("""
+                            hasAuthority('ADMIN') or
+                            (hasAuthority('USER') and
+                             @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity)))
+                        """)
+        @Operation(summary = "Categoria", description = "Devuelve la informacion por su ID")
+        @GetMapping("/{id}")
+        public ResponseEntity<Category> getById(@PathVariable UUID id) {
+                Category category = getCategoriesUseCase.getById(id);
+                return ResponseEntity.ok(category);
+        }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
-    @PostMapping("/global")
-    public ResponseEntity<Category> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
-        Category category = createCategoryUseCase.createMainCategory(request.name(), request.type());
-        return ResponseEntity.status(HttpStatus.CREATED).body(category);
-    }
+        @PreAuthorize("hasAuthority('USER')")
+        @Operation(summary = "Sub-categoria", description = "Crea una categoria que necesite usuario")
+        @PostMapping("/of-user")
+        public ResponseEntity<Category> createUserCategory(@AuthenticationPrincipal UserEntity user,
+                        @RequestBody CategoryForUserRequest request) {
+                Category category = createCategoryUseCase.createCategoryForUser(user.getId(), request.name(),
+                                request.type(),
+                                request.parentCategoryId());
+                return ResponseEntity.status(HttpStatus.CREATED).body(category);
+        }
 
-    @PreAuthorize("""
-            hasAuthority('USER') and @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
-            """)
-    @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
-    @PutMapping("/{id}")
-    public ResponseEntity<Category> updateUsercategory(@PathVariable UUID id,
-            @AuthenticationPrincipal UserDetails user, @RequestBody CategoryForUserRequest request) {
+        @PreAuthorize("hasAuthority('ADMIN')")
+        @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
+        @PostMapping("/global")
+        public ResponseEntity<Category> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
+                Category category = createCategoryUseCase.createMainCategory(request.name(), request.type());
+                return ResponseEntity.status(HttpStatus.CREATED).body(category);
+        }
 
-        Category category = updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
-                request.parentCategoryId(),
-                request.active());
+        @PreAuthorize("""
+                        hasAuthority('USER') and @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
+                        """)
+        @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
+        @PutMapping("/of-user/{id}")
+        public ResponseEntity<Category> updateUsercategory(@PathVariable UUID id,
+                        @AuthenticationPrincipal UserDetails user, @RequestBody CategoryForUserRequest request) {
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(category);
-    }
+                Category category = updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
+                                request.parentCategoryId(),
+                                request.active());
 
-    @PreAuthorize("""
-            hasAuthority('USER') and @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
-            """)
-    @Operation(summary = "Eliminar categoria", description = "Elimina una categoria creada por el usuario")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserCategory(@PathVariable UUID id, @AuthenticationPrincipal UserEntity user) {
-        deleteMyCategoryUseCase.deleteMyCategory(id);
-        return ResponseEntity.noContent().build();
-    }
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(category);
+        }
+
+        @PreAuthorize("""
+                        hasAuthority('USER') and @securityService.isOwner(#id, authentication.name, T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
+                        """)
+        @Operation(summary = "Eliminar categoria", description = "Elimina una categoria creada por el usuario")
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteUserCategory(@PathVariable UUID id,
+                        @AuthenticationPrincipal UserEntity user) {
+                deleteMyCategoryUseCase.deleteMyCategory(id);
+                return ResponseEntity.noContent().build();
+        }
 
 }

@@ -1,9 +1,14 @@
 package com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.UUID;
 
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.project.ProjectCategory;
+import com.financia.kash.movimiento.categoria.domain.model.CategoryType;
 
-public record CategoryResponse(List<ProjectCategory> glogeneralCategories, List<ProjectCategory> userCategories) {
+public record CategoryResponse(
+        UUID id,
+        String name,
+        CategoryType type,
+        LocalDate creationDate) {
 
 }

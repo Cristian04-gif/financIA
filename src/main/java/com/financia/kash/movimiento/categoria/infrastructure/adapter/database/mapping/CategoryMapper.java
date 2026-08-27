@@ -8,6 +8,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
 import com.financia.kash.movimiento.categoria.domain.model.Category;
+import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryResponse;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.project.ProjectCategory;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
@@ -28,6 +29,8 @@ public interface CategoryMapper {
     Category mapToDomain(ProjectCategory projectCategory);
 
     ProjectCategory mapToProject(Category category);
+
+    CategoryResponse mapToResponse(Category category);
 
     default UserEntity mapUser(UUID userId) {
         if (userId == null) {

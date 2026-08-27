@@ -22,10 +22,9 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public List<Category> findAll() {
+    public List<Category> findGlobalCategories() {
         return categoryRepository.findByUserIsNullAndParentCategoryIdIsNull().stream()
                 .map(categoryMapper::mapToDomain).toList();
-
     }
 
     @Override
