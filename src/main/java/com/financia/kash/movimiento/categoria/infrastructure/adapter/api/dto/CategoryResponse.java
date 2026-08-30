@@ -6,9 +6,10 @@ import java.util.UUID;
 import com.financia.kash.movimiento.categoria.domain.model.CategoryType;
 
 public record CategoryResponse(
-        UUID id,
-        String name,
-        CategoryType type,
-        LocalDate creationDate) {
+                UUID id,
+                String name,
+                CategoryType type,
+                LocalDate creationDate,
+                boolean active) {
 
 }

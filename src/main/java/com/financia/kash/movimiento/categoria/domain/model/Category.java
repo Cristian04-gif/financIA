@@ -5,14 +5,13 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryTypeNotfoundException;
+import com.financia.kash.shared.domain.utils.Default;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
-@Builder
+@AllArgsConstructor(onConstructor_ = { @Default })
 public class Category {
 
     private final UUID id;

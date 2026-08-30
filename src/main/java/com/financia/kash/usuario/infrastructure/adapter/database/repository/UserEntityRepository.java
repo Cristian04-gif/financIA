@@ -11,7 +11,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.repository.proj
 
 public interface UserEntityRepository extends JpaRepository<UserEntity, UUID> {
 
-    List<ProjectUser> findAllByUser(UserEntity userEntity);
+    List<ProjectUser> findAllBy();
 
     Optional<UserEntity> findByEmail(String email);
 

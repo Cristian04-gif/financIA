@@ -24,7 +24,6 @@ public interface CategoryMapper {
     Category mapToDomain(CategoryEntity categoryEntity);
 
     @Mapping(target = "parentCategoryId", ignore = true)
-    @Mapping(target = "creationDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
     Category mapToDomain(ProjectCategory projectCategory);
 
