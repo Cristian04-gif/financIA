@@ -14,6 +14,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.repository.proj
 public interface UserMapper {
 
     @Mapping(target = "authorities", ignore = true)
+    @Mapping(target = "categories", ignore = true)
     UserEntity mapToEntity(User user);
 
     User mapToDomain(UserEntity entity);

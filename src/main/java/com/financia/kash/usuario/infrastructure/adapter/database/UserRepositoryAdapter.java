@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
+import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
 import com.financia.kash.shared.application.port.output.UserForSharedPort;
 import com.financia.kash.usuario.application.port.output.UserRepositoryPort;
 import com.financia.kash.usuario.domain.exception.UserNotFoundException;
@@ -18,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class UserRepositoryAdapter implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort {
+public class UserRepositoryAdapter
+        implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort, UserForCategoryPort {
 
     private final UserEntityRepository userRepository;
     private final UserMapper userMapper;
@@ -61,6 +63,12 @@ public class UserRepositoryAdapter implements UserRepositoryPort, UserEmailForAu
     @Override
     public Optional<User> findById(UUID id) {
         return userRepository.findById(id).map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public User findUserById(UUID userI) {
+        return userRepository.findById(userI).map(userMapper::mapToDomain)
+                .orElseThrow(() -> new UserNotFoundException(userI));
     }
 
 }
