@@ -3,8 +3,11 @@ package com.financia.kash.auth.infrastructure.adapter.api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.financia.kash.auth.application.service.AuthService;
-import com.financia.kash.auth.application.service.TwoFactorAuthService;
+import com.financia.kash.auth.application.port.input.Confirm2FARequestUseCase;
+import com.financia.kash.auth.application.port.input.LoginUserUseCase;
+import com.financia.kash.auth.application.port.input.RegisterUserUseCase;
+import com.financia.kash.auth.application.port.input.Request2faUseCase;
+import com.financia.kash.auth.application.port.input.Verify2faUseCase;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
 import com.financia.kash.auth.infrastructure.adapter.api.dto.LoginRequestDTO;
@@ -30,20 +33,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Autenticacion", description = "Operaciones de la API de autentificacion")
 public class AuthController {
 
-    private final AuthService authService;
-    private final TwoFactorAuthService factorAuthService;
+    private final RegisterUserUseCase registerUserUseCase;
+    private final LoginUserUseCase loginUserUseCase;
+    private final Request2faUseCase request2faUseCase;
+    private final Confirm2FARequestUseCase confirm2faRequestUseCase;
+    private final Verify2faUseCase verify2faUseCase;
 
     @Operation(summary = "Registro de usuario", description = "Devuelve el token de autenticacion")
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid Auth auth) {
-        AuthResponse authResponse = authService.registerUser(auth);
+        AuthResponse authResponse = registerUserUseCase.registerUser(auth);
         return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
     @Operation(summary = "Inicio de sesion de usuario", description = "Devuelve el token de autenticacion")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto) {
-        Map<String, Object> authResponse = authService.loginUser(dto.email(), dto.password());
+        Map<String, Object> authResponse = loginUserUseCase.loginUser(dto.email(), dto.password());
         return ResponseEntity.ok(authResponse);
     }
 
@@ -51,7 +57,7 @@ public class AuthController {
     @PostMapping("/2fa/setup")
     public ResponseEntity<?> setup2fa(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
-        Map<String, String> responseSetup = factorAuthService.setup2fa(email);
+        Map<String, String> responseSetup = request2faUseCase.setup2fa(email);
         return ResponseEntity.ok(responseSetup);
     }
 
@@ -59,14 +65,14 @@ public class AuthController {
     @PostMapping("/2fa/confirm")
     public ResponseEntity<String> comfim2fa(@AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> request) {
-        String msg = factorAuthService.confirm2fa(userDetails.getUsername(), request);
+        String msg = confirm2faRequestUseCase.confirm2fa(userDetails.getUsername(), request);
         return ResponseEntity.ok(msg);
     }
 
     @Operation(summary = "Verificacion en dos pasos")
     @PostMapping("/verify-2fa")
     public ResponseEntity<AuthResponse> verify2fa(@RequestBody @Valid Verify2faRequest request) {
-        AuthResponse authResponse = authService.verify2fa(request.getPreToken(), request.getCode());
+        AuthResponse authResponse = verify2faUseCase.verify2fa(request.getPreToken(), request.getCode());
         return ResponseEntity.ok(authResponse);
     }
 
