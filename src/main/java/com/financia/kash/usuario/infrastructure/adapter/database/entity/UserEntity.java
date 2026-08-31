@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.RoleUser;
@@ -63,6 +64,9 @@ public class UserEntity implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<CategoryEntity> categories;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<AccountEntity> accounts;
 
     public UserEntity(String name, String lastName, String email, String password, EstadoUsuario status,
             RoleUser role) {
