@@ -16,6 +16,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 public interface AccountMapper {
 
     @Mapping(source = "userId", target = "user")
+    @Mapping(target = "transfers", ignore = true)
     AccountEntity mapToEntity(Account account);
 
     @Mapping(source = "user.id", target = "userId")

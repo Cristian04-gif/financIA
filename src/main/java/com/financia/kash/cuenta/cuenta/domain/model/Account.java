@@ -37,30 +37,31 @@ public class Account {
         this.active = true;
     }
 
-    public boolean isAccountActive() {
+    public void validateAccountIsActive() {
         if (!this.active) {
             throw new InactiveAccountException(this.name);
         }
-        return true;
     }
 
-    public boolean isSufficientFunds(BigDecimal amount) {
-        if (this.currentBalance.compareTo(amount) <= 0) {
+    public void validateSufficientFunds(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("El importe de la transferencia debe ser positivo");
+        }
+        if (this.currentBalance.compareTo(amount) < 0) {
             throw new InsufficientFundsException(this.name);
         }
-        return true;
     }
 
     public void transfer(BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException(amount);
         }
-        this.currentBalance.subtract(amount);
+        this.currentBalance = this.currentBalance.subtract(amount);
         this.updateDate = LocalDate.now();
     }
 
     public void receive(BigDecimal amount) {
-        this.currentBalance.add(amount);
+        this.currentBalance = this.currentBalance.add(amount);
         this.updateDate = LocalDate.now();
     }
 }

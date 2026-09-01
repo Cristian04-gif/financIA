@@ -4,5 +4,5 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface TransferMoneyUseCase {
-    void transfer(UUID idSource, UUID idTarget, BigDecimal amount);
+    void transfer(UUID idSource, UUID idTarget, BigDecimal amount, String description);
 }

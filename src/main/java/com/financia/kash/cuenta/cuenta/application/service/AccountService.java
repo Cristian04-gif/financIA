@@ -13,6 +13,8 @@ import com.financia.kash.cuenta.cuenta.application.port.input.TransferMoneyUseCa
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
+import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
+import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -23,20 +25,30 @@ public class AccountService
         implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase {
 
     private final AccountRespotoryPort accountRespotoryPort;
+    private final TransferRepositoryPort transferRepositoryPort;
 
     @Override
     @Transactional
-    public void transfer(UUID idSource, UUID idTarget, BigDecimal amount) {
+    public void transfer(UUID idSource, UUID idTarget, BigDecimal amount, String description) {
         Account accountSource = accountRespotoryPort.findMyAccountById(idSource);
         Account accountTarget = accountRespotoryPort.findMyAccountById(idTarget);
 
-        if (accountSource.isAccountActive() && accountSource.isSufficientFunds(amount)) {
-            accountSource.transfer(amount);
-            accountTarget.receive(amount);
+        if (accountSource.getId().equals(accountTarget.getId())) {
+            throw new IllegalArgumentException("No puedes hacer una trasnferencia entre las mismas cuentas");
         }
+
+        accountSource.validateAccountIsActive();
+        accountSource.validateSufficientFunds(amount);
+
+        accountSource.transfer(amount);
+        accountTarget.receive(amount);
+
+        Transfer transfer = new Transfer(accountSource.getUserId(), idSource, idTarget, amount, description);
+        transferRepositoryPort.save(transfer);
 
         accountRespotoryPort.save(accountSource);
         accountRespotoryPort.save(accountTarget);
+
     }
 
     @Override
