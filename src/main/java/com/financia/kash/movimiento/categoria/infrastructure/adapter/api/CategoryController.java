@@ -25,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,7 +98,7 @@ public class CategoryController {
         @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
         @PutMapping("/of-user/{id}")
         public ResponseEntity<Category> updateUsercategory(@PathVariable UUID id,
-                        @AuthenticationPrincipal UserDetails user, @RequestBody CategoryForUserRequest request) {
+                        @RequestBody CategoryForUserRequest request) {
 
                 Category category = updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
                                 request.parentCategoryId(),
@@ -113,8 +112,7 @@ public class CategoryController {
                         """)
         @Operation(summary = "Eliminar categoria", description = "Elimina una categoria creada por el usuario")
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteUserCategory(@PathVariable UUID id,
-                        @AuthenticationPrincipal UserEntity user) {
+        public ResponseEntity<Void> deleteUserCategory(@PathVariable UUID id) {
                 deleteMyCategoryUseCase.deleteMyCategory(id);
                 return ResponseEntity.noContent().build();
         }
