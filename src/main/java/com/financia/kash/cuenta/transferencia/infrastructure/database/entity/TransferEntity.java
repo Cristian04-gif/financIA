@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
+import com.financia.kash.shared.infrastructure.security.Ownable;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import jakarta.persistence.Column;
@@ -27,7 +28,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransferEntity {
+public class TransferEntity implements Ownable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -53,4 +54,12 @@ public class TransferEntity {
     @CreationTimestamp
     @Column(name = "fecha_creacion")
     private LocalDate creationDate;
+
+    @Override
+    public String getOwnerEmail() {
+        if (this.user == null) {
+            return null;
+        }
+        return this.user.getEmail();
+    }
 }
