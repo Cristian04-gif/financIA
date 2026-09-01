@@ -73,4 +73,12 @@ public class AccountService
         return accountRespotoryPort.save(account);
     }
 
+    @Override
+    public void changeStatusAcount(UUID accountId) {
+        Account account = getMyAccountById(accountId);
+        account.changeStatus();
+        accountRespotoryPort.save(account);
+
+    }
+
 }

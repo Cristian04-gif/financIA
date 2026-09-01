@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
@@ -60,9 +61,9 @@ public class AccountController {
             """)
     @Operation(summary = "Cuenta", description = "Devuelve una cuenta por su id")
     @GetMapping("/my-accounts/{id}")
-    public ResponseEntity<AccountProject> getMayAccountById(@PathVariable UUID id) {
+    public ResponseEntity<Account> getMayAccountById(@PathVariable UUID id) {
         Account account = getAccountUseCase.getMyAccountById(id);
-        return ResponseEntity.ok(accountMapper.mapToProject(account));
+        return ResponseEntity.ok(account);
     }
 
     @PreAuthorize("hasAuthority('USER')")
@@ -82,10 +83,22 @@ public class AccountController {
                     #request.idSource, #request.idTarget, authentication.name
                 )
             """)
-    @Operation(summary = "Reazilar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
+    @Operation(summary = "Realizar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
     @PostMapping("/transfer")
     public ResponseEntity<Void> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request) {
         transferMoneyUseCase.transfer(request.idSource(), request.idTarget(), request.amount(), request.description());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("""
+                hasAuthority("ADMIN") or
+                (hasAuthority('USER') and
+                 @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity)))
+            """)
+    @Operation(summary = "Desactivar cuenta cuenta")
+    @PutMapping("/my-accounts/{id}/changeStatus")
+    public ResponseEntity<Void> changeStatusAccount(@PathVariable UUID id) {
+        deleteAccountUseCase.changeStatusAcount(id);
         return ResponseEntity.noContent().build();
     }
 

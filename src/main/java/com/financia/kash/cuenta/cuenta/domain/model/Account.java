@@ -64,4 +64,8 @@ public class Account {
         this.currentBalance = this.currentBalance.add(amount);
         this.updateDate = LocalDate.now();
     }
+
+    public void changeStatus() {
+        this.active = !this.active;
+    }
 }

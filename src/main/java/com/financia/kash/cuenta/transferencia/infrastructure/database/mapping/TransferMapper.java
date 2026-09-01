@@ -20,7 +20,6 @@ public interface TransferMapper {
 
     @Mapping(source = "sourceAccount", target = "sourceAccount.id")
     @Mapping(source = "userId", target = "user")
-    @Mapping(target = "id", ignore = true)
     TransferEntity mapToEntity(Transfer transfer);
 
     default UserEntity mapUser(UUID userId) {
