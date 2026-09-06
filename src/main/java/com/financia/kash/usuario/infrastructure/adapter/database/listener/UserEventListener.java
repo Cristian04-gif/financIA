@@ -16,11 +16,9 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 import com.financia.kash.usuario.infrastructure.adapter.database.repository.UserEntityRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Component
 @RequiredArgsConstructor
-@Log4j2
 public class UserEventListener {
 
     private final UserEntityRepository userRepository;
@@ -28,7 +26,6 @@ public class UserEventListener {
     @EventListener
     @Transactional
     public void handleuserRegistration(UserRegistrarionEvent event) {
-        log.info("evento escuchado, {}", event.auth().getEmail());
         boolean existRole = Arrays.stream(RoleUser.values())
                 .anyMatch(e -> e.name().equalsIgnoreCase(event.auth().getRole()));
 
@@ -36,14 +33,12 @@ public class UserEventListener {
             throw new UserRoleNotfoundException(event.auth().getRole());
         }
 
-        log.info("rol existente, {}", existRole);
         UserEntity userEntity = new UserEntity(event.auth().getName(), event.auth().getLastName(),
                 event.auth().getEmail(),
                 event.auth().getPassword(), EstadoUsuario.ACTIVO,
                 RoleUser.valueOf(event.auth().getRole().toUpperCase()));
 
         userRepository.save(userEntity);
-        log.info("usuario guardado");
     }
 
     @EventListener

@@ -3,6 +3,7 @@ package com.financia.kash.auth.application.service;
 import java.util.Map;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
 import com.financia.kash.auth.application.port.input.Confirm2FARequestUseCase;
 import com.financia.kash.auth.application.port.input.Request2faUseCase;
@@ -14,6 +15,7 @@ import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
 
+@Service
 @RequiredArgsConstructor
 public class TwoFactorAuthService implements Request2faUseCase, Confirm2FARequestUseCase {
 

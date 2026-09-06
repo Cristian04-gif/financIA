@@ -2,6 +2,7 @@ package com.financia.kash.auth.infrastructure.security.filters;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,27 +10,32 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.auth.infrastructure.security.service.JwtService;
-import com.financia.kash.shared.domain.exception.ErrorResponse;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Component
-@RequiredArgsConstructor
 @Log4j2
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final ObjectMapper objectMapper;
+
+    private final HandlerExceptionResolver resolver;
+
+    public JwtFilter(JwtService jwtService, UserDetailsService userDetailsService,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.resolver = resolver;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -90,16 +96,7 @@ public class JwtFilter extends OncePerRequestFilter {
             log.error("error de autenticacion, {}", e.getMessage());
             SecurityContextHolder.clearContext();
 
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), e.getClass().getSimpleName(),
-                    request.getRequestURI());
-
-            String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-            response.getWriter().write(jsonResponse);
-            return;
+            resolver.resolveException(request, response, null, e);
         }
     }
 }

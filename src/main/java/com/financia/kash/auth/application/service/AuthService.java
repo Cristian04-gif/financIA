@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Service;
 
 import com.financia.kash.auth.application.port.input.LoginUserUseCase;
 import com.financia.kash.auth.application.port.input.RegisterUserUseCase;
@@ -22,6 +23,7 @@ import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
 
+@Service
 @RequiredArgsConstructor
 public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verify2faUseCase {
 

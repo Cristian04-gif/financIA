@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import com.financia.kash.auth.infrastructure.security.filters.JwtFilter;
 
@@ -23,6 +24,7 @@ public class SecurityConfig {
 
         private final JwtFilter jwtFilter;
         private final AuthenticationProvider authenticationProvider;
+        private final HandlerExceptionResolver handlerExceptionResolver;
 
         private final String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
                         "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
@@ -38,6 +40,11 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authenticationProvider(authenticationProvider)
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint((request, response,
+                                                                authException) -> handlerExceptionResolver
+                                                                                .resolveException(request, response,
+                                                                                                null, authException)))
                                 .build();
         }
 }
