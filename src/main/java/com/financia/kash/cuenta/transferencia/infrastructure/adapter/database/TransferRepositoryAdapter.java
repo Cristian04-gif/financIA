@@ -1,4 +1,4 @@
-package com.financia.kash.cuenta.transferencia.infrastructure.database;
+package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.exception.TransferNotFoundException;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.mapping.TransferMapper;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.repository.TransferEntityRepository;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.mapping.TransferMapper;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 

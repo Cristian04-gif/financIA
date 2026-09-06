@@ -3,6 +3,8 @@ package com.financia.kash.movimiento.categoria.application.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+
 import com.financia.kash.movimiento.categoria.application.port.input.ChangeStatusUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.CreateCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.DeleteMyCategoryUseCase;
@@ -15,6 +17,7 @@ import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
 
+@Service
 @RequiredArgsConstructor
 public class CategoryService
         implements GetCategoriesUseCase, CreateCategoryUseCase, UpdateCategoryUseCase, DeleteMyCategoryUseCase,

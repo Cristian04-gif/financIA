@@ -1,4 +1,4 @@
-package com.financia.kash.cuenta.transferencia.infrastructure.database.mapping;
+package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.mapping;
 
 import java.util.UUID;
 
@@ -8,7 +8,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.ERROR)

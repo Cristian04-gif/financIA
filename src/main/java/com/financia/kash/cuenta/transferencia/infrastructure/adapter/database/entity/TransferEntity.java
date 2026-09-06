@@ -1,4 +1,4 @@
-package com.financia.kash.cuenta.transferencia.infrastructure.database.entity;
+package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

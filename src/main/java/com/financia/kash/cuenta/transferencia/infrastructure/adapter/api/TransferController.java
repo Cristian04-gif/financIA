@@ -1,4 +1,4 @@
-package com.financia.kash.cuenta.transferencia.infrastructure.api;
+package com.financia.kash.cuenta.transferencia.infrastructure.adapter.api;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -7,7 +7,7 @@ import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTrans
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.infrastructure.api.dto.TransferUpdateRequest;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.dto.TransferUpdateRequest;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;

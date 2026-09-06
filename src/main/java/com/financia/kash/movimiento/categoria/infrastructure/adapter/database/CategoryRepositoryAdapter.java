@@ -3,7 +3,7 @@ package com.financia.kash.movimiento.categoria.infrastructure.adapter.database;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
@@ -14,7 +14,7 @@ import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.re
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 

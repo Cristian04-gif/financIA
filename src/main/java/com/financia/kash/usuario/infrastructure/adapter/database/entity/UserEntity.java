@@ -11,7 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.RoleUser;

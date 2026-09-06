@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
-import com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.shared.infrastructure.security.Ownable;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 

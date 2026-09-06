@@ -3,7 +3,7 @@ package com.financia.kash.usuario.infrastructure.adapter.database;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
@@ -17,7 +17,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.repository.User
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class UserRepositoryAdapter
         implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort, UserForCategoryPort {

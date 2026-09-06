@@ -1,4 +1,4 @@
-package com.financia.kash.cuenta.transferencia.infrastructure.api.dto;
+package com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.dto;
 
 import java.math.BigDecimal;
 

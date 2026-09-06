@@ -2,6 +2,8 @@ package com.financia.kash.usuario.application.service;
 
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
 import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
 import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
@@ -12,6 +14,7 @@ import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
 
+@Service
 @RequiredArgsConstructor
 public class UserService implements ChangePasswordUseCase, MyInformationUseCase, DeleteUserUseCase {
 
