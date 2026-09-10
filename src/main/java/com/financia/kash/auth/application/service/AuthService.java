@@ -2,9 +2,8 @@ package com.financia.kash.auth.application.service;
 
 import java.util.Map;
 
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import com.financia.kash.auth.application.port.input.LoginUserUseCase;
@@ -13,15 +12,16 @@ import com.financia.kash.auth.application.port.input.Verify2faUseCase;
 import com.financia.kash.auth.application.port.output.AuthenticationPort;
 import com.financia.kash.auth.application.port.output.PasswordEncoderPort;
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
+import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
 import com.financia.kash.auth.domain.exception.AuthException;
 import com.financia.kash.auth.domain.exception.ExistingEmailException;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
 import com.financia.kash.auth.domain.model.TwoFactorAuth;
-import com.financia.kash.auth.infrastructure.adapter.event.UserRegistrarionEvent;
 import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -30,54 +30,68 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
     private final AuthenticationPort authenticationPort;
     private final PasswordEncoderPort passwordEncoderPort;
     private final UserEmailForAuthenticationPort emailForAuthenticationPort;
-    private final ApplicationEventPublisher eventPublisher;
     private final TwoFactorAuth twoFactorAuth;
-    private final UserDetailsService userDetailsService;
+    private final ReactiveUserDetailsService userDetailsService;
+    private final UserSaveForAuthPort userSaveForAuthPort;
 
     @Override
-    public AuthResponse registerUser(Auth auth) {
-        if (emailForAuthenticationPort.existEmail(auth.getEmail())) {
-            throw new ExistingEmailException(auth.getEmail());
-        }
+    public Mono<AuthResponse> registerUser(Auth auth) {
+        return emailForAuthenticationPort.existEmail(auth.getEmail()).flatMap(isRegister -> {
+            if (isRegister) {
+                return Mono.error(new ExistingEmailException(auth.getEmail()));
+            }
 
-        Auth authRegister = new Auth(auth.getName(), auth.getLastName(), auth.getEmail(),
-                passwordEncoderPort.ecoderPassword(auth.getPassword()), auth.getRole());
+            User user = new User(auth.getName(), auth.getLastName(), auth.getEmail(),
+                    passwordEncoderPort.ecoderPassword(auth.getPassword()), auth.getRole().toUpperCase());
 
-        // evento que guarde al usuario
-        eventPublisher.publishEvent(new UserRegistrarionEvent(authRegister));
+            return userSaveForAuthPort.save(user).then(authenticationPort.authenticate(
+                    auth.getEmail(),
+                    auth.getPassword()))
+                    .map(AuthResponse::new);
 
-        String token = authenticationPort.authenticate(auth.getEmail(), auth.getPassword());
-
-        return new AuthResponse(token);
+        });
     }
 
     @Override
-    public Map<String, Object> loginUser(String email, String password) {
-        User user = emailForAuthenticationPort.findByEmail(email);
-        if (user.isEnable2fa()) {
-            String preAuthToken = authenticationPort.preAuthenticate(email, password);
-            return Map.of("requires2fa", true,
-                    "preAuthToken", preAuthToken);
-        }
-        String token = authenticationPort.authenticate(email, password);
-        return Map.of("requires2fa", false, "token", token);
+    public Mono<Map<String, Object>> loginUser(String email, String password) {
+        return emailForAuthenticationPort.findByEmail(email).flatMap(user -> {
+            if (user.isEnable2fa()) {
+                return authenticationPort
+                        .preAuthenticate(email, password)
+                        .map(token -> Map.of(
+                                "requires2fa", true,
+                                "preAuthToken", token));
+            }
+
+            return authenticationPort
+                    .authenticate(email, password)
+                    .map(token -> Map.of(
+                            "requires2fa", false,
+                            "token", token));
+
+        });
     }
 
     @Override
-    public AuthResponse verify2fa(String preToken, String code) {
+    public Mono<AuthResponse> verify2fa(String preToken, String code) {
         String username = authenticationPort.getUsername(preToken);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        if (!authenticationPort.validatePreAuthToken(preToken, userDetails)) {
-            throw new RuntimeException("Token temporal inválido o expirado");
-        }
+        Mono<UserDetails> userDetails = userDetailsService.findByUsername(username);
+        Mono<User> userMono = emailForAuthenticationPort.findByEmail(username);
 
-        User user = emailForAuthenticationPort.findByEmail(username);
+        return Mono.zip(userDetails, userMono).flatMap(tupla -> {
+            UserDetails details = tupla.getT1();
+            User user = tupla.getT2();
+            if (!authenticationPort.validatePreAuthToken(preToken, details)) {
+                return Mono.error(new RuntimeException("Token temporal inválido o expirado"));
+            }
 
-        if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
-            throw new AuthException("Código de verificación incorrecto");
-        }
-        String finalToken = authenticationPort.generateFinalTokenWithoutPassword(userDetails);
-        return new AuthResponse(finalToken);
+            if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
+                return Mono.error(new AuthException("Código de verificación incorrecto"));
+            }
+
+            String finalToken = authenticationPort.generateFinalTokenWithoutPassword(details);
+            return Mono.just(new AuthResponse(finalToken));
+        });
 
     }
 

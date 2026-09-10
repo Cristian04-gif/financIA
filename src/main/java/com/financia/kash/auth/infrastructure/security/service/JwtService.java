@@ -97,17 +97,26 @@ public class JwtService {
         return getClaim(token, Claims::getSubject);
     }
 
-    public Date getExipationDate(String token) {
+    public Date getExpirationDate(String token) {
         return getClaim(token, Claims::getExpiration);
     }
 
     public boolean isTokenExpired(String token) {
-        return getExipationDate(token).before(new Date());
+        return getExpirationDate(token).before(new Date());
     }
 
     public boolean canByTokenRenewed(String token) {
-        return getExipationDate(token).before(new Date(System.currentTimeMillis() + REFRESH_WINDOW));
+        Date expiration = getExpirationDate(token);
+        Date now = new Date();
 
+        if (expiration.after(now)) {
+            return false;
+        }
+
+        Date refreshLimit = new Date(
+                expiration.getTime() + REFRESH_WINDOW);
+
+        return now.before(refreshLimit);
     }
 
     public String renewToken(String token, UserDetails userDetails) {

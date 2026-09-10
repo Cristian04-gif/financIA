@@ -4,8 +4,6 @@ import com.financia.kash.usuario.domain.model.User;
 
 import reactor.core.publisher.Mono;
 
-public interface UserEmailForAuthenticationPort {
-    Mono<Boolean> existEmail(String email);
-
-    Mono<User> findByEmail(String email);
+public interface UserSaveForAuthPort {
+    Mono<User> save(User user);
 }

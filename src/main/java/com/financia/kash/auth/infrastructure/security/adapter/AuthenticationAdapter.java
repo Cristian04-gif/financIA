@@ -1,6 +1,6 @@
 package com.financia.kash.auth.infrastructure.security.adapter;
 
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,30 +11,39 @@ import com.financia.kash.auth.infrastructure.security.service.JwtService;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
 public class AuthenticationAdapter implements AuthenticationPort {
 
-    private final AuthenticationManager authenticationManager;
+    private final ReactiveAuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
     @Override
-    public String authenticate(String username, String password) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(username, password));
+    public Mono<String> authenticate(String username, String password) {
+        Authentication credentials = new UsernamePasswordAuthenticationToken(username, password);
 
-        UserEntity userEntity = (UserEntity) authentication.getPrincipal();
-        return jwtService.generateToken(userEntity);
+        return authenticationManager.authenticate(credentials).map(auth -> {
+            UserEntity user = (UserEntity) auth.getPrincipal();
+            return jwtService.generatePreToken(user);
+        });
     }
 
     @Override
-    public String preAuthenticate(String username, String password) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(username, password));
+    public Mono<String> preAuthenticate(String username, String password) {
+        Authentication credentials = new UsernamePasswordAuthenticationToken(
+                username,
+                password);
 
-        UserEntity userEntity = (UserEntity) authentication.getPrincipal();
-        return jwtService.generatePreToken(userEntity);
+        return authenticationManager
+                .authenticate(credentials)
+                .map(authentication -> {
+
+                    UserEntity user = (UserEntity) authentication.getPrincipal();
+
+                    return jwtService.generatePreToken(user);
+                });
     }
 
     @Override

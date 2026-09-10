@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
@@ -41,39 +42,36 @@ public class AuthController {
 
     @Operation(summary = "Registro de usuario", description = "Devuelve el token de autenticacion")
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody @Valid Auth auth) {
-        AuthResponse authResponse = registerUserUseCase.registerUser(auth);
-        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+    public Mono<ResponseEntity<AuthResponse>> register(@RequestBody @Valid Auth auth) {
+        return registerUserUseCase.registerUser(auth)
+                .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
     }
 
     @Operation(summary = "Inicio de sesion de usuario", description = "Devuelve el token de autenticacion")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto) {
-        Map<String, Object> authResponse = loginUserUseCase.loginUser(dto.email(), dto.password());
-        return ResponseEntity.ok(authResponse);
+    public Mono<ResponseEntity<?>> login(@RequestBody @Valid LoginRequestDTO dto) {
+        return loginUserUseCase.loginUser(dto.email(), dto.password()).map(value -> ResponseEntity.ok(value));
     }
 
     @Operation(summary = "Solicitud de autenticacion 2fa")
     @PostMapping("/2fa/setup")
-    public ResponseEntity<?> setup2fa(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        Map<String, String> responseSetup = request2faUseCase.setup2fa(email);
-        return ResponseEntity.ok(responseSetup);
+    public Mono<ResponseEntity<?>> setup2fa(@AuthenticationPrincipal UserDetails userDetails) {
+        return request2faUseCase.setup2fa(userDetails.getUsername()).map(value -> ResponseEntity.ok(value));
     }
 
     @Operation(summary = "Confirmar autenticacion 2fa")
     @PostMapping("/2fa/confirm")
-    public ResponseEntity<String> comfim2fa(@AuthenticationPrincipal UserDetails userDetails,
+    public Mono<ResponseEntity<String>> comfim2fa(@AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> request) {
-        String msg = confirm2faRequestUseCase.confirm2fa(userDetails.getUsername(), request);
-        return ResponseEntity.ok(msg);
+        return confirm2faRequestUseCase.confirm2fa(userDetails.getUsername(), request)
+                .map(value -> ResponseEntity.ok(value));
     }
 
     @Operation(summary = "Verificacion en dos pasos")
     @PostMapping("/verify-2fa")
-    public ResponseEntity<AuthResponse> verify2fa(@RequestBody @Valid Verify2faRequest request) {
-        AuthResponse authResponse = verify2faUseCase.verify2fa(request.getPreToken(), request.getCode());
-        return ResponseEntity.ok(authResponse);
+    public Mono<ResponseEntity<AuthResponse>> verify2fa(@RequestBody @Valid Verify2faRequest request) {
+        return verify2faUseCase.verify2fa(request.getPreToken(), request.getCode())
+                .map(value -> ResponseEntity.ok(value));
     }
 
 }
