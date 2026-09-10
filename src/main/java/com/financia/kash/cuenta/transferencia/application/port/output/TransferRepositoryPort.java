@@ -6,12 +6,14 @@ import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
+import reactor.core.publisher.Mono;
+
 public interface TransferRepositoryPort {
-    PaginationResponse<Transfer> findAllMyTransfer(UUID userId, PaginationRequest request);
+    Mono<PaginationResponse<Transfer>> findAllMyTransfer(UUID userId, PaginationRequest request);
 
-    Transfer findById(UUID id);
+    Mono<Transfer> findById(UUID id);
 
-    Transfer save(Transfer transfer);
+    Mono<Transfer> save(Transfer transfer);
 
-    void delete(UUID id);
+    Mono<Void> delete(UUID id);
 }

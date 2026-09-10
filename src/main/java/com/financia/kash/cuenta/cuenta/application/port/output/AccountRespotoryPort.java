@@ -1,18 +1,20 @@
 package com.financia.kash.cuenta.cuenta.application.port.output;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface AccountRespotoryPort {
-    List<Account> findAllMyAccounts(UUID userId);
+    Flux<Account> findAllMyAccounts(UUID userId);
 
-    Account findMyAccountById(UUID accountId);
+    Mono<Account> findMyAccountById(UUID accountId);
 
-    boolean existsAccount(UUID accountId);
+    Mono<Boolean> existsAccount(UUID accountId);
 
-    Account save(Account account);
+    Mono<Account> save(Account account);
 
-    void delete(UUID accountId);
+    Mono<Void> delete(UUID accountId);
 }

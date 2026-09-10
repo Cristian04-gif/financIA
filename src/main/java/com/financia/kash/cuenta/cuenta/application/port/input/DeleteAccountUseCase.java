@@ -2,8 +2,10 @@ package com.financia.kash.cuenta.cuenta.application.port.input;
 
 import java.util.UUID;
 
-public interface DeleteAccountUseCase {
-    void changeStatusAcount(UUID accountId);
+import reactor.core.publisher.Mono;
 
-    void deleteMyAccount(UUID accountId);
+public interface DeleteAccountUseCase {
+    Mono<Void> changeStatusAcount(UUID accountId);
+
+    Mono<Void> deleteMyAccount(UUID accountId);
 }

@@ -18,8 +18,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -48,10 +49,8 @@ public class AccountController {
 
     @Operation(summary = "Cuentas del usuario", description = "Devuelve las cuentas del usuario logeado")
     @GetMapping("/my-accounts")
-    public ResponseEntity<List<AccountProject>> getAllMayAccounts(@AuthenticationPrincipal UserEntity user) {
-        List<AccountProject> list = getAccountUseCase.getAllMyAccount(user.getId()).stream()
-                .map(accountMapper::mapToProject).toList();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Flux<AccountProject>> getAllMyAccounts(@AuthenticationPrincipal UserEntity user) {
+        return ResponseEntity.ok(getAccountUseCase.getAllMyAccount(user.getId()).map(accountMapper::mapToProject));
     }
 
     @PreAuthorize("""
@@ -61,20 +60,19 @@ public class AccountController {
             """)
     @Operation(summary = "Cuenta", description = "Devuelve una cuenta por su id")
     @GetMapping("/my-accounts/{id}")
-    public ResponseEntity<Account> getMayAccountById(@PathVariable UUID id) {
-        Account account = getAccountUseCase.getMyAccountById(id);
-        return ResponseEntity.ok(account);
+    public Mono<ResponseEntity<Account>> getMayAccountById(@PathVariable UUID id) {
+        return getAccountUseCase.getMyAccountById(id).map(ResponseEntity::ok);
     }
 
     @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Crear cuenta")
     @PostMapping("")
-    public ResponseEntity<AccountProject> createAccount(@AuthenticationPrincipal UserEntity user,
+    public Mono<ResponseEntity<AccountProject>> createAccount(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid AccountRequest request) {
-        Account account = createAccountUseCase.createAccount(user.getId(), request.name(), request.type(),
-                request.initialBalance());
+        return createAccountUseCase.createAccount(user.getId(), request.name(), request.type(),
+                request.initialBalance())
+                .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(accountMapper.mapToProject(value)));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(accountMapper.mapToProject(account));
     }
 
     @PreAuthorize("""
@@ -85,11 +83,10 @@ public class AccountController {
             """)
     @Operation(summary = "Realizar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request,
+    public Mono<ResponseEntity<Void>> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request,
             @AuthenticationPrincipal UserEntity user) {
-        transferMoneyUseCase.transfer(user.getId(), request.idSource(), request.idTarget(), request.amount(),
-                request.description());
-        return ResponseEntity.noContent().build();
+        return transferMoneyUseCase.transfer(user.getId(), request.idSource(), request.idTarget(), request.amount(),
+                request.description()).thenReturn(ResponseEntity.noContent().build());
     }
 
     @PreAuthorize("""
@@ -99,9 +96,8 @@ public class AccountController {
             """)
     @Operation(summary = "Desactivar cuenta cuenta")
     @PutMapping("/my-accounts/{id}/changeStatus")
-    public ResponseEntity<Void> changeStatusAccount(@PathVariable UUID id) {
-        deleteAccountUseCase.changeStatusAcount(id);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Void>> changeStatusAccount(@PathVariable UUID id) {
+        return deleteAccountUseCase.changeStatusAcount(id).thenReturn(ResponseEntity.noContent().build());
     }
 
     @PreAuthorize("""
@@ -110,9 +106,8 @@ public class AccountController {
             """)
     @Operation(summary = "Eliminar cuenta")
     @DeleteMapping("/my-accounts/{id}")
-    public ResponseEntity<Void> deleteMyAccount(@PathVariable UUID id) {
-        deleteAccountUseCase.deleteMyAccount(id);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Void>> deleteMyAccount(@PathVariable UUID id) {
+        return deleteAccountUseCase.deleteMyAccount(id).thenReturn(ResponseEntity.noContent().build());
     }
 
 }

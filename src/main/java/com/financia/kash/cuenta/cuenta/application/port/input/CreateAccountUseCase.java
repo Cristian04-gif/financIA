@@ -6,6 +6,8 @@ import java.util.UUID;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 
+import reactor.core.publisher.Mono;
+
 public interface CreateAccountUseCase {
-    Account createAccount(UUID userId, String name, AccountType type, BigDecimal initialBalance);
+    Mono<Account> createAccount(UUID userId, String name, AccountType type, BigDecimal initialBalance);
 }
