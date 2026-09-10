@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.financia.kash.shared.domain.exception.ErrorResponse;
+import com.financia.kash.shared.domain.exception.UserInactiveException;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +34,16 @@ public class GlogalExceptionHandle {
                 errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(UserInactiveException.class)
+    public ResponseEntity<ErrorResponse> userInactive(HttpServletRequest request,
+            UserInactiveException exception) {
+
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
+                request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     @ExceptionHandler({ JwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class })
