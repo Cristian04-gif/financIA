@@ -2,6 +2,8 @@ package com.financia.kash.usuario.application.port.input;
 
 import java.util.UUID;
 
+import reactor.core.publisher.Mono;
+
 public interface DeleteUserUseCase {
-    void deleteMe(UUID id);
+    Mono<Void> deleteMe(UUID id);
 }

@@ -1,6 +1,5 @@
 package com.financia.kash.usuario.infrastructure.adapter.database;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -14,11 +13,11 @@ import com.financia.kash.usuario.application.port.output.UserRepositoryPort;
 import com.financia.kash.usuario.domain.exception.UserNotFoundException;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.User;
-import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 import com.financia.kash.usuario.infrastructure.adapter.database.mapping.UserMapper;
 import com.financia.kash.usuario.infrastructure.adapter.database.repository.UserEntityRepository;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,54 +29,53 @@ public class UserRepositoryAdapter
     private final UserMapper userMapper;
 
     @Override
-    public User getMe(UUID id) {
-        return userRepository.findById(id).map(userMapper::mapToDomain)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public Mono<Boolean> isUserActive(UUID userId) {
+        return userRepository.existsByIdAndStatus(userId, EstadoUsuario.ACTIVO);
     }
 
     @Override
-    public boolean existEmail(String email) {
+    public Mono<User> findUserById(UUID userI) {
+        return userRepository.findById(userI).switchIfEmpty(Mono.error(new UserNotFoundException(userI)))
+                .map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public Mono<User> findById(UUID id) {
+        return userRepository.findById(id).switchIfEmpty(Mono.error(new UserNotFoundException(id)))
+                .map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public Mono<User> findByEmail(String email) {
+        return userRepository.findByEmail(email).switchIfEmpty(Mono.error(new UserNotFoundException(email)))
+                .map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public Mono<User> getMe(UUID id) {
+        return userRepository.findById(id).switchIfEmpty(Mono.error(new UserNotFoundException(id)))
+                .map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public Mono<User> getMe(String email) {
+        return userRepository.findByEmail(email).switchIfEmpty(Mono.error(new UserNotFoundException(email)))
+                .map(userMapper::mapToDomain);
+    }
+
+    @Override
+    public Mono<Boolean> existEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
     @Override
-    public User save(User user) {
-        UserEntity entity = userMapper.mapToEntity(user);
-        UserEntity saved = userRepository.save(entity);
-        return userMapper.mapToDomain(saved);
+    public Mono<User> save(User user) {
+        return Mono.just(userMapper.mapToEntity(user)).flatMap(userRepository::save).map(userMapper::mapToDomain);
     }
 
     @Override
-    public void delete(UUID id) {
-        userRepository.deleteById(id);
-    }
-
-    @Override
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).map(userMapper::mapToDomain)
-                .orElseThrow(() -> new UserNotFoundException(email));
-    }
-
-    @Override
-    public User getMe(String email) {
-        return userRepository.findByEmail(email).map(userMapper::mapToDomain)
-                .orElseThrow(() -> new UserNotFoundException(email));
-    }
-
-    @Override
-    public Optional<User> findById(UUID id) {
-        return userRepository.findById(id).map(userMapper::mapToDomain);
-    }
-
-    @Override
-    public User findUserById(UUID userI) {
-        return userRepository.findById(userI).map(userMapper::mapToDomain)
-                .orElseThrow(() -> new UserNotFoundException(userI));
-    }
-
-    @Override
-    public boolean isUserActive(UUID userId) {
-        return userRepository.existsByIdAndStatus(userId, EstadoUsuario.ACTIVO);
+    public Mono<Void> delete(UUID id) {
+        return userRepository.deleteById(id);
     }
 
 }

@@ -4,15 +4,17 @@ import java.util.UUID;
 
 import com.financia.kash.usuario.domain.model.User;
 
+import reactor.core.publisher.Mono;
+
 public interface UserRepositoryPort {
-    User getMe(UUID id);
+    Mono<User> getMe(UUID id);
 
-    User getMe(String email);
+    Mono<User> getMe(String email);
 
-    boolean existEmail(String email);
+    Mono<Boolean> existEmail(String email);
 
-    User save(User user);
+    Mono<User> save(User user);
 
-    void delete(UUID id);
+    Mono<Void> delete(UUID id);
 
 }

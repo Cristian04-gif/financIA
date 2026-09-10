@@ -1,23 +1,24 @@
 package com.financia.kash.usuario.infrastructure.adapter.database.repository;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 import com.financia.kash.usuario.infrastructure.adapter.database.repository.project.ProjectUser;
 
-public interface UserEntityRepository extends JpaRepository<UserEntity, UUID> {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-    List<ProjectUser> findAllBy();
+public interface UserEntityRepository extends ReactiveCrudRepository<UserEntity, UUID> {
 
-    Optional<UserEntity> findByEmail(String email);
+    Flux<ProjectUser> findAllBy();
 
-    boolean existsByEmail(String email);
+    Mono<UserEntity> findByEmail(String email);
 
-    boolean existsByIdAndStatus(UUID id, EstadoUsuario status);
+    Mono<Boolean> existsByEmail(String email);
+
+    Mono<Boolean> existsByIdAndStatus(UUID id, EstadoUsuario status);
 
 }

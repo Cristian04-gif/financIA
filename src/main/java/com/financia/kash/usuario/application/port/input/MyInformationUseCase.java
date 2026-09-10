@@ -4,8 +4,10 @@ import java.util.UUID;
 
 import com.financia.kash.usuario.domain.model.User;
 
-public interface MyInformationUseCase {
-    User findMe(UUID id);
+import reactor.core.publisher.Mono;
 
-    User findMe(String email);
+public interface MyInformationUseCase {
+    Mono<User> findMe(UUID id);
+
+    Mono<User> findMe(String email);
 }

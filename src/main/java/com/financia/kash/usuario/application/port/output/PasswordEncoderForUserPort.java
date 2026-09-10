@@ -1,5 +1,7 @@
 package com.financia.kash.usuario.application.port.output;
 
+import reactor.core.publisher.Mono;
+
 public interface PasswordEncoderForUserPort {
-    String ecoderPassword(String password);
+    Mono<String> ecoderPassword(String password);
 }

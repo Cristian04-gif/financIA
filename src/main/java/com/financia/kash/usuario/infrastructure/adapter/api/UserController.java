@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
 import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
 import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
-import com.financia.kash.usuario.domain.model.User;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.NewPasswordRequestDTO;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.UserResponseDTO;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
@@ -16,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/users/me")
 @RequiredArgsConstructor
 @Tag(name = "Usuarios", description = "Operaciones de la API de Usuarios")
 public class UserController {
@@ -40,30 +40,28 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Informacion personal", description = "Devuelve la informacion de usuario logeado")
-    @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> myInfo(@AuthenticationPrincipal UserEntity user) {
+    @GetMapping
+    public Mono<ResponseEntity<UserResponseDTO>> myInfo(@AuthenticationPrincipal UserEntity user) {
         UUID id = user.getId();
-        User user2 = informationUseCase.findMe(id);
-        return ResponseEntity.ok(userMapper.mapToDTO(user2));
+        return informationUseCase.findMe(id).map(userMapper::mapToDTO).map(value -> ResponseEntity.ok(value));
     }
 
     @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Actualizar contraseña")
-    @PutMapping("/me/password")
-    public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal UserEntity user,
+    @PutMapping("/password")
+    public Mono<ResponseEntity<Void>> updatePassword(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid NewPasswordRequestDTO dto) {
-        UUID id = user.getId();
-        changePasswordUseCase.changePassword(id, dto.newPassword());
-        return ResponseEntity.ok().build();
+
+        return changePasswordUseCase.changePassword(user.getId(), dto.newPassword())
+                .thenReturn(ResponseEntity.ok().build());
+
     }
 
     @PreAuthorize("hasAuthority('USER') and @securityService.isSameUser(#user.getId(), authentication.name)")
     @Operation(summary = "Suspender usuario", description = "Suspende al usuario por 30 dias antes de ser eliminado")
-    @DeleteMapping("/me")
-    public ResponseEntity<Void> suspendUser(@AuthenticationPrincipal UserEntity user) {
-        UUID id = user.getId();
-        deleteUserUseCase.deleteMe(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping
+    public Mono<ResponseEntity<Void>> suspendUser(@AuthenticationPrincipal UserEntity user) {
+        return deleteUserUseCase.deleteMe(user.getId()).thenReturn(ResponseEntity.noContent().build());
     }
 
 }

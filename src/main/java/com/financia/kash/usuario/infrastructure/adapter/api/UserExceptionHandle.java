@@ -10,29 +10,26 @@ import com.financia.kash.usuario.domain.exception.UserNotFoundException;
 import com.financia.kash.usuario.domain.exception.UserRoleNotfoundException;
 import com.financia.kash.usuario.domain.exception.UserStateNotFoundException;
 
-import jakarta.servlet.http.HttpServletRequest;
+import reactor.core.publisher.Mono;
 
 @RestControllerAdvice
 public class UserExceptionHandle {
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> userNotFound(HttpServletRequest request, Exception exception) {
-        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public Mono<ResponseEntity<ErrorResponse>> userNotFound(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(response));
     }
 
     @ExceptionHandler(UserRoleNotfoundException.class)
-    public ResponseEntity<ErrorResponse> userRoleNotFound(HttpServletRequest request, Exception exception) {
-        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    public Mono<ResponseEntity<ErrorResponse>> userRoleNotFound(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 
     @ExceptionHandler(UserStateNotFoundException.class)
-    public ResponseEntity<ErrorResponse> userStateNotFound(HttpServletRequest request, Exception exception) {
-        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    public Mono<ResponseEntity<ErrorResponse>> userStateNotFound(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 }
