@@ -45,13 +45,8 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
 
     @Override
     public Mono<Void> changePassword(UUID id, String newPassword) {
-        Mono<User> userMono = repositoryPort.getMe(id);
-        Mono<String> encoderPasswordMono = encoderForUserPort.ecoderPassword(newPassword);
-
-        return Mono.zip(userMono, encoderPasswordMono).flatMap(tuple -> {
-            User user = tuple.getT1();
-            String passwordEncoder = tuple.getT2();
-            user.changePassword(passwordEncoder);
+        return repositoryPort.getMe(id).flatMap(user -> {
+            user.changePassword(encoderForUserPort.ecoderPassword(newPassword));
             return repositoryPort.save(user);
         }).then();
     }

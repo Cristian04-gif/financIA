@@ -14,10 +14,6 @@ import com.financia.kash.usuario.infrastructure.adapter.database.repository.proj
 public interface UserMapper {
 
     @Mapping(target = "authorities", ignore = true)
-    @Mapping(target = "categories", ignore = true)
-    @Mapping(target = "accounts", ignore = true)
-    @Mapping(target = "transfers", ignore = true)
-    @Mapping(target = "motions", ignore = true)
     UserEntity mapToEntity(User user);
 
     User mapToDomain(UserEntity entity);

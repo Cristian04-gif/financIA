@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
+import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.UserForMovementPort;
 import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
@@ -23,7 +24,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserRepositoryAdapter
         implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort, UserForCategoryPort,
-        UserActiveForAccountPort, UserForMovementPort {
+        UserActiveForAccountPort, UserForMovementPort, UserSaveForAuthPort {
 
     private final UserEntityRepository userRepository;
     private final UserMapper userMapper;

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.shared.domain.utils.Default;
 import com.financia.kash.usuario.domain.exception.User2FAEnabledException;
 import com.financia.kash.usuario.domain.exception.UserStateNotFoundException;
 
@@ -12,7 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor_ = { @Default })
 @Builder
 public class User {
     private final UUID id;
@@ -26,6 +27,20 @@ public class User {
     private RoleUser role;
     private String secret2fa;
     private boolean enable2fa;
+
+    public User(String name, String lastName, String email, String password, String role) {
+        this.id = null;
+        this.name = name;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.creationDate = LocalDate.now();
+        this.updateDate = null;
+        this.status = EstadoUsuario.ACTIVO;
+        this.role = RoleUser.valueOf(role);
+        this.secret2fa = null;
+        this.enable2fa = false;
+    }
 
     private boolean existStatus(String estado) {
         if (estado == null)
