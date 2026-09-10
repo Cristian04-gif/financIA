@@ -18,6 +18,7 @@ public interface CategoryMapper {
 
     @Mapping(source = "userId", target = "user")
     @Mapping(target = "ownerEmail", ignore = true)
+    @Mapping(target = "motions", ignore = true)
     CategoryEntity mapToEntity(Category category);
 
     @Mapping(source = "user.id", target = "userId")

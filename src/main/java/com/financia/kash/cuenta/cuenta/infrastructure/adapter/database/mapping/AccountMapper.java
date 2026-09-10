@@ -17,6 +17,7 @@ public interface AccountMapper {
 
     @Mapping(source = "userId", target = "user")
     @Mapping(target = "transfers", ignore = true)
+    @Mapping(target = "motions", ignore = true)
     AccountEntity mapToEntity(Account account);
 
     @Mapping(source = "user.id", target = "userId")

@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
+import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MotionEntity;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.RoleUser;
 
@@ -40,22 +41,30 @@ public class UserEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
     @Column(name = "nombre")
     private String name;
+
     @Column(name = "apellido")
     private String lastName;
+
     @Column(unique = true)
     private String email;
+
     @Column(name = "contraseña")
     private String password;
+
     @CreationTimestamp
     @Column(name = "fecha_creacion")
     private LocalDate creationDate;
+
     @Column(name = "fecha_actualizacion", nullable = true)
     private LocalDate updateDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
     private EstadoUsuario status;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "rol")
     private RoleUser role;
@@ -71,6 +80,9 @@ public class UserEntity implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<TransferEntity> transfers;
+
+    @OneToMany(mappedBy = "user")
+    private List<MotionEntity> motions;
 
     public UserEntity(String name, String lastName, String email, String password, EstadoUsuario status,
             RoleUser role) {

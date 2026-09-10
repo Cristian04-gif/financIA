@@ -1,14 +1,17 @@
 package com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.financia.kash.movimiento.categoria.domain.model.CategoryType;
+import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MotionEntity;
 import com.financia.kash.shared.infrastructure.security.Ownable;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +21,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -57,6 +61,9 @@ public class CategoryEntity implements Ownable {
 
     @Column(name = "activo")
     private boolean active;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
+    private List<MotionEntity> motions;
 
     @Override
     public String getOwnerEmail() {

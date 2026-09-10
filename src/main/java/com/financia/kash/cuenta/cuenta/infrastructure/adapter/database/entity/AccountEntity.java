@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
+import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MotionEntity;
 import com.financia.kash.shared.infrastructure.security.Ownable;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
@@ -69,6 +70,9 @@ public class AccountEntity implements Ownable {
 
     @OneToMany(mappedBy = "sourceAccount", cascade = CascadeType.REMOVE)
     private List<TransferEntity> transfers;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.REMOVE)
+    private List<MotionEntity> motions;
 
     @Override
     public String getOwnerEmail() {
