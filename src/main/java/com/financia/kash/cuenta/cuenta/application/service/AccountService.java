@@ -15,6 +15,8 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
+import com.financia.kash.shared.domain.exception.UserInactiveException;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -26,10 +28,14 @@ public class AccountService
 
     private final AccountRespotoryPort accountRespotoryPort;
     private final TransferRepositoryPort transferRepositoryPort;
+    private final UserActiveForAccountPort userActiveForAccountPort;
 
     @Override
     @Transactional
-    public void transfer(UUID idSource, UUID idTarget, BigDecimal amount, String description) {
+    public void transfer(UUID userId, UUID idSource, UUID idTarget, BigDecimal amount, String description) {
+        if (userActiveForAccountPort.isUserActive(userId)) {
+            throw new UserInactiveException();
+        }
         Account accountSource = accountRespotoryPort.findMyAccountById(idSource);
         Account accountTarget = accountRespotoryPort.findMyAccountById(idTarget);
 
@@ -43,7 +49,7 @@ public class AccountService
         accountSource.transfer(amount);
         accountTarget.receive(amount);
 
-        Transfer transfer = new Transfer(accountSource.getUserId(), idSource, idTarget, amount, description);
+        Transfer transfer = new Transfer(userId, idSource, idTarget, amount, description);
         transferRepositoryPort.save(transfer);
 
         accountRespotoryPort.save(accountSource);
@@ -69,6 +75,9 @@ public class AccountService
 
     @Override
     public Account createAccount(UUID userId, String name, AccountType type, BigDecimal initialBalance) {
+        if (userActiveForAccountPort.isUserActive(userId)) {
+            throw new UserInactiveException();
+        }
         Account account = new Account(userId, name, type, initialBalance);
         return accountRespotoryPort.save(account);
     }
@@ -78,7 +87,6 @@ public class AccountService
         Account account = getMyAccountById(accountId);
         account.changeStatus();
         accountRespotoryPort.save(account);
-
     }
 
 }

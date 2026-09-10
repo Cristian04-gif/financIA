@@ -11,12 +11,13 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
+import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class AccountRepositoryAdapter implements AccountRespotoryPort {
+public class AccountRepositoryAdapter implements AccountRespotoryPort, AccountForMovementPort {
 
     private final AccountEntityRepository accountRepository;
     private final AccountMapper accountMapper;

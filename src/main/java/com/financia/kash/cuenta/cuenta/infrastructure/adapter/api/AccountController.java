@@ -85,8 +85,10 @@ public class AccountController {
             """)
     @Operation(summary = "Realizar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request) {
-        transferMoneyUseCase.transfer(request.idSource(), request.idTarget(), request.amount(), request.description());
+    public ResponseEntity<Void> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request,
+            @AuthenticationPrincipal UserEntity user) {
+        transferMoneyUseCase.transfer(user.getId(), request.idSource(), request.idTarget(), request.amount(),
+                request.description());
         return ResponseEntity.noContent().build();
     }
 

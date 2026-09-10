@@ -7,9 +7,12 @@ import org.springframework.stereotype.Repository;
 
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.UserForMovementPort;
+import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
 import com.financia.kash.shared.application.port.output.UserForSharedPort;
 import com.financia.kash.usuario.application.port.output.UserRepositoryPort;
 import com.financia.kash.usuario.domain.exception.UserNotFoundException;
+import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.User;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 import com.financia.kash.usuario.infrastructure.adapter.database.mapping.UserMapper;
@@ -20,7 +23,8 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class UserRepositoryAdapter
-        implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort, UserForCategoryPort {
+        implements UserRepositoryPort, UserEmailForAuthenticationPort, UserForSharedPort, UserForCategoryPort,
+        UserActiveForAccountPort, UserForMovementPort {
 
     private final UserEntityRepository userRepository;
     private final UserMapper userMapper;
@@ -69,6 +73,11 @@ public class UserRepositoryAdapter
     public User findUserById(UUID userI) {
         return userRepository.findById(userI).map(userMapper::mapToDomain)
                 .orElseThrow(() -> new UserNotFoundException(userI));
+    }
+
+    @Override
+    public boolean isUserActive(UUID userId) {
+        return userRepository.existsByIdAndStatus(userId, EstadoUsuario.ACTIVO);
     }
 
 }
