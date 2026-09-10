@@ -9,20 +9,17 @@ import lombok.Data;
 public class ErrorResponse {
     private String message;
     private String exception;
-    private String path;
     private Map<String, String> errors;
 
-    public ErrorResponse(String message, String exception, String path) {
+    public ErrorResponse(String message, String exception) {
         this.message = message;
         this.exception = exception;
-        this.path = path;
         this.errors = new HashMap<>();
     }
 
-    public ErrorResponse(String message, String exception, String path, Map<String, String> errors) {
+    public ErrorResponse(String message, String exception, Map<String, String> errors) {
         this.message = message;
         this.exception = exception;
-        this.path = path;
         this.errors = errors;
     }
 }

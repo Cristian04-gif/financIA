@@ -2,6 +2,8 @@ package com.financia.kash.shared.application.port.output;
 
 import java.util.UUID;
 
+import reactor.core.publisher.Mono;
+
 public interface UserActiveForAccountPort {
-    boolean isUserActive(UUID userId);
+    Mono<Boolean> isUserActive(UUID userId);
 }

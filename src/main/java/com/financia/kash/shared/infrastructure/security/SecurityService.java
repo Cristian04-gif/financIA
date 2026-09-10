@@ -1,44 +1,45 @@
 package com.financia.kash.shared.infrastructure.security;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
-import com.financia.kash.shared.application.port.output.UserForSharedPort;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
+import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.MovementEntityRepository;
+import com.financia.kash.usuario.infrastructure.adapter.database.repository.UserEntityRepository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Component("securityService")
 @RequiredArgsConstructor
 public class SecurityService {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final UserEntityRepository userRepository;
+    private final AccountEntityRepository accountRepository;
+    private final TransferEntityRepository transferRepository;
+    private final MovementEntityRepository movementRepository;
 
-    private final UserForSharedPort userForSharedPort;
-    private final AccountEntityRepository accountEntityRepository;
-
-    public boolean isOwner(UUID id, String emailAuth, Class<? extends Ownable> clazz) {
-        Ownable entity = entityManager.find(clazz, id);
-
-        return entity != null
-                && (entity.getOwnerEmail().equals("global") ? true : Objects.equals(entity.getOwnerEmail(), emailAuth));
+    public Mono<Boolean> isSameUser(UUID userId, String emaulAuth) {
+        return userRepository.findById(userId).map(user -> user.getEmail().equals(emaulAuth));
     }
 
-    public boolean isOwnerAccounts(UUID idSource, UUID idTarget, String emailAuth) {
-
-        return accountEntityRepository.countOwnedAccounts(
-                idSource,
-                idTarget,
-                emailAuth) == 2;
+    public Mono<Boolean> isOwnerAccount(UUID accountId, String emailAuth) {
+        return accountRepository.isOwner(accountId, emailAuth);
     }
 
-    public boolean isSameUser(UUID userId, String emaulAuth) {
-        return userForSharedPort.findById(userId).map(user -> user.getEmail().equals(emaulAuth)).orElse(false);
+    public Mono<Boolean> isOwnerAccounts(UUID idSource, UUID idTarget, String emailAuth) {
+
+        Mono<Boolean> sourceAccount = accountRepository.isOwner(idSource, emailAuth);
+        Mono<Boolean> targetAccount = accountRepository.isOwner(idTarget, emailAuth);
+
+        return Mono.zip(sourceAccount, targetAccount).flatMap(tupla -> {
+            boolean source = tupla.getT1();
+            boolean target = tupla.getT2();
+
+            return Mono.just(source && target ? true : false);
+        });
     }
 
 }
