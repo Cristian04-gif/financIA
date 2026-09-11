@@ -3,7 +3,6 @@ package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -18,6 +17,8 @@ import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,35 +28,40 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
     private final TransferMapper transferMapper;
 
     @Override
-    public PaginationResponse<Transfer> findAllMyTransfer(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<Transfer>> findAllMyTransfer(UUID userId, PaginationRequest request) {
         PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
                 Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
                         request.getSortBy()));
 
-        Page<TransferEntity> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
-        List<Transfer> entities = pageTransfer.getContent().stream().map(transferMapper::mapToDomain).toList();
+        Flux<TransferEntity> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
+        Mono<Long> count = transferRepository.count();
+        return Mono.zip(pageTransfer.map(transferMapper::mapToDomain).collectList(), count).map(tuple -> {
+            List<Transfer> transfers = tuple.getT1();
+            long totalElements = tuple.getT2();
+            int totalPages = (int) Math.ceil((double) totalElements / request.getPageSize());
+            boolean isLats = request.getPageNum() >= Math.max(0, totalPages - 1);
 
-        return new PaginationResponse<>(entities, pageTransfer.getNumber(),
-                pageTransfer.getSize(), pageTransfer.getTotalPages(), pageTransfer.getTotalElements(),
-                pageTransfer.isLast());
+            return new PaginationResponse<>(transfers, request.getPageNum(),
+                    request.getPageSize(), totalPages, totalElements, isLats);
+
+        });
     }
 
     @Override
-    public Transfer findById(UUID id) {
+    public Mono<Transfer> findById(UUID id) {
         return transferRepository.findById(id).map(transferMapper::mapToDomain)
-                .orElseThrow(() -> new TransferNotFoundException(id));
+                .switchIfEmpty(Mono.error(new TransferNotFoundException(id)));
     }
 
     @Override
-    public Transfer save(Transfer transfer) {
-        TransferEntity entity = transferMapper.mapToEntity(transfer);
-        TransferEntity save = transferRepository.save(entity);
-        return transferMapper.mapToDomain(save);
+    public Mono<Transfer> save(Transfer transfer) {
+        return Mono.just(transferMapper.mapToEntity(transfer)).flatMap(entity -> transferRepository.save(entity))
+                .map(transferMapper::mapToDomain);
     }
 
     @Override
-    public void delete(UUID id) {
-        transferRepository.deleteById(id);
+    public Mono<Void> delete(UUID id) {
+        return transferRepository.deleteById(id);
     }
 
 }

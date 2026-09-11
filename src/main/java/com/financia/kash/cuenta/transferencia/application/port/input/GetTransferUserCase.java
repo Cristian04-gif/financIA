@@ -6,8 +6,10 @@ import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
-public interface GetTransferUserCase {
-    PaginationResponse<Transfer> getAllMyTransfers(UUID userId, PaginationRequest request);
+import reactor.core.publisher.Mono;
 
-    Transfer getMyTransfer(UUID transferId);
+public interface GetTransferUserCase {
+    Mono<PaginationResponse<Transfer>> getAllMyTransfers(UUID userId, PaginationRequest request);
+
+    Mono<Transfer> getMyTransfer(UUID transferId);
 }

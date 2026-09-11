@@ -2,13 +2,14 @@ package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.r
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 
-public interface TransferEntityRepository extends JpaRepository<TransferEntity, UUID> {
+import reactor.core.publisher.Flux;
 
-    Page<TransferEntity> findAllByUserId(UUID userId, Pageable pageable);
+public interface TransferEntityRepository extends ReactiveCrudRepository<TransferEntity, UUID> {
+
+    Flux<TransferEntity> findAllByUserId(UUID userId, Pageable pageable);
 }

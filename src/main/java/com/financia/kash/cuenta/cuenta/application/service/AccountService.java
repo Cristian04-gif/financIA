@@ -79,7 +79,8 @@ public class AccountService
     @Override
     @Transactional
     public Mono<Void> deleteMyAccount(UUID accountId) {
-        return accountRespotoryPort.delete(accountId);
+        return accountRespotoryPort.findMyAccountById(accountId)
+                .flatMap(account -> accountRespotoryPort.delete(accountId));
     }
 
     @Override

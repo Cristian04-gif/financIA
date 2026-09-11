@@ -4,62 +4,39 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
-import com.financia.kash.shared.infrastructure.security.Ownable;
-import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "transferencias")
+@Table("transferencias")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransferEntity implements Ownable {
+public class TransferEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private UserEntity user;
+    @Column(value = "usuario_id")
+    private UUID userId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cuenta_origen_id", nullable = false)
-    private AccountEntity sourceAccount;
+    @Column(value = "cuenta_origen_id")
+    private UUID sourceAccount;
 
-    @Column(name = "cuenta_destino_id", nullable = false)
+    @Column(value = "cuenta_destino_id")
     private UUID destinationAccount;
 
-    @Column(name = "monto", nullable = false, precision = 14, scale = 2)
+    @Column(value = "monto")
     private BigDecimal amount;
 
-    @Column(name = "descripcion", nullable = true)
+    @Column(value = "descripcion")
     private String description;
 
-    @CreationTimestamp
-    @Column(name = "fecha_creacion")
+    @Column(value = "fecha_creacion")
     private LocalDate creationDate;
 
-    @Override
-    public String getOwnerEmail() {
-        if (this.user == null) {
-            return null;
-        }
-        return this.user.getEmail();
-    }
 }

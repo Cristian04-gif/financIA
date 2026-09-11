@@ -15,6 +15,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -40,16 +41,15 @@ public class TransferController {
 
     @Operation(summary = "Transfereencias del usuario", description = "Devuelve las transferencias del usuario logeado")
     @GetMapping("/my-transfers")
-    public ResponseEntity<PaginationResponse<Transfer>> getMyTransfers(@AuthenticationPrincipal UserEntity user,
+    public Mono<ResponseEntity<PaginationResponse<Transfer>>> getMyTransfers(@AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "creationDate") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
 
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
-        PaginationResponse<Transfer> paginationResponse = getTransferUserCase.getAllMyTransfers(user.getId(),
-                paginationRequest);
-        return ResponseEntity.ok(paginationResponse);
+        return getTransferUserCase.getAllMyTransfers(user.getId(),
+                paginationRequest).map(ResponseEntity::ok);
     }
 
     @PreAuthorize("""
@@ -58,8 +58,8 @@ public class TransferController {
                 """)
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
     @GetMapping("/my-transfers/{id}")
-    public ResponseEntity<Transfer> getMyTransfer(@PathVariable UUID id) {
-        return ResponseEntity.ok(getTransferUserCase.getMyTransfer(id));
+    public Mono<ResponseEntity<Transfer>> getMyTransfer(@PathVariable UUID id) {
+        return getTransferUserCase.getMyTransfer(id).map(ResponseEntity::ok);
     }
 
     @PreAuthorize("""
@@ -68,9 +68,10 @@ public class TransferController {
                 """)
     @Operation(summary = "Actualizar Transferencia", description = "Actualizar el monto o descripcion de la transferencia")
     @PutMapping("/my-transfers/{id}")
-    public ResponseEntity<Transfer> updateTransfer(@PathVariable UUID id, @RequestBody TransferUpdateRequest request) {
-        updateTransferUseCase.updateTransfer(id, request.newAmount(), request.newDescription());
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
+            @RequestBody TransferUpdateRequest request) {
+        return updateTransferUseCase.updateTransfer(id, request.newAmount(), request.newDescription())
+                .thenReturn(ResponseEntity.noContent().build());
     }
 
     @PreAuthorize("""
@@ -79,9 +80,8 @@ public class TransferController {
                 """)
     @Operation(summary = "Elimina una transferncia porsu id")
     @DeleteMapping("/my-transfers/{id}")
-    public ResponseEntity<Transfer> delete(@PathVariable UUID id) {
-        deleteTransferUseCase.deleteTransfer(id);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Transfer>> delete(@PathVariable UUID id) {
+        return deleteTransferUseCase.deleteTransfer(id).thenReturn(ResponseEntity.noContent().build());
     }
 
 }

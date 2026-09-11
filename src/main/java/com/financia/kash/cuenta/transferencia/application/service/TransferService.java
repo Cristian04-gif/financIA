@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
@@ -15,8 +16,8 @@ import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -26,63 +27,75 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     private final AccountRespotoryPort accountRespotoryPort;
 
     @Override
-    public PaginationResponse<Transfer> getAllMyTransfers(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<Transfer>> getAllMyTransfers(UUID userId, PaginationRequest request) {
         return transferRepositoryPort.findAllMyTransfer(userId, request);
     }
 
     @Override
-    public Transfer getMyTransfer(UUID transferId) {
+    public Mono<Transfer> getMyTransfer(UUID transferId) {
         return transferRepositoryPort.findById(transferId);
     }
 
     @Override
     @Transactional
-    public void updateTransfer(UUID transferId, BigDecimal newAmount, String newDescription) {
-        Transfer transfer = transferRepositoryPort.findById(transferId);
+    public Mono<Void> updateTransfer(UUID transferId, BigDecimal newAmount, String newDescription) {
+        return transferRepositoryPort.findById(transferId).flatMap(transfer -> {
+            if (newAmount != null || !transfer.getAmount().equals(newAmount)) {
+                BigDecimal previousAmount = transfer.getAmount();
 
-        if (newAmount != null || !transfer.getAmount().equals(newAmount)) {
-            BigDecimal previousAmount = transfer.getAmount();
+                Mono<Account> accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
+                Mono<Account> accountDestination = accountRespotoryPort
+                        .findMyAccountById(transfer.getDestinationAccount());
 
-            Account accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
-            Account accountDestination = accountRespotoryPort.findMyAccountById(transfer.getDestinationAccount());
+                Mono.zip(accountOrigin, accountDestination).flatMap(tuple -> {
+                    Account origin = tuple.getT1();
+                    Account detination = tuple.getT2();
 
-            // devuelve lo transferido anteriormente
-            accountDestination.transfer(previousAmount);
-            accountOrigin.receive(previousAmount);
+                    // devuelve lo transferido anteriormente
+                    detination.transfer(previousAmount);
+                    origin.receive(previousAmount);
 
-            // corregir transferencia
-            accountOrigin.transfer(newAmount);
-            accountDestination.receive(newAmount);
+                    // corregir transferencia
+                    origin.transfer(newAmount);
+                    detination.receive(newAmount);
 
-            transfer.changeAmount(newAmount);
+                    transfer.changeAmount(newAmount);
 
-            accountRespotoryPort.save(accountOrigin);
-            accountRespotoryPort.save(accountDestination);
-        }
+                    return accountRespotoryPort.save(origin).then(accountRespotoryPort.save(detination));
+                });
+            }
 
-        if (newDescription != null || !transfer.getDescription().equals(newDescription)) {
-            transfer.changeDescription(newDescription);
-        }
-        transferRepositoryPort.save(transfer);
+            if (newDescription != null || !transfer.getDescription().equals(newDescription)) {
+                transfer.changeDescription(newDescription);
+
+            }
+            return transferRepositoryPort.save(transfer);
+        }).then();
+
     }
 
     @Override
     @Transactional
-    public void deleteTransfer(UUID transferId) {
-        Transfer transfer = transferRepositoryPort.findById(transferId);
+    public Mono<Void> deleteTransfer(UUID transferId) {
+        return transferRepositoryPort.findById(transferId).flatMap(transfer -> {
+            Mono<Account> accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
+            Mono<Account> accountDestination = accountRespotoryPort.findMyAccountById(transfer.getDestinationAccount());
 
-        Account accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
-        Account accountDestination = accountRespotoryPort.findMyAccountById(transfer.getDestinationAccount());
+            return Mono.zip(accountOrigin, accountDestination).flatMap(tuple -> {
+                Account origin = tuple.getT1();
+                Account destination = tuple.getT2();
 
-        BigDecimal previousAmount = transfer.getAmount();
+                BigDecimal previousAmount = transfer.getAmount();
 
-        accountDestination.transfer(previousAmount);
-        accountOrigin.receive(previousAmount);
+                destination.transfer(previousAmount);
+                origin.receive(previousAmount);
 
-        accountRespotoryPort.save(accountOrigin);
-        accountRespotoryPort.save(accountDestination);
+                accountRespotoryPort.save(origin);
+                accountRespotoryPort.save(destination);
 
-        transferRepositoryPort.delete(transferId);
+                return transferRepositoryPort.delete(transferId);
+            });
+        });
 
     }
 

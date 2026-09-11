@@ -10,6 +10,7 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -17,7 +18,8 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class AccountRepositoryAdapter implements AccountRespotoryPort, AccountForMovementPort {
+public class AccountRepositoryAdapter
+        implements AccountRespotoryPort, AccountForMovementPort, SaveAccountForMovementPort {
 
     private final AccountEntityRepository accountRepository;
     private final AccountMapper accountMapper;
