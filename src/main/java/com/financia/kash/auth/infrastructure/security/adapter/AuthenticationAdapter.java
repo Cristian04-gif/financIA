@@ -26,7 +26,7 @@ public class AuthenticationAdapter implements AuthenticationPort {
 
         return authenticationManager.authenticate(credentials).map(auth -> {
             UserEntity user = (UserEntity) auth.getPrincipal();
-            return jwtService.generatePreToken(user);
+            return jwtService.generateToken(user);
         });
     }
 
