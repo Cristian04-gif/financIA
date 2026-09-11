@@ -10,31 +10,32 @@ import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
 public class MovementRepositoryAdapter implements MovementRepositoryPort {
 
     @Override
-    public PaginationResponse<Motion> findAllMyMotions(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<Motion>> findAllMyMotions(UUID userId, PaginationRequest request) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findAllMyMotions'");
     }
 
     @Override
-    public Motion findById(UUID movementId) {
+    public Mono<Motion> findById(UUID movementId) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findById'");
     }
 
     @Override
-    public Motion save(Motion motion) {
+    public Mono<Motion> save(Motion motion) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'save'");
     }
 
     @Override
-    public void delete(UUID movementId) {
+    public Mono<Void> delete(UUID movementId) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'delete'");
     }

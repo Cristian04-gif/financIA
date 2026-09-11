@@ -2,10 +2,10 @@ package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.
 
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MotionEntity;
 
-public interface MovementEntityRepository extends JpaRepository<MotionEntity, UUID> {
+public interface MovementEntityRepository extends ReactiveCrudRepository<MotionEntity, UUID> {
 
 }

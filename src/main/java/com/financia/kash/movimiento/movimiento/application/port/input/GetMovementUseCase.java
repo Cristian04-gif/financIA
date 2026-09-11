@@ -6,8 +6,10 @@ import com.financia.kash.movimiento.movimiento.domain.model.Motion;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
-public interface GetMovementUseCase {
-    PaginationResponse<Motion> getAllMovements(UUID userId, PaginationRequest request);
+import reactor.core.publisher.Mono;
 
-    Motion getMovementById(UUID movementId);
+public interface GetMovementUseCase {
+    Mono<PaginationResponse<Motion>> getAllMovements(UUID userId, PaginationRequest request);
+
+    Mono<Motion> getMovementById(UUID movementId);
 }

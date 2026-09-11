@@ -4,8 +4,10 @@ import java.util.UUID;
 
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 
-public interface CreateCategoryUseCase {
-    Category createMainCategory(String name, String type);
+import reactor.core.publisher.Mono;
 
-    Category createCategoryForUser(UUID userId, String name, String type, UUID parentCategoryId);
+public interface CreateCategoryUseCase {
+    Mono<Category> createMainCategory(String name, String type);
+
+    Mono<Category> createCategoryForUser(UUID userId, String name, String type, UUID parentCategoryId);
 }

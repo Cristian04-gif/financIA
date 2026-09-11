@@ -17,8 +17,9 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -46,18 +47,17 @@ public class CategoryController {
 
         @Operation(summary = "Categorias globales", description = "Devuelve las categorias globales")
         @GetMapping("/global")
-        public ResponseEntity<List<CategoryResponse>> getGlobalCategories() {
-                List<CategoryResponse> globalCategories = getCategoriesUseCase.getGlobalCategories().stream()
-                                .map(categoryMapper::mapToResponse).toList();
+        public ResponseEntity<Flux<CategoryResponse>> getGlobalCategories() {
+                Flux<CategoryResponse> globalCategories = getCategoriesUseCase.getGlobalCategories()
+                                .map(categoryMapper::mapToResponse);
                 return ResponseEntity.ok(globalCategories);
         }
 
         @Operation(summary = "Categorias del usuario", description = "Devuelve las categorias creadas por el usuario logeado")
         @GetMapping("/of-user")
-        public ResponseEntity<List<CategoryResponse>> getGlobalCategories(@AuthenticationPrincipal UserEntity user) {
-                UUID userId = user.getId();
-                List<CategoryResponse> userCategories = getCategoriesUseCase.getAllMyCategory(userId).stream()
-                                .map(categoryMapper::mapToResponse).toList();
+        public ResponseEntity<Flux<CategoryResponse>> getGlobalCategories(@AuthenticationPrincipal UserEntity user) {
+                Flux<CategoryResponse> userCategories = getCategoriesUseCase.getAllMyCategory(user.getId())
+                                .map(categoryMapper::mapToResponse);
                 return ResponseEntity.ok(userCategories);
         }
 
@@ -68,28 +68,27 @@ public class CategoryController {
                         """)
         @Operation(summary = "Categoria", description = "Devuelve la informacion por su ID")
         @GetMapping("/{id}")
-        public ResponseEntity<Category> getById(@PathVariable UUID id) {
-                Category category = getCategoriesUseCase.getById(id);
-                return ResponseEntity.ok(category);
+        public Mono<ResponseEntity<Category>> getById(@PathVariable UUID id) {
+                return getCategoriesUseCase.getById(id).map(ResponseEntity::ok);
         }
 
         @PreAuthorize("hasAuthority('USER')")
         @Operation(summary = "Sub-categoria", description = "Crea una categoria que necesite usuario")
         @PostMapping("/of-user")
-        public ResponseEntity<Category> createUserCategory(@AuthenticationPrincipal UserEntity user,
+        public Mono<ResponseEntity<Category>> createUserCategory(@AuthenticationPrincipal UserEntity user,
                         @RequestBody CategoryForUserRequest request) {
-                Category category = createCategoryUseCase.createCategoryForUser(user.getId(), request.name(),
+                return createCategoryUseCase.createCategoryForUser(user.getId(), request.name(),
                                 request.type(),
-                                request.parentCategoryId());
-                return ResponseEntity.status(HttpStatus.CREATED).body(category);
+                                request.parentCategoryId())
+                                .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
         @PreAuthorize("hasAuthority('ADMIN')")
         @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
         @PostMapping("/global")
-        public ResponseEntity<Category> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
-                Category category = createCategoryUseCase.createMainCategory(request.name(), request.type());
-                return ResponseEntity.status(HttpStatus.CREATED).body(category);
+        public Mono<ResponseEntity<Category>> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
+                return createCategoryUseCase.createMainCategory(request.name(), request.type())
+                                .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
         @PreAuthorize("""
@@ -97,14 +96,14 @@ public class CategoryController {
                         """)
         @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
         @PutMapping("/of-user/{id}")
-        public ResponseEntity<Category> updateUsercategory(@PathVariable UUID id,
+        public Mono<ResponseEntity<Category>> updateUsercategory(@PathVariable UUID id,
                         @RequestBody CategoryForUserRequest request) {
 
-                Category category = updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
+                return updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
                                 request.parentCategoryId(),
-                                request.active());
+                                request.active())
+                                .map(category -> ResponseEntity.status(HttpStatus.ACCEPTED).body(category));
 
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(category);
         }
 
         @PreAuthorize("""
@@ -112,9 +111,8 @@ public class CategoryController {
                         """)
         @Operation(summary = "Eliminar categoria", description = "Elimina una categoria creada por el usuario")
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteUserCategory(@PathVariable UUID id) {
-                deleteMyCategoryUseCase.deleteMyCategory(id);
-                return ResponseEntity.noContent().build();
+        public Mono<ResponseEntity<Void>> deleteUserCategory(@PathVariable UUID id) {
+                return deleteMyCategoryUseCase.deleteMyCategory(id).thenReturn(ResponseEntity.noContent().build());
         }
 
 }

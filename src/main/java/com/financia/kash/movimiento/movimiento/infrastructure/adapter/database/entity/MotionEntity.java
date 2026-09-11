@@ -5,67 +5,52 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
-import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "movimientos")
+@Table("movimientos")
 public class MotionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
-    private UserEntity user;
+    @Column(value = "usuario_id")
+    private UUID userId;
 
-    @ManyToOne
-    @JoinColumn(name = "cuenta_id")
-    private AccountEntity account;
+    @Column(value = "cuenta_id")
+    private UUID accountId;
 
-    @ManyToOne
-    @JoinColumn(name = "categoria_id")
-    private CategoryEntity category;
+    @Column(value = "categoria_id")
+    private UUID categoryId;
 
-    @Column(name = "tipo")
-    @Enumerated(EnumType.STRING)
+    @Column(value = "tipo")
     private TypeMovement type;
 
-    @Column(name = "monto", precision = 19, scale = 2)
+    @Column(value = "monto")
     private BigDecimal amount;
 
-    @Column(name = "fecha_emision")
+    @Column(value = "fecha_emision")
     private LocalDate date;
 
-    @Column(name = "descripcion")
+    @Column(value = "descripcion")
     private String description;
 
-    @Column(name = "comun")
+    @Column(value = "comun")
     private Boolean common;
 
-    @Column(name = "fecha_registro")
+    @Column(value = "fecha_registro")
     private LocalDateTime creationDate;
 
-    @Column(name = "fecha_actualizacion")
+    @Column(value = "fecha_actualizacion")
     private LocalDateTime updateDate;
 }

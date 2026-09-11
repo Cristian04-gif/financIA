@@ -66,7 +66,7 @@ public class Motion {
         updateDate();
     }
 
-    public void activeCommontMovement(UUID movementId) {
+    public void activeCommontMovement() {
         if (this.common) {
             throw new MovementAlreadyActivatedException();
         }

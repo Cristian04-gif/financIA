@@ -1,20 +1,22 @@
 package com.financia.kash.movimiento.categoria.application.port.output;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface CategoryRepositoryPort {
-    List<Category> findGlobalCategories();
+    Flux<Category> findGlobalCategories();
 
-    List<Category> findAllMyCategories(UUID userId);
+    Flux<Category> findAllMyCategories(UUID userId);
 
-    Category findById(UUID id);
+    Mono<Category> findById(UUID id);
 
-    boolean existsById(UUID id);
+    Mono<Boolean> existsById(UUID id);
 
-    Category save(Category category);
+    Mono<Category> save(Category category);
 
-    void delete(UUID id);
+    Mono<Void> delete(UUID id);
 }

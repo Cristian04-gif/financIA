@@ -1,6 +1,5 @@
 package com.financia.kash.movimiento.categoria.application.service;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -16,6 +15,8 @@ import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -27,60 +28,75 @@ public class CategoryService
     private final UserForCategoryPort userForCategoryPort;
 
     @Override
-    public List<Category> getGlobalCategories() {
+    public Flux<Category> getGlobalCategories() {
         return categoryRepositoryPort.findGlobalCategories();
     }
 
     @Override
-    public List<Category> getAllMyCategory(UUID userId) {
+    public Flux<Category> getAllMyCategory(UUID userId) {
         return categoryRepositoryPort.findAllMyCategories(userId);
 
     }
 
     @Override
-    public Category getById(UUID id) {
+    public Mono<Category> getById(UUID id) {
         return categoryRepositoryPort.findById(id);
     }
 
     @Override
-    public Category createMainCategory(String name, String type) {
-        Category category = new Category(name, type);
-        return categoryRepositoryPort.save(category);
+    public Mono<Category> createMainCategory(String name, String type) {
+        return Mono.just(new Category(name, type)).flatMap(categoryRepositoryPort::save);
 
     }
 
     @Override
-    public Category createCategoryForUser(UUID userId, String name, String type, UUID parentCategoryId) {
-        Category categoryParent = getById(parentCategoryId);
-        User user = userForCategoryPort.findUserById(userId);
-        Category category = new Category(user.getId(), name, type, categoryParent.getId());
-        return categoryRepositoryPort.save(category);
+    public Mono<Category> createCategoryForUser(UUID userId, String name, String type, UUID parentCategoryId) {
+        Mono<Category> categoryParentMono = getById(parentCategoryId);
+        Mono<User> userMono = userForCategoryPort.findUserById(userId);
+
+        return Mono.zip(categoryParentMono, userMono).flatMap(tuple -> {
+            Category categoryParent = tuple.getT1();
+            User user = tuple.getT2();
+
+            Category category = new Category(user.getId(), name, type, categoryParent.getId());
+            return categoryRepositoryPort.save(category);
+
+        });
+
     }
 
     @Override
-    public void deleteMyCategory(UUID categoryId) {
-        categoryRepositoryPort.delete(categoryId);
+    public Mono<Void> deleteMyCategory(UUID categoryId) {
+        return categoryRepositoryPort.findById(categoryId)
+                .flatMap(category -> categoryRepositoryPort.delete(categoryId));
+    }
+
+    @Override
+    public Mono<Category> updateCategoryForUser(UUID id, String name, String type, UUID parentId, boolean active) {
+
+        Mono<Category> categoryMono = getById(id);
+        Mono<Category> categoryParentMono = getById(parentId);
+
+        return Mono.zip(categoryMono, categoryParentMono).flatMap(tuple -> {
+            Category category = tuple.getT1();
+            Category categoryParent = tuple.getT2();
+
+            category.rename(name);
+            category.parentCategoryId(categoryParent.getId());
+            category.changeType(type);
+            category.changeStatus(active);
+
+            return categoryRepositoryPort.save(category);
+        });
 
     }
 
     @Override
-    public Category updateCategoryForUser(UUID id, String name, String type, UUID parentId, boolean active) {
-
-        Category category = getById(id);
-        Category categoryParent = getById(parentId);
-
-        category.rename(name);
-        category.parentCategoryId(categoryParent.getId());
-        category.changeType(type);
-        category.changeStatus(active);
-
-        return categoryRepositoryPort.save(category);
-    }
-
-    @Override
-    public void changeStatus(UUID id) {
-        Category category = categoryRepositoryPort.findById(id);
-        category.changeStatus(!category.isActive());
+    public Mono<Void> changeStatus(UUID id) {
+        return categoryRepositoryPort.findById(id).flatMap(category -> {
+            category.changeStatus(!category.isActive());
+            return categoryRepositoryPort.save(category);
+        }).then();
 
     }
 

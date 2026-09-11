@@ -6,12 +6,14 @@ import com.financia.kash.movimiento.movimiento.domain.model.Motion;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
+import reactor.core.publisher.Mono;
+
 public interface MovementRepositoryPort {
-    PaginationResponse<Motion> findAllMyMotions(UUID userId, PaginationRequest request);
+    Mono<PaginationResponse<Motion>> findAllMyMotions(UUID userId, PaginationRequest request);
 
-    Motion findById(UUID movementId);
+    Mono<Motion> findById(UUID movementId);
 
-    Motion save(Motion motion);
+    Mono<Motion> save(Motion motion);
 
-    void delete(UUID movementId);
+    Mono<Void> delete(UUID movementId);
 }

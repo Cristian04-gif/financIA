@@ -9,22 +9,20 @@ import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundE
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryTypeNotfoundException;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
-import jakarta.servlet.http.HttpServletRequest;
+import reactor.core.publisher.Mono;
 
 @RestControllerAdvice
 public class CategoryExceptionhandle {
 
     @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorResponse> categoryNotFound(HttpServletRequest request, Exception exception) {
-        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public Mono<ResponseEntity<ErrorResponse>> categoryNotFound(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(response));
     }
 
     @ExceptionHandler(CategoryTypeNotfoundException.class)
-    public ResponseEntity<ErrorResponse> categoryTypeNotFound(HttpServletRequest request, Exception exception) {
-        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public Mono<ResponseEntity<ErrorResponse>> categoryTypeNotFound(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(response));
     }
 }

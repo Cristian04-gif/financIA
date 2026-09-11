@@ -2,8 +2,10 @@ package com.financia.kash.movimiento.movimiento.application.port.input;
 
 import java.util.UUID;
 
-public interface ChangeStateCommonMotion {
-    void deactivateCommonMovement(UUID userid, UUID movementId);
+import reactor.core.publisher.Mono;
 
-    void activateCommonMovement(UUID userid, UUID movementId);
+public interface ChangeStateCommonMotion {
+    Mono<Void> deactivateCommonMovement(UUID userid, UUID movementId);
+
+    Mono<Void> activateCommonMovement(UUID userid, UUID movementId);
 }

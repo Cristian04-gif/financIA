@@ -2,6 +2,8 @@ package com.financia.kash.movimiento.movimiento.application.port.output;
 
 import java.util.UUID;
 
+import reactor.core.publisher.Mono;
+
 public interface UserForMovementPort {
-    boolean isUserActive(UUID userId);
+    Mono<Boolean> isUserActive(UUID userId);
 }

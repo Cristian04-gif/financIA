@@ -1,14 +1,16 @@
 package com.financia.kash.movimiento.categoria.application.port.input;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface GetCategoriesUseCase {
-    List<Category> getGlobalCategories();
+    Flux<Category> getGlobalCategories();
 
-    List<Category> getAllMyCategory(UUID userId);
+    Flux<Category> getAllMyCategory(UUID userId);
 
-    Category getById(UUID id);
+    Mono<Category> getById(UUID id);
 }

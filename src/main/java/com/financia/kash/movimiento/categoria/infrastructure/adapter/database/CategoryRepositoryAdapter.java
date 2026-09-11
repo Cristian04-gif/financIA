@@ -1,6 +1,5 @@
 package com.financia.kash.movimiento.categoria.infrastructure.adapter.database;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -8,11 +7,12 @@ import org.springframework.stereotype.Repository;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,37 +22,36 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public List<Category> findGlobalCategories() {
-        return categoryRepository.findByUserIsNullAndParentCategoryIdIsNull().stream()
-                .map(categoryMapper::mapToDomain).toList();
+    public Flux<Category> findGlobalCategories() {
+        return categoryRepository.findByUserIdIsNullAndParentCategoryIdIsNull()
+                .map(categoryMapper::mapToDomain);
     }
 
     @Override
-    public List<Category> findAllMyCategories(UUID userId) {
-        return categoryRepository.findAllByUserId(userId).stream().map(categoryMapper::mapToDomain).toList();
+    public Flux<Category> findAllMyCategories(UUID userId) {
+        return categoryRepository.findAllByUserId(userId).map(categoryMapper::mapToDomain);
     }
 
     @Override
-    public Category findById(UUID id) {
+    public Mono<Category> findById(UUID id) {
         return categoryRepository.findById(id).map(categoryMapper::mapToDomain)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+                .switchIfEmpty(Mono.error(new CategoryNotFoundException(id)));
     }
 
     @Override
-    public boolean existsById(UUID id) {
+    public Mono<Boolean> existsById(UUID id) {
         return categoryRepository.existsById(id);
     }
 
     @Override
-    public Category save(Category category) {
-        CategoryEntity categoryEntity = categoryMapper.mapToEntity(category);
-        CategoryEntity saved = categoryRepository.save(categoryEntity);
-        return categoryMapper.mapToDomain(saved);
+    public Mono<Category> save(Category category) {
+        return Mono.just(categoryMapper.mapToEntity(category)).flatMap(entity -> categoryRepository.save(entity))
+                .map(categoryMapper::mapToDomain);
     }
 
     @Override
-    public void delete(UUID id) {
-        categoryRepository.deleteById(id);
+    public Mono<Void> delete(UUID id) {
+        return categoryRepository.deleteById(id);
     }
 
 }
