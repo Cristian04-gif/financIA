@@ -1,5 +1,6 @@
 package com.financia.kash.shared.infrastructure.security;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -10,10 +11,12 @@ import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.r
 import com.financia.kash.usuario.infrastructure.adapter.database.repository.UserEntityRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 @Component("securityService")
 @RequiredArgsConstructor
+@Log4j2
 public class SecurityService {
 
     private final UserEntityRepository userRepository;
@@ -22,24 +25,25 @@ public class SecurityService {
     private final MovementEntityRepository movementRepository;
 
     public Mono<Boolean> isSameUser(UUID userId, String emaulAuth) {
-        return userRepository.findById(userId).map(user -> user.getEmail().equals(emaulAuth));
+        return userRepository.findById(userId).map(user -> Objects.equals(user.getEmail(), emaulAuth))
+                .defaultIfEmpty(false);
     }
 
-    public Mono<Boolean> isOwnerAccount(UUID accountId, String emailAuth) {
-        return accountRepository.isOwner(accountId, emailAuth);
-    }
+    // public Mono<Boolean> isOwnerAccount(UUID accountId, String emailAuth) {
+    // return accountRepository.isOwner(accountId, emailAuth);
+    // }
+    // public Mono<Boolean> isOwnerAccounts(UUID idSource, UUID idTarget, String
+    // emailAuth) {
 
-    public Mono<Boolean> isOwnerAccounts(UUID idSource, UUID idTarget, String emailAuth) {
+    // Mono<Boolean> sourceAccount = accountRepository.isOwner(idSource, emailAuth);
+    // Mono<Boolean> targetAccount = accountRepository.isOwner(idTarget, emailAuth);
 
-        Mono<Boolean> sourceAccount = accountRepository.isOwner(idSource, emailAuth);
-        Mono<Boolean> targetAccount = accountRepository.isOwner(idTarget, emailAuth);
+    // return Mono.zip(sourceAccount, targetAccount).flatMap(tupla -> {
+    // boolean source = tupla.getT1();
+    // boolean target = tupla.getT2();
 
-        return Mono.zip(sourceAccount, targetAccount).flatMap(tupla -> {
-            boolean source = tupla.getT1();
-            boolean target = tupla.getT2();
-
-            return Mono.just(source && target ? true : false);
-        });
-    }
+    // return Mono.just(source && target ? true : false);
+    // });
+    // }
 
 }

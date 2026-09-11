@@ -60,7 +60,7 @@ public class AccountController {
             """)
     @Operation(summary = "Cuenta", description = "Devuelve una cuenta por su id")
     @GetMapping("/my-accounts/{id}")
-    public Mono<ResponseEntity<Account>> getMayAccountById(@PathVariable UUID id) {
+    public Mono<ResponseEntity<Account>> getMyAccountById(@PathVariable UUID id) {
         return getAccountUseCase.getMyAccountById(id).map(ResponseEntity::ok);
     }
 
