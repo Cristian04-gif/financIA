@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/v1/transfers")
+@RequestMapping("/api/v1/transfers/my-transfers")
 @RequiredArgsConstructor
 @Tag(name = "Transferencias", description = "Operaciones de la API de Transferencias")
 public class TransferController {
@@ -40,7 +39,7 @@ public class TransferController {
     private final DeleteTransferUseCase deleteTransferUseCase;
 
     @Operation(summary = "Transfereencias del usuario", description = "Devuelve las transferencias del usuario logeado")
-    @GetMapping("/my-transfers")
+    @GetMapping
     public Mono<ResponseEntity<PaginationResponse<Transfer>>> getMyTransfers(@AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
@@ -52,34 +51,37 @@ public class TransferController {
                 paginationRequest).map(ResponseEntity::ok);
     }
 
-    @PreAuthorize("""
-            hasAuthority('USER') and
-                     @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-                """)
+    // @PreAuthorize("""
+    // hasAuthority('USER') and
+    // @securityService.isOwner(#id, authentication.name,
+    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
+    // """)
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
-    @GetMapping("/my-transfers/{id}")
+    @GetMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> getMyTransfer(@PathVariable UUID id) {
         return getTransferUserCase.getMyTransfer(id).map(ResponseEntity::ok);
     }
 
-    @PreAuthorize("""
-            hasAuthority('USER') and
-                     @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-                """)
+    // @PreAuthorize("""
+    // hasAuthority('USER') and
+    // @securityService.isOwner(#id, authentication.name,
+    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
+    // """)
     @Operation(summary = "Actualizar Transferencia", description = "Actualizar el monto o descripcion de la transferencia")
-    @PutMapping("/my-transfers/{id}")
+    @PutMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
             @RequestBody TransferUpdateRequest request) {
         return updateTransferUseCase.updateTransfer(id, request.newAmount(), request.newDescription())
                 .thenReturn(ResponseEntity.noContent().build());
     }
 
-    @PreAuthorize("""
-            hasAuthority('USER') and
-                     @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-                """)
+    // @PreAuthorize("""
+    // hasAuthority('USER') and
+    // @securityService.isOwner(#id, authentication.name,
+    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
+    // """)
     @Operation(summary = "Elimina una transferncia porsu id")
-    @DeleteMapping("/my-transfers/{id}")
+    @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> delete(@PathVariable UUID id) {
         return deleteTransferUseCase.deleteTransfer(id).thenReturn(ResponseEntity.noContent().build());
     }

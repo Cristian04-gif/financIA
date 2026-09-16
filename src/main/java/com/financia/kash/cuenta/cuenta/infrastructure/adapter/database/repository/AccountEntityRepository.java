@@ -15,10 +15,14 @@ public interface AccountEntityRepository extends ReactiveCrudRepository<AccountE
     Flux<AccountProject> findByUserId(UUID userId);
 
     @Query("""
-                SELECT a FROM AccountEntity a
-                INNER JOIN a.usuario u
-                WHERE a.id = :id AND u.email = :email
+            SELECT EXISTS(
+                SELECT 1
+                FROM cuentas a
+                INNER JOIN usuarios u ON u.id = a.usuario_id
+                WHERE a.id = :id
+                AND u.email = :email
+            )
             """)
-    Mono<AccountEntity> findByIdAndUserEmail(UUID id, String email);
+    Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 
 }

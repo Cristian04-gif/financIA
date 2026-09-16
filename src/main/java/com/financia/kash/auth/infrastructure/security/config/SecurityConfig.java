@@ -9,6 +9,8 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.server.WebFilter;
 
+import com.financia.kash.shared.infrastructure.utils.statics.Endpoints;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -19,34 +21,15 @@ public class SecurityConfig {
 
         private final WebFilter jwtFilter;
         private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-        // private final AuthenticationProvider authenticationProvider;
-        // private final HandlerExceptionResolver handlerExceptionResolver;
-
-        private final String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
-                        "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html" };
 
         @Bean
         public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
                 return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
-                                .authorizeExchange(exchange -> exchange.pathMatchers(ENDPOINTS_FREE).permitAll()
+                                .authorizeExchange(exchange -> exchange.pathMatchers(Endpoints.ENDPOINTS_FREE)
+                                                .permitAll()
                                                 .anyExchange().authenticated())
                                 .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                                 .build();
-                // .authorizeHttpRequests(auth ->
-                // auth.requestMatchers(ENDPOINTS_FREE).permitAll()
-                // .anyRequest().authenticated())
-                // .sessionManagement(session -> session
-                // .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // .authenticationProvider(authenticationProvider)
-                // .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                // .exceptionHandling(exception -> exception
-                // .authenticationEntryPoint((request, response,
-                // authException) -> handlerExceptionResolver
-                // .resolveException(request, response,
-                // null, authException)))
-                // .build();
         }
 }

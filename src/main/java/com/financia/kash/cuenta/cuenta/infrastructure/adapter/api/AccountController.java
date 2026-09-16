@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,18 +52,13 @@ public class AccountController {
         return ResponseEntity.ok(getAccountUseCase.getAllMyAccount(user.getId()).map(accountMapper::mapToProject));
     }
 
-    @PreAuthorize("""
-                hasAuthority('ADMIN') or
-                (hasAuthority('USER') and
-                 @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity)))
-            """)
     @Operation(summary = "Cuenta", description = "Devuelve una cuenta por su id")
     @GetMapping("/my-accounts/{id}")
     public Mono<ResponseEntity<Account>> getMyAccountById(@PathVariable UUID id) {
         return getAccountUseCase.getMyAccountById(id).map(ResponseEntity::ok);
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    // @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Crear cuenta")
     @PostMapping("")
     public Mono<ResponseEntity<AccountProject>> createAccount(@AuthenticationPrincipal UserEntity user,
@@ -75,12 +69,12 @@ public class AccountController {
 
     }
 
-    @PreAuthorize("""
-                hasAuthority('USER') and
-                @securityService.isOwnerAccounts(
-                    #request.idSource, #request.idTarget, authentication.name
-                )
-            """)
+    // @PreAuthorize("""
+    // hasAuthority('USER') and
+    // @securityService.isOwnerAccounts(
+    // #request.idSource, #request.idTarget, authentication.name
+    // )
+    // """)
     @Operation(summary = "Realizar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
     @PostMapping("/transfer")
     public Mono<ResponseEntity<Void>> transferMoney(@P("request") @RequestBody @Valid TransferMoneyRequest request,
@@ -89,21 +83,23 @@ public class AccountController {
                 request.description()).thenReturn(ResponseEntity.noContent().build());
     }
 
-    @PreAuthorize("""
-                hasAuthority("ADMIN") or
-                (hasAuthority('USER') and
-                 @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity)))
-            """)
+    // @PreAuthorize("""
+    // hasAuthority("ADMIN") or
+    // (hasAuthority('USER') and
+    // @securityService.isOwner(#id, authentication.name,
+    // T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity)))
+    // """)
     @Operation(summary = "Desactivar cuenta cuenta")
     @PutMapping("/my-accounts/{id}/changeStatus")
     public Mono<ResponseEntity<Void>> changeStatusAccount(@PathVariable UUID id) {
         return deleteAccountUseCase.changeStatusAcount(id).thenReturn(ResponseEntity.noContent().build());
     }
 
-    @PreAuthorize("""
-                hasAuthority('USER') and
-                 @securityService.isOwner(#id, authentication.name, T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity))
-            """)
+    // @PreAuthorize("""
+    // hasAuthority('USER') and
+    // @securityService.isOwner(#id, authentication.name,
+    // T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity))
+    // """)
     @Operation(summary = "Eliminar cuenta")
     @DeleteMapping("/my-accounts/{id}")
     public Mono<ResponseEntity<Void>> deleteMyAccount(@PathVariable UUID id) {

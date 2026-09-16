@@ -3,13 +3,26 @@ package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.r
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface TransferEntityRepository extends ReactiveCrudRepository<TransferEntity, UUID> {
 
     Flux<TransferEntity> findAllByUserId(UUID userId, Pageable pageable);
+
+    @Query("""
+            SELECT EXISTS(
+                SELECT 1
+                FROM transferencias t
+                INNER JOIN usuarios u ON u.id = t.usuario_id
+                WHERE t.id = :id
+                AND u.email = :email
+            )
+            """)
+    Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 }

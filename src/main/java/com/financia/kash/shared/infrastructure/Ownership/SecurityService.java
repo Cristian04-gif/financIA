@@ -1,4 +1,4 @@
-package com.financia.kash.shared.infrastructure.security;
+package com.financia.kash.shared.infrastructure.Ownership;
 
 import java.util.Objects;
 import java.util.UUID;
