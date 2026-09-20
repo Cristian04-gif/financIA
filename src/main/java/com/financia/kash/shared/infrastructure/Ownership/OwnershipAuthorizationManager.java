@@ -8,10 +8,12 @@ import org.springframework.security.web.server.authorization.AuthorizationContex
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class OwnershipAuthorizationManager {
 
     private final OwnershipAuthorizationService authorizationService;
@@ -28,6 +30,7 @@ public class OwnershipAuthorizationManager {
 
             try {
                 resourceId = UUID.fromString(id);
+                log.info("type: {}, id: {}", resourceType, resourceId);
             } catch (IllegalArgumentException e) {
                 return Mono.just(new AuthorizationDecision(false));
             }

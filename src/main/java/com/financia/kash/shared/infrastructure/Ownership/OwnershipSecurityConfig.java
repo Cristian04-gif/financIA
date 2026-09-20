@@ -25,6 +25,10 @@ public class OwnershipSecurityConfig {
 
                         .pathMatchers(Endpoints.OWNER_ACCESS_TRANSFER)
                         .access(authorizationManager.forResource(ResourceType.TRANSFER))
+
+                        .pathMatchers(Endpoints.OWNER_ACCESS_CATEGORIES)
+                        .access(authorizationManager.forResource(ResourceType.CATEGORY))
+
                         .anyExchange().authenticated())
                 .build();
     }

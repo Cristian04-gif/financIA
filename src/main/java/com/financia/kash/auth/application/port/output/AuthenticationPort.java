@@ -13,5 +13,5 @@ public interface AuthenticationPort {
 
     String generateFinalTokenWithoutPassword(UserDetails userDetails);
 
-    String getUsername(String token);
+    Mono<String> getUsername(String token);
 }

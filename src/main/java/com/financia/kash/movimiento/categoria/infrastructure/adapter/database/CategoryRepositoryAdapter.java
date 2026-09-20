@@ -8,7 +8,7 @@ import com.financia.kash.movimiento.categoria.application.port.output.CategoryRe
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryRepository;
+import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryEntityRepository;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryEntityRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
     @Override

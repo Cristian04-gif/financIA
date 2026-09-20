@@ -62,8 +62,8 @@ public class AuthenticationAdapter implements AuthenticationPort {
     }
 
     @Override
-    public String getUsername(String token) {
-        return jwtService.getUsername(token);
+    public Mono<String> getUsername(String token) {
+        return Mono.just(jwtService.getUsername(token));
     }
 
     @Override

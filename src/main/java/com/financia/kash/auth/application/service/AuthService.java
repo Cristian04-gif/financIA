@@ -74,23 +74,24 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
 
     @Override
     public Mono<AuthResponse> verify2fa(String preToken, String code) {
-        String username = authenticationPort.getUsername(preToken);
-        Mono<UserDetails> userDetails = userDetailsService.findByUsername(username);
-        Mono<User> userMono = emailForAuthenticationPort.findByEmail(username);
+        return authenticationPort.getUsername(preToken).flatMap(username -> {
+            Mono<UserDetails> userDetails = userDetailsService.findByUsername(username);
+            Mono<User> userMono = emailForAuthenticationPort.findByEmail(username);
 
-        return Mono.zip(userDetails, userMono).flatMap(tupla -> {
-            UserDetails details = tupla.getT1();
-            User user = tupla.getT2();
-            if (!authenticationPort.validatePreAuthToken(preToken, details)) {
-                return Mono.error(new RuntimeException("Token temporal inválido o expirado"));
-            }
+            return Mono.zip(userDetails, userMono).flatMap(tupla -> {
+                UserDetails details = tupla.getT1();
+                User user = tupla.getT2();
+                if (!authenticationPort.validatePreAuthToken(preToken, details)) {
+                    return Mono.error(new RuntimeException("Token temporal inválido o expirado"));
+                }
 
-            if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
-                return Mono.error(new AuthException("Código de verificación incorrecto"));
-            }
+                if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
+                    return Mono.error(new AuthException("Código de verificación incorrecto"));
+                }
 
-            String finalToken = authenticationPort.generateFinalTokenWithoutPassword(details);
-            return Mono.just(new AuthResponse(finalToken));
+                String finalToken = authenticationPort.generateFinalTokenWithoutPassword(details);
+                return Mono.just(new AuthResponse(finalToken));
+            });
         });
 
     }

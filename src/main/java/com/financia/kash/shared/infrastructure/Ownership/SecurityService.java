@@ -29,7 +29,7 @@ public class SecurityService {
                 .defaultIfEmpty(false);
     }
 
-    // public Mono<Boolean> isOwnerAccount(UUID accountId, String emailAuth) {
+    // public Mono<Boolean> isOwner(UUID accountId, String emailAuth) {
     // return accountRepository.isOwner(accountId, emailAuth);
     // }
     // public Mono<Boolean> isOwnerAccounts(UUID idSource, UUID idTarget, String

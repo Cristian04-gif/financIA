@@ -80,32 +80,32 @@ public class MovementService
 
     @Override
     public Mono<Void> deactivateCommonMovement(UUID userId, UUID movementId) {
-        userForMovementPort.isUserActive(userId).map(isactive -> {
+        return userForMovementPort.isUserActive(userId).map(isactive -> {
             if (!isactive) {
                 return Mono.error(new UserInactiveException());
             }
-            return Mono.just(true);
-        });
-        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-            motion.deactiveCommontMovement();
-            return movementRepositoryPort.save(motion);
+            return movementRepositoryPort.findById(movementId).flatMap(motion -> {
+                motion.deactiveCommontMovement();
+                return movementRepositoryPort.save(motion);
 
+            });
         }).then();
+
     }
 
     @Override
     public Mono<Void> activateCommonMovement(UUID userId, UUID movementId) {
-        userForMovementPort.isUserActive(userId).map(isactive -> {
+        return userForMovementPort.isUserActive(userId).map(isactive -> {
             if (!isactive) {
                 return Mono.error(new UserInactiveException());
             }
-            return Mono.just(true);
-        });
-        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-            motion.activeCommontMovement();
-            return movementRepositoryPort.save(motion);
+            return movementRepositoryPort.findById(movementId).flatMap(motion -> {
+                motion.activeCommontMovement();
+                return movementRepositoryPort.save(motion);
 
+            });
         }).then();
+
     }
 
     @Override
