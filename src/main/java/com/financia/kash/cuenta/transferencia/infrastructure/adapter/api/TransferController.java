@@ -7,6 +7,7 @@ import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTrans
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.dto.TransferUpdateRequest;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
@@ -39,7 +40,7 @@ public class TransferController {
     private final DeleteTransferUseCase deleteTransferUseCase;
 
     @Operation(summary = "Transfereencias del usuario", description = "Devuelve las transferencias del usuario logeado")
-    @GetMapping
+    @GetMapping()
     public Mono<ResponseEntity<PaginationResponse<Transfer>>> getMyTransfers(@AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
@@ -51,22 +52,23 @@ public class TransferController {
                 paginationRequest).map(ResponseEntity::ok);
     }
 
-    // @PreAuthorize("""
-    // hasAuthority('USER') and
-    // @securityService.isOwner(#id, authentication.name,
-    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-    // """)
+    @Operation(summary = "Transfereencias por cuenta de usuario", description = "Devuelve las transferencias de una cuenta especifica del usuario")
+    @GetMapping("/account/{id}")
+    public Mono<ResponseEntity<PaginationResponse<TransferDTO>>> getmyTransferByAccount(@PathVariable UUID id,
+            @RequestParam(required = false, defaultValue = "0") int pageNum,
+            @RequestParam(required = false, defaultValue = "10") int pageSize,
+            @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String direction) {
+        PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
+        return getTransferUserCase.getAllTransfersByAccount(id, paginationRequest).map(ResponseEntity::ok);
+    }
+
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> getMyTransfer(@PathVariable UUID id) {
         return getTransferUserCase.getMyTransfer(id).map(ResponseEntity::ok);
     }
 
-    // @PreAuthorize("""
-    // hasAuthority('USER') and
-    // @securityService.isOwner(#id, authentication.name,
-    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-    // """)
     @Operation(summary = "Actualizar Transferencia", description = "Actualizar el monto o descripcion de la transferencia")
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
@@ -75,11 +77,6 @@ public class TransferController {
                 .thenReturn(ResponseEntity.noContent().build());
     }
 
-    // @PreAuthorize("""
-    // hasAuthority('USER') and
-    // @securityService.isOwner(#id, authentication.name,
-    // T(com.financia.kash.cuenta.transferencia.infrastructure.database.entity.TransferEntity))
-    // """)
     @Operation(summary = "Elimina una transferncia porsu id")
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> delete(@PathVariable UUID id) {

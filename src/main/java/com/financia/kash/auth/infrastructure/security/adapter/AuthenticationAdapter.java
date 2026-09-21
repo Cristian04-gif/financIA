@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.financia.kash.auth.application.port.output.AuthenticationPort;
-import com.financia.kash.auth.infrastructure.security.service.JwtService;
+import com.financia.kash.auth.application.service.JwtService;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;

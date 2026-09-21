@@ -11,7 +11,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import com.financia.kash.auth.infrastructure.security.service.JwtService;
+import com.financia.kash.auth.application.service.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -83,13 +83,11 @@ public class JwtFilter implements WebFilter {
                                                                 authentication);
                                         })
                                         .onErrorResume(Exception.class, e -> {
-                                                log.error(
-                                                                "Error de autenticación: {}",
-                                                                e.getMessage());
+                                                log.error("Error de autenticación", e);
 
                                                 return unauthorized(
                                                                 exchange,
-                                                                e.getMessage());
+                                                                "Error durante la autenticación");
                                         });
 
                 } catch (Exception e) {

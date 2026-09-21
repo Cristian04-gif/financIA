@@ -17,12 +17,12 @@ public interface AccountEntityRepository extends ReactiveCrudRepository<AccountE
     @Query("""
             SELECT EXISTS(
                 SELECT 1
-                FROM cuentas a
-                INNER JOIN usuarios u ON u.id = a.usuario_id
-                WHERE a.id = :id
+                FROM cuentas c
+                INNER JOIN usuarios u ON u.id = c.usuario_id
+                WHERE c.id = :id
                 AND u.email = :email
             )
             """)
-    Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
+    Mono<Boolean> existaByIdAndOwnerEmail(UUID id, String email);
 
 }

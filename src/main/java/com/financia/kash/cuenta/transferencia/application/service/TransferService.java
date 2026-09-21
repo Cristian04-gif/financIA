@@ -13,6 +13,7 @@ import com.financia.kash.cuenta.transferencia.application.port.input.GetTransfer
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
@@ -32,8 +33,14 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     }
 
     @Override
+    public Mono<PaginationResponse<TransferDTO>> getAllTransfersByAccount(UUID accountId, PaginationRequest request) {
+        return transferRepositoryPort.findAllTransferByAccount(accountId, request);
+    }
+
+    @Override
     public Mono<Transfer> getMyTransfer(UUID transferId) {
         return transferRepositoryPort.findById(transferId);
+
     }
 
     @Override
@@ -79,7 +86,8 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     public Mono<Void> deleteTransfer(UUID transferId) {
         return transferRepositoryPort.findById(transferId).flatMap(transfer -> {
             Mono<Account> accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
-            Mono<Account> accountDestination = accountRespotoryPort.findMyAccountById(transfer.getDestinationAccount());
+            Mono<Account> accountDestination = accountRespotoryPort
+                    .findMyAccountById(transfer.getDestinationAccount());
 
             return Mono.zip(accountOrigin, accountDestination).flatMap(tuple -> {
                 Account origin = tuple.getT1();

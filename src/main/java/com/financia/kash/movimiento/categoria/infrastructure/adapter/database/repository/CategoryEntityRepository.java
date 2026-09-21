@@ -18,14 +18,14 @@ public interface CategoryEntityRepository extends ReactiveCrudRepository<Categor
     Flux<ProjectCategory> findAllByUserId(UUID id);
 
     @Query("""
-            SELECT EXISTS(
-                SELECT 1
-                FROM categorias c
-                INNER JOIN usuarios u ON u.id = c.usuario_id
-                WHERE c.id = :id
-                AND u.email = :email
-            )
-            """)
+                    SELECT EXISTS(
+            SELECT 1
+            FROM categorias c
+            LEFT JOIN usuarios u ON u.id = c.usuario_id
+            WHERE c.id = :id
+             AND (u.email = :email OR c.usuario_id IS NULL)
+                   )
+                   """)
     Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 
 }

@@ -54,25 +54,18 @@ public class CategoryController {
 
         @Operation(summary = "Categorias del usuario", description = "Devuelve las categorias creadas por el usuario logeado")
         @GetMapping("/of-user")
-        public ResponseEntity<Flux<CategoryResponse>> getGlobalCategories(@AuthenticationPrincipal UserEntity user) {
+        public ResponseEntity<Flux<CategoryResponse>> getMyCategories(@AuthenticationPrincipal UserEntity user) {
                 Flux<CategoryResponse> userCategories = getCategoriesUseCase.getAllMyCategory(user.getId())
                                 .map(categoryMapper::mapToResponse);
                 return ResponseEntity.ok(userCategories);
         }
 
-        // @PreAuthorize("""
-        // hasAuthority('ADMIN') or
-        // (hasAuthority('USER') and
-        // @securityService.isOwner(#id, authentication.name,
-        // T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity)))
-        // """)
         @Operation(summary = "Categoria", description = "Devuelve la informacion por su ID")
-        @GetMapping("/{id}")
+        @GetMapping("/category/{id}")
         public Mono<ResponseEntity<Category>> getById(@PathVariable UUID id) {
                 return getCategoriesUseCase.getById(id).map(ResponseEntity::ok);
         }
 
-        // @PreAuthorize("hasAuthority('USER')")
         @Operation(summary = "Sub-categoria", description = "Crea una categoria que necesite usuario")
         @PostMapping("/of-user")
         public Mono<ResponseEntity<Category>> createUserCategory(@AuthenticationPrincipal UserEntity user,
@@ -83,7 +76,6 @@ public class CategoryController {
                                 .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
-        // @PreAuthorize("hasAuthority('ADMIN')")
         @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
         @PostMapping("/global")
         public Mono<ResponseEntity<Category>> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
@@ -91,10 +83,6 @@ public class CategoryController {
                                 .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
-        // @PreAuthorize("""
-        // hasAuthority('USER') and @securityService.isOwner(#id, authentication.name,
-        // T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
-        // """)
         @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
         @PutMapping("/of-user/{id}")
         public Mono<ResponseEntity<Category>> updateUsercategory(@PathVariable UUID id,
@@ -107,10 +95,6 @@ public class CategoryController {
 
         }
 
-        // @PreAuthorize("""
-        // hasAuthority('USER') and @securityService.isOwner(#id, authentication.name,
-        // T(com.financia.kash.movimiento.categoria.infrastructure.adapter.database.entity.CategoryEntity))
-        // """)
         @Operation(summary = "Eliminar categoria", description = "Elimina una categoria creada por el usuario")
         @DeleteMapping("/{id}")
         public Mono<ResponseEntity<Void>> deleteUserCategory(@PathVariable UUID id) {

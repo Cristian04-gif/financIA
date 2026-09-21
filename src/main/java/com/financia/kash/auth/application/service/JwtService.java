@@ -1,4 +1,4 @@
-package com.financia.kash.auth.infrastructure.security.service;
+package com.financia.kash.auth.application.service;
 
 import java.security.Key;
 import java.util.Date;

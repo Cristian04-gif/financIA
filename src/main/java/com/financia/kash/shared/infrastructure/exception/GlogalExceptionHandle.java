@@ -47,4 +47,10 @@ public class GlogalExceptionHandle {
         ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
         return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Mono<ResponseEntity<ErrorResponse>> illegalArgumentException(Exception exception) {
+        ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
 }

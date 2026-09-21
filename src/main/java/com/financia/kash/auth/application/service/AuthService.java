@@ -13,7 +13,6 @@ import com.financia.kash.auth.application.port.output.AuthenticationPort;
 import com.financia.kash.auth.application.port.output.PasswordEncoderPort;
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
 import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
-import com.financia.kash.auth.domain.exception.AuthException;
 import com.financia.kash.auth.domain.exception.ExistingEmailException;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
@@ -82,11 +81,11 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
                 UserDetails details = tupla.getT1();
                 User user = tupla.getT2();
                 if (!authenticationPort.validatePreAuthToken(preToken, details)) {
-                    return Mono.error(new RuntimeException("Token temporal inválido o expirado"));
+                    return Mono.error(new IllegalArgumentException("Token temporal inválido o expirado"));
                 }
 
                 if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
-                    return Mono.error(new AuthException("Código de verificación incorrecto"));
+                    return Mono.error(new IllegalArgumentException("Código de verificación incorrecto"));
                 }
 
                 String finalToken = authenticationPort.generateFinalTokenWithoutPassword(details);

@@ -10,9 +10,11 @@ import org.springframework.stereotype.Repository;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.exception.TransferNotFoundException;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.mapping.TransferMapper;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.project.TransferProject;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
@@ -48,9 +50,29 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
     }
 
     @Override
+    public Mono<PaginationResponse<TransferDTO>> findAllTransferByAccount(UUID account, PaginationRequest request) {
+        PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
+                Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        request.getSortBy()));
+
+        Flux<TransferProject> pageTransfer = transferRepository.findAllByAccountId(account, pageRequest);
+        Mono<Long> count = transferRepository.countBySourceAccount(account);
+
+        return Mono.zip(pageTransfer.map(transferMapper::mapToDomainDTO).collectList(), count).map(tuple -> {
+            List<TransferDTO> list = tuple.getT1();
+            long totalElements = tuple.getT2();
+            int totalPages = (int) Math.ceil((double) totalElements / request.getPageSize());
+            boolean isLast = request.getPageNum() >= Math.max(0, totalPages - 1);
+
+            return new PaginationResponse<>(list,
+                    request.getPageNum(), request.getPageSize(), totalPages, totalElements, isLast);
+        });
+    }
+
+    @Override
     public Mono<Transfer> findById(UUID id) {
-        return transferRepository.findById(id).map(transferMapper::mapToDomain)
-                .switchIfEmpty(Mono.error(new TransferNotFoundException(id)));
+        return transferRepository.findById(id).switchIfEmpty(Mono.error(new TransferNotFoundException(id)))
+                .map(transferMapper::mapToDomain);
     }
 
     @Override

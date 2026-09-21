@@ -16,12 +16,10 @@ import com.financia.kash.movimiento.movimiento.application.port.input.GetMovemen
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
-import com.financia.kash.movimiento.movimiento.application.port.output.UserForMovementPort;
 import com.financia.kash.movimiento.movimiento.domain.model.Motion;
 import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
-import com.financia.kash.shared.domain.exception.UserInactiveException;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -35,7 +33,6 @@ public class MovementService
     private final AccountForMovementPort accountForMovementPort;
     private final SaveAccountForMovementPort saveAccountForMovementPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
-    private final UserForMovementPort userForMovementPort;
 
     @Override
     public Mono<PaginationResponse<Motion>> getAllMovements(UUID userId, PaginationRequest request) {
@@ -51,59 +48,41 @@ public class MovementService
     @Transactional
     public Mono<Motion> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
             LocalDate date, String description, boolean common) {
-        userForMovementPort.isUserActive(userId).map(isactive -> {
-            if (!isactive) {
-                return Mono.error(new UserInactiveException());
-            }
-            return Mono.just(true);
-        });
 
-        categoryRepositoryPort.existsById(categoryId).map(exist -> {
+        return categoryRepositoryPort.existsById(categoryId).flatMap(exist -> {
             if (!exist) {
                 return Mono.error(new CategoryNotFoundException(categoryId));
             }
-            return Mono.just(true);
-        });
+            return accountForMovementPort.findMyAccountById(accountId).flatMap(account -> {
+                account.validateAccountIsActive();
+                account.validateSufficientFunds(amount);
+                account.transfer(amount);
 
-        return accountForMovementPort.findMyAccountById(accountId).flatMap(account -> {
-            account.validateAccountIsActive();
-            account.validateSufficientFunds(amount);
-            account.transfer(amount);
-
-            Motion motion = new Motion(userId, accountId, categoryId, type, amount, date,
-                    description, common);
-            motion.validateTransactionType(type);
-            return movementRepositoryPort.save(motion);
+                Motion motion = new Motion(userId, accountId, categoryId, type, amount, date,
+                        description, common);
+                return movementRepositoryPort.save(motion);
+            });
         });
 
     }
 
     @Override
     public Mono<Void> deactivateCommonMovement(UUID userId, UUID movementId) {
-        return userForMovementPort.isUserActive(userId).map(isactive -> {
-            if (!isactive) {
-                return Mono.error(new UserInactiveException());
-            }
-            return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-                motion.deactiveCommontMovement();
-                return movementRepositoryPort.save(motion);
+        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
+            motion.deactiveCommontMovement();
+            return movementRepositoryPort.save(motion);
 
-            });
         }).then();
 
     }
 
     @Override
     public Mono<Void> activateCommonMovement(UUID userId, UUID movementId) {
-        return userForMovementPort.isUserActive(userId).map(isactive -> {
-            if (!isactive) {
-                return Mono.error(new UserInactiveException());
-            }
-            return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-                motion.activeCommontMovement();
-                return movementRepositoryPort.save(motion);
 
-            });
+        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
+            motion.activeCommontMovement();
+            return movementRepositoryPort.save(motion);
+
         }).then();
 
     }

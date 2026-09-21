@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.financia.kash.shared.infrastructure.utils.HasUuid;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
 import com.financia.kash.usuario.domain.model.RoleUser;
 
@@ -23,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserEntity implements UserDetails {
+public class UserEntity implements UserDetails, HasUuid {
 
     @Id
     private UUID id;

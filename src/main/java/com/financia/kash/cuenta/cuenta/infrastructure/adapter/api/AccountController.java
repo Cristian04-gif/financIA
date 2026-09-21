@@ -7,7 +7,6 @@ import com.financia.kash.cuenta.cuenta.application.port.input.CreateAccountUseCa
 import com.financia.kash.cuenta.cuenta.application.port.input.DeleteAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.GetAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.TransferMoneyUseCase;
-import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.dto.AccountRequest;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.dto.TransferMoneyRequest;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
@@ -26,8 +25,6 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,12 +50,11 @@ public class AccountController {
     }
 
     @Operation(summary = "Cuenta", description = "Devuelve una cuenta por su id")
-    @GetMapping("/my-accounts/{id}")
-    public Mono<ResponseEntity<Account>> getMyAccountById(@PathVariable UUID id) {
-        return getAccountUseCase.getMyAccountById(id).map(ResponseEntity::ok);
+    @GetMapping("/my-account/{id}")
+    public Mono<ResponseEntity<AccountProject>> getMyAccountById(@PathVariable UUID id) {
+        return getAccountUseCase.getMyAccountById(id).map(accountMapper::mapToProject).map(ResponseEntity::ok);
     }
 
-    // @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Crear cuenta")
     @PostMapping("")
     public Mono<ResponseEntity<AccountProject>> createAccount(@AuthenticationPrincipal UserEntity user,
@@ -69,41 +65,25 @@ public class AccountController {
 
     }
 
-    // @PreAuthorize("""
-    // hasAuthority('USER') and
-    // @securityService.isOwnerAccounts(
-    // #request.idSource, #request.idTarget, authentication.name
-    // )
-    // """)
     @Operation(summary = "Realizar transferencia", description = "Transfiere un monto de una a otra cuenta del usuario")
     @PostMapping("/transfer")
     public Mono<ResponseEntity<Void>> transferMoney(@RequestBody @Valid TransferMoneyRequest request,
             @AuthenticationPrincipal UserEntity user) {
-        return transferMoneyUseCase.transfer(user.getId(), request.idSource(), request.idTarget(), request.amount(),
+        return transferMoneyUseCase.transfer(request.idSource(), request.idTarget(), request.amount(),
                 request.description()).thenReturn(ResponseEntity.noContent().build());
     }
 
-    // @PreAuthorize("""
-    // hasAuthority("ADMIN") or
-    // (hasAuthority('USER') and
-    // @securityService.isOwner(#id, authentication.name,
-    // T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity)))
-    // """)
     @Operation(summary = "Desactivar cuenta cuenta")
     @PutMapping("/my-accounts/{id}/changeStatus")
     public Mono<ResponseEntity<Void>> changeStatusAccount(@PathVariable UUID id) {
         return deleteAccountUseCase.changeStatusAcount(id).thenReturn(ResponseEntity.noContent().build());
     }
 
-    // @PreAuthorize("""
-    // hasAuthority('USER') and
-    // @securityService.isOwner(#id, authentication.name,
-    // T(com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity))
-    // """)
-    @Operation(summary = "Eliminar cuenta")
-    @DeleteMapping("/my-accounts/{id}")
-    public Mono<ResponseEntity<Void>> deleteMyAccount(@PathVariable UUID id) {
-        return deleteAccountUseCase.deleteMyAccount(id).thenReturn(ResponseEntity.noContent().build());
-    }
+    // @Operation(summary = "Eliminar cuenta")
+    // @DeleteMapping("/my-accounts/{id}")
+    // public Mono<ResponseEntity<Void>> deleteMyAccount(@PathVariable UUID id) {
+    // return
+    // deleteAccountUseCase.deleteMyAccount(id).thenReturn(ResponseEntity.noContent().build());
+    // }
 
 }

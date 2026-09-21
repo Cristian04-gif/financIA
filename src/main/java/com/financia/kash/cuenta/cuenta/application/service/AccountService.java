@@ -15,8 +15,7 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
-import com.financia.kash.shared.domain.exception.UserInactiveException;
+// import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
 
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -29,40 +28,35 @@ public class AccountService
 
     private final AccountRespotoryPort accountRespotoryPort;
     private final TransferRepositoryPort transferRepositoryPort;
-    private final UserActiveForAccountPort userActiveForAccountPort;
+    // private final UserActiveForAccountPort userActiveForAccountPort;
 
     @Override
     @Transactional
-    public Mono<Void> transfer(UUID userId, UUID idSource, UUID idTarget, BigDecimal amount, String description) {
+    public Mono<Void> transfer(UUID idSource, UUID idTarget, BigDecimal amount, String description) {
 
-        return userActiveForAccountPort.isUserActive(userId).flatMap(active -> {
-            if (!active) {
-                return Mono.error(new UserInactiveException());
+        Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(idSource);
+        Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(idTarget);
+
+        return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
+            Account source = tupla.getT1();
+            Account target = tupla.getT2();
+
+            if (source.getId().equals(target.getId())) {
+                return Mono.error(
+                        new IllegalArgumentException("No puedes hacer una trasnferencia entre las mismas cuentas"));
             }
-            Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(idSource);
-            Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(idTarget);
 
-            return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
-                Account source = tupla.getT1();
-                Account target = tupla.getT2();
+            source.validateAccountIsActive();
+            source.validateSufficientFunds(amount);
 
-                if (source.getId().equals(target.getId())) {
-                    return Mono.error(
-                            new IllegalArgumentException("No puedes hacer una trasnferencia entre las mismas cuentas"));
-                }
+            source.transfer(amount);
+            target.receive(amount);
 
-                source.validateAccountIsActive();
-                source.validateSufficientFunds(amount);
+            Transfer transfer = new Transfer(source.getUserId(), idSource, idTarget, amount, description);
 
-                source.transfer(amount);
-                target.receive(amount);
-
-                Transfer transfer = new Transfer(userId, idSource, idTarget, amount, description);
-
-                return transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
-                        .then(accountRespotoryPort.save(target));
-            }).then();
-        });
+            return transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
+                    .then(accountRespotoryPort.save(target));
+        }).then();
 
     }
 
@@ -73,26 +67,25 @@ public class AccountService
 
     @Override
     public Mono<Account> getMyAccountById(UUID accountId) {
+
         return accountRespotoryPort.findMyAccountById(accountId);
+
     }
 
     @Override
     @Transactional
     public Mono<Void> deleteMyAccount(UUID accountId) {
+
         return accountRespotoryPort.findMyAccountById(accountId)
                 .flatMap(account -> accountRespotoryPort.delete(accountId));
     }
 
     @Override
     public Mono<Account> createAccount(UUID userId, String name, AccountType type, BigDecimal initialBalance) {
-        return userActiveForAccountPort.isUserActive(userId).flatMap(active -> {
-            if (!active) {
-                return Mono.error(new UserInactiveException());
-            }
 
-            Account account = new Account(userId, name, type, initialBalance);
-            return accountRespotoryPort.save(account);
-        });
+        Account account = new Account(userId, name, type, initialBalance);
+        return accountRespotoryPort.save(account);
+
     }
 
     @Override
@@ -100,8 +93,8 @@ public class AccountService
 
         return getMyAccountById(accountId).flatMap(account -> {
             account.changeStatus();
-            return accountRespotoryPort.save(account);
-        }).then();
+            return accountRespotoryPort.save(account).then();
+        });
 
     }
 

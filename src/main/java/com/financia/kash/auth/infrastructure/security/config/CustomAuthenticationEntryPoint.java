@@ -32,7 +32,7 @@ public class CustomAuthenticationEntryPoint implements ServerAuthenticationEntry
         httpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
         httpResponse.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.name(), ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED.name());
 
         try {
             byte[] bytes = objectMapper.writeValueAsBytes(errorResponse);

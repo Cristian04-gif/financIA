@@ -36,7 +36,7 @@ public class Motion {
         this.userId = userId;
         this.accountId = accountId;
         this.categoryId = categoryId;
-        this.type = type;
+        validateTransactionType(type);
         this.amount = amount;
         this.date = date;
         this.description = description;
@@ -49,6 +49,7 @@ public class Motion {
         if (!existType(typeMovement)) {
             throw new InvalidMovementTypeException(typeMovement.name());
         }
+        this.type = typeMovement;
     }
 
     private boolean existType(TypeMovement typeMoviment) {
