@@ -10,11 +10,13 @@ import com.financia.kash.shared.domain.PaginationResponse;
 import reactor.core.publisher.Mono;
 
 public interface TransferRepositoryPort {
-    Mono<PaginationResponse<Transfer>> findAllMyTransfer(UUID userId, PaginationRequest request);
+    Mono<PaginationResponse<TransferDTO>> findAllMyTransfer(UUID userId, PaginationRequest request);
 
     Mono<PaginationResponse<TransferDTO>> findAllTransferByAccount(UUID account, PaginationRequest request);
 
     Mono<Transfer> findById(UUID id);
+
+    Mono<TransferDTO> findByIdDTO(UUID id);
 
     Mono<Transfer> save(Transfer transfer);
 

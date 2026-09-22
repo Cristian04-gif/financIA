@@ -12,10 +12,8 @@ import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repositor
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface AccountMapper {
 
-    @Mapping(source = "userId", target = "userId")
     AccountEntity mapToEntity(Account account);
 
-    @Mapping(source = "userId", target = "userId")
     Account mapToDomain(AccountEntity accountEntity);
 
     @Mapping(target = "userId", ignore = true)

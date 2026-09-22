@@ -41,7 +41,8 @@ public class TransferController {
 
     @Operation(summary = "Transfereencias del usuario", description = "Devuelve las transferencias del usuario logeado")
     @GetMapping()
-    public Mono<ResponseEntity<PaginationResponse<Transfer>>> getMyTransfers(@AuthenticationPrincipal UserEntity user,
+    public Mono<ResponseEntity<PaginationResponse<TransferDTO>>> getMyTransfers(
+            @AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "creationDate") String sortBy,
@@ -65,7 +66,7 @@ public class TransferController {
 
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Transfer>> getMyTransfer(@PathVariable UUID id) {
+    public Mono<ResponseEntity<TransferDTO>> getMyTransfer(@PathVariable UUID id) {
         return getTransferUserCase.getMyTransfer(id).map(ResponseEntity::ok);
     }
 

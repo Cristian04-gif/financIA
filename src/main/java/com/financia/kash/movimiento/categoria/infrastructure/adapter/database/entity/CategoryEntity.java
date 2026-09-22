@@ -8,6 +8,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.financia.kash.movimiento.categoria.domain.model.CategoryType;
+import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryEntity {
+public class CategoryEntity implements HasUuid {
 
     @Id
     private UUID id;

@@ -11,7 +11,6 @@ import com.financia.kash.cuenta.transferencia.application.port.output.TransferRe
 import com.financia.kash.cuenta.transferencia.domain.exception.TransferNotFoundException;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
-import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.mapping.TransferMapper;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.project.TransferProject;
@@ -30,15 +29,15 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
     private final TransferMapper transferMapper;
 
     @Override
-    public Mono<PaginationResponse<Transfer>> findAllMyTransfer(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<TransferDTO>> findAllMyTransfer(UUID userId, PaginationRequest request) {
         PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
                 Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
                         request.getSortBy()));
 
-        Flux<TransferEntity> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
+        Flux<TransferProject> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
         Mono<Long> count = transferRepository.count();
-        return Mono.zip(pageTransfer.map(transferMapper::mapToDomain).collectList(), count).map(tuple -> {
-            List<Transfer> transfers = tuple.getT1();
+        return Mono.zip(pageTransfer.map(transferMapper::mapToDomainDTO).collectList(), count).map(tuple -> {
+            List<TransferDTO> transfers = tuple.getT1();
             long totalElements = tuple.getT2();
             int totalPages = (int) Math.ceil((double) totalElements / request.getPageSize());
             boolean isLats = request.getPageNum() >= Math.max(0, totalPages - 1);
@@ -84,6 +83,12 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
     @Override
     public Mono<Void> delete(UUID id) {
         return transferRepository.deleteById(id);
+    }
+
+    @Override
+    public Mono<TransferDTO> findByIdDTO(UUID id) {
+        return transferRepository.findByIdProject(id).switchIfEmpty(Mono.error(new TransferNotFoundException(id)))
+                .map(transferMapper::mapToDomainDTO);
     }
 
 }

@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
+import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountEntity {
+public class AccountEntity implements HasUuid {
     @Id
     private UUID id;
 

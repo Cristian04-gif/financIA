@@ -12,7 +12,6 @@ import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTrans
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
-import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
@@ -28,7 +27,7 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     private final AccountRespotoryPort accountRespotoryPort;
 
     @Override
-    public Mono<PaginationResponse<Transfer>> getAllMyTransfers(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<TransferDTO>> getAllMyTransfers(UUID userId, PaginationRequest request) {
         return transferRepositoryPort.findAllMyTransfer(userId, request);
     }
 
@@ -38,8 +37,8 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     }
 
     @Override
-    public Mono<Transfer> getMyTransfer(UUID transferId) {
-        return transferRepositoryPort.findById(transferId);
+    public Mono<TransferDTO> getMyTransfer(UUID transferId) {
+        return transferRepositoryPort.findByIdDTO(transferId);
 
     }
 

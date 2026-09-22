@@ -10,6 +10,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
+import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("movimientos")
-public class MotionEntity {
+public class MotionEntity implements HasUuid {
 
     @Id
     private UUID id;
@@ -45,12 +46,25 @@ public class MotionEntity {
     @Column(value = "descripcion")
     private String description;
 
-    @Column(value = "comun")
-    private Boolean common;
-
     @Column(value = "fecha_registro")
     private LocalDateTime creationDate;
 
     @Column(value = "fecha_actualizacion")
     private LocalDateTime updateDate;
+
+    /*
+     * suscripcion
+     * -------------------------
+     * id
+     * usuario_id
+     * nombre
+     * monto
+     * periodicidad
+     * fecha_inicio
+     * proxima_fecha
+     * fecha_fin
+     * estado
+     * 
+     */
+
 }

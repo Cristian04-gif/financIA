@@ -81,13 +81,6 @@ public class JwtFilter implements WebFilter {
                                                                 exchange,
                                                                 chain,
                                                                 authentication);
-                                        })
-                                        .onErrorResume(Exception.class, e -> {
-                                                log.error("Error de autenticación", e);
-
-                                                return unauthorized(
-                                                                exchange,
-                                                                "Error durante la autenticación");
                                         });
 
                 } catch (Exception e) {

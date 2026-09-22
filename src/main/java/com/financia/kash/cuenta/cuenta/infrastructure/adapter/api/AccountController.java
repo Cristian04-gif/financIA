@@ -74,7 +74,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Desactivar cuenta cuenta")
-    @PutMapping("/my-accounts/{id}/changeStatus")
+    @PutMapping("/my-account/{id}/changeStatus")
     public Mono<ResponseEntity<Void>> changeStatusAccount(@PathVariable UUID id) {
         return deleteAccountUseCase.changeStatusAcount(id).thenReturn(ResponseEntity.noContent().build());
     }

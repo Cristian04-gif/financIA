@@ -9,11 +9,9 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.server.WebFilter;
 
-import com.financia.kash.auth.infrastructure.security.service.UserStatusAuthorizationManager;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.AccountAuthorizationManager;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.TransferAuthorizationManager;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryAuthorizationManager;
-import com.financia.kash.shared.infrastructure.exception.CustomAccessDeniedHandler;
 import com.financia.kash.shared.infrastructure.utils.statics.Endpoints;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +25,6 @@ public class SecurityConfig {
         private final WebFilter jwtFilter;
         private final CustomAuthenticationEntryPoint authenticationEntryPoint;
         private final CustomAccessDeniedHandler customAccessDeniedHandler;
-        private final UserStatusAuthorizationManager statusAuthorizationManager;
         private final AccountAuthorizationManager accountAuthorizationManager;
         private final TransferAuthorizationManager transferAuthorizationManager;
         private final CategoryAuthorizationManager categoryAuthorizationManager;

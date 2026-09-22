@@ -37,7 +37,6 @@ public class UserController {
     private final DeleteUserUseCase deleteUserUseCase;
     private final UserMapper userMapper;
 
-    // @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Informacion personal", description = "Devuelve la informacion de usuario logeado")
     @GetMapping
     public Mono<ResponseEntity<UserResponseDTO>> myInfo(@AuthenticationPrincipal UserEntity user) {
@@ -45,7 +44,6 @@ public class UserController {
         return informationUseCase.findMe(id).map(userMapper::mapToDTO).map(value -> ResponseEntity.ok(value));
     }
 
-    // @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Actualizar contraseña")
     @PutMapping("/password")
     public Mono<ResponseEntity<Void>> updatePassword(@AuthenticationPrincipal UserEntity user,
@@ -56,7 +54,6 @@ public class UserController {
 
     }
 
-    // @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Suspender usuario", description = "Suspende al usuario por 30 dias antes de ser eliminado")
     @DeleteMapping
     public Mono<ResponseEntity<Void>> suspendUser(@AuthenticationPrincipal UserEntity user) {

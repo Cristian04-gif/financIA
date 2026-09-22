@@ -17,6 +17,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @Tag(name = "Categorias", description = "Operaciones de la API de Categoria")
+@Log4j2
 public class CategoryController {
 
         private final GetCategoriesUseCase getCategoriesUseCase;
