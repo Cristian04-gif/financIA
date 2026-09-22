@@ -1,7 +1,7 @@
 package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
@@ -39,6 +39,6 @@ public class TransferEntity implements HasUuid {
     private String description;
 
     @Column(value = "fecha_creacion")
-    private LocalDate creationDate;
+    private LocalDateTime creationDate;
 
 }

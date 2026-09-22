@@ -11,11 +11,12 @@ public class Endpoints {
         };
 
         public final static String OWNER_ACCESS_ACCOUNT[] = {
-                        "/api/v1/accounts/my-account/{id}", "/api/v1/accounts/my-account/{id}/changeStatus"
+                        "/api/v1/accounts/my-account/{id}", "/api/v1/accounts/my-account/{id}/changeStatus",
+                        "/api/v1/transfers/my-transfers/account/{id}"
         };
 
         public final static String OWNER_ACCESS_TRANSFER[] = {
-                        "/api/v1/transfers/my-transfers/account/{id}", "/api/v1/transfers/my-transfers/{id}"
+                        "/api/v1/transfers/my-transfers/{id}"
         };
 
         public final static String OWNER_ACCESS_CATEGORIES[] = {
