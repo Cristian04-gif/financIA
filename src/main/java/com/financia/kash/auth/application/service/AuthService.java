@@ -14,6 +14,7 @@ import com.financia.kash.auth.application.port.output.PasswordEncoderPort;
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
 import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
 import com.financia.kash.auth.domain.exception.ExistingEmailException;
+import com.financia.kash.auth.domain.exception.InvalidTwoFactorCodeException;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
 import com.financia.kash.auth.domain.model.TwoFactorAuth;
@@ -85,7 +86,7 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
                 }
 
                 if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
-                    return Mono.error(new IllegalArgumentException("Código de verificación incorrecto"));
+                    return Mono.error(new InvalidTwoFactorCodeException());
                 }
 
                 String finalToken = authenticationPort.generateFinalTokenWithoutPassword(details);

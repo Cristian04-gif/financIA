@@ -21,6 +21,7 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg17
+    container_name: financia
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

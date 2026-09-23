@@ -14,25 +14,32 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import de.taimos.totp.TOTP;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 public class TwoFactorAuth {
+
+    private final SecureRandom secureRandom = new SecureRandom();
+    private final Base32 base32 = new Base32();
+
     // 1. Genera un secreto aleatorio Base32 para el usuario
     public String generateNewSecret() {
-        SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[20];
-        random.nextBytes(bytes);
-        Base32 base32 = new Base32();
+        secureRandom.nextBytes(bytes);
         return base32.encodeToString(bytes);
     }
 
     // 2. Genera la URL que leerá Google Authenticator
     public String getQRBarcodeURL(String secret, String username) {
-        return "otpauth://totp/MiApp:" + username + "?secret=" + secret + "&issuer=MiApp";
+        String issuer = "FinancIA";
+
+        return String.format(
+                "otpauth://totp/%s:%s?secret=%s&issuer=%s", issuer, username, secret, issuer);
     }
 
     // 3. Convierte la URL en una imagen QR en formato Base64 para el Frontend
-    public String generateQRCodeBase64(String qrCodeText) {
+    private String generateQRCodeBase64(String qrCodeText) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, 250, 250);
@@ -44,9 +51,20 @@ public class TwoFactorAuth {
         }
     }
 
+    public Mono<String> generateQRCodeBase64Reactive(String qrCodeText) {
+        return Mono.fromCallable(() -> generateQRCodeBase64(qrCodeText)).subscribeOn(Schedulers.boundedElastic());
+    }
+
     // 4. Valida si el código de 6 dígitos es correcto en el tiempo actual
     public boolean verifyCode(String secret, String code) {
-        Base32 base32 = new Base32();
+        if (secret == null || code == null) {
+            return false;
+        }
+
+        if (!code.matches("\\d{6}")) {
+            return false;
+        }
+
         byte[] bytes = base32.decode(secret);
         String hexSecret = Hex.encodeHexString(bytes);
         // Calcula el código TOTP actual basado en el secreto hexadecimal
