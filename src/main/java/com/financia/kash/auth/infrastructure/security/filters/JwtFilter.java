@@ -1,6 +1,7 @@
 package com.financia.kash.auth.infrastructure.security.filters;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,11 @@ public class JwtFilter implements WebFilter {
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+                if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+                        return chain.filter(exchange);
+                }
+
                 String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
                 String path = exchange.getRequest().getPath().value();
