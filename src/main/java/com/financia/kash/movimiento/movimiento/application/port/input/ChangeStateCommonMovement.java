@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import reactor.core.publisher.Mono;
 
-public interface ChangeStateCommonMotion {
+public interface ChangeStateCommonMovement {
     Mono<Void> deactivateCommonMovement(UUID userid, UUID movementId);
 
     Mono<Void> activateCommonMovement(UUID userid, UUID movementId);

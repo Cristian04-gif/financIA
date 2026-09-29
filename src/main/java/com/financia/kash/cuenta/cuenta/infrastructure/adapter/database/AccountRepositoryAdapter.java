@@ -31,8 +31,8 @@ public class AccountRepositoryAdapter
 
     @Override
     public Mono<Account> findMyAccountById(UUID accountId) {
-        return accountRepository.findById(accountId).map(accountMapper::mapToDomain)
-                .switchIfEmpty(Mono.error(new AccountNotFoundException(accountId)));
+        return accountRepository.findById(accountId).switchIfEmpty(Mono.error(new AccountNotFoundException(accountId)))
+                .map(accountMapper::mapToDomain);
     }
 
     @Override

@@ -31,6 +31,8 @@ public interface TransferEntityRepository extends ReactiveCrudRepository<Transfe
                         """)
         Flux<TransferProject> findAllByUserId(UUID userId, Pageable pageable);
 
+        Mono<Long> countByUserId(UUID userId);
+
         @Query("""
                         SELECT t.id,
                                    t.cuenta_origen_id AS cuenta_origen_id,
@@ -43,7 +45,7 @@ public interface TransferEntityRepository extends ReactiveCrudRepository<Transfe
                             FROM cuentas c
                             INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
                             INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
-                            WHERE t.id = :userId
+                            WHERE t.id = :id
                         """)
         Mono<TransferProject> findByIdProject(UUID id);
 

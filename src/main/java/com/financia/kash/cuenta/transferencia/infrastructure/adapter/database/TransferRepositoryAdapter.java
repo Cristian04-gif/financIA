@@ -35,7 +35,7 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
                         request.getSortBy()));
 
         Flux<TransferProject> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
-        Mono<Long> count = transferRepository.count();
+        Mono<Long> count = transferRepository.countByUserId(userId);
         return Mono.zip(pageTransfer.map(transferMapper::mapToDomainDTO).collectList(), count).map(tuple -> {
             List<TransferDTO> transfers = tuple.getT1();
             long totalElements = tuple.getT2();

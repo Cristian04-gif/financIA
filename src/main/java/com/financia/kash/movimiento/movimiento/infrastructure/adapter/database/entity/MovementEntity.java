@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("movimientos")
-public class MotionEntity implements HasUuid {
+public class MovementEntity implements HasUuid {
 
     @Id
     private UUID id;
@@ -51,20 +51,5 @@ public class MotionEntity implements HasUuid {
 
     @Column(value = "fecha_actualizacion")
     private LocalDateTime updateDate;
-
-    /*
-     * suscripcion
-     * -------------------------
-     * id
-     * usuario_id
-     * nombre
-     * monto
-     * periodicidad
-     * fecha_inicio
-     * proxima_fecha
-     * fecha_fin
-     * estado
-     * 
-     */
 
 }

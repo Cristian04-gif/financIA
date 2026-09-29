@@ -15,8 +15,9 @@ import com.financia.kash.movimiento.movimiento.application.port.input.GetMovemen
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
-import com.financia.kash.movimiento.movimiento.domain.model.Motion;
+import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
+import com.financia.kash.movimiento.movimiento.domain.model.dto.MovementDTO;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
@@ -34,18 +35,19 @@ public class MovementService
     private final CategoryRepositoryPort categoryRepositoryPort;
 
     @Override
-    public Mono<PaginationResponse<Motion>> getAllMovements(UUID userId, PaginationRequest request) {
+    public Mono<PaginationResponse<MovementDTO>> getAllMovements(UUID userId, PaginationRequest request) {
         return movementRepositoryPort.findAllMyMotions(userId, request);
     }
 
     @Override
-    public Mono<Motion> getMovementById(UUID movementId) {
-        return movementRepositoryPort.findById(movementId);
+    public Mono<MovementDTO> getMovementById(UUID movementId) {
+        return movementRepositoryPort.findByIdDTO(movementId);
     }
 
     @Override
     @Transactional
-    public Mono<Motion> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
+    public Mono<Movement> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type,
+            BigDecimal amount,
             LocalDate date, String description, boolean common) {
 
         return categoryRepositoryPort.existsById(categoryId).flatMap(exist -> {
@@ -57,34 +59,13 @@ public class MovementService
                 account.validateSufficientFunds(amount);
                 account.transfer(amount);
 
-                Motion motion = new Motion(userId, accountId, categoryId, type, amount, date,
+                Movement motion = new Movement(userId, accountId, categoryId, type, amount, date,
                         description);
                 return movementRepositoryPort.save(motion);
             });
         });
 
     }
-
-    // @Override
-    // public Mono<Void> deactivateCommonMovement(UUID userId, UUID movementId) {
-    // return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-    // motion.deactiveCommontMovement();
-    // return movementRepositoryPort.save(motion);
-
-    // }).then();
-
-    // }
-
-    // @Override
-    // public Mono<Void> activateCommonMovement(UUID userId, UUID movementId) {
-
-    // return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-    // motion.activeCommontMovement();
-    // return movementRepositoryPort.save(motion);
-
-    // }).then();
-
-    // }
 
     @Override
     public Mono<Void> deleteMovement(UUID movementId) {

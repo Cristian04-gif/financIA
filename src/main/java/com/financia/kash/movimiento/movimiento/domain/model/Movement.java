@@ -14,7 +14,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor(onConstructor_ = { @Default })
-public class Motion {
+public class Movement {
 
     private final UUID id;
     private final UUID userId;
@@ -27,7 +27,7 @@ public class Motion {
     private final LocalDateTime creationDate;
     private LocalDateTime updateDate;
 
-    public Motion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
+    public Movement(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
             LocalDate date, String description) {
         this.id = null;
         this.userId = userId;
@@ -54,22 +54,6 @@ public class Motion {
         }
         return Arrays.stream(TypeMovement.values()).anyMatch(e -> e.equals(typeMoviment));
     }
-
-    // public void deactiveCommontMovement() {
-    // if (!this.common) {
-    // throw new MovementAlreadyDeactivatedException(this.id);
-    // }
-    // this.common = false;
-    // updateDate();
-    // }
-
-    // public void activeCommontMovement() {
-    // if (this.common) {
-    // throw new MovementAlreadyActivatedException();
-    // }
-    // this.common = true;
-    // updateDate();
-    // }
 
     private void updateDate() {
         this.updateDate = LocalDateTime.now();
