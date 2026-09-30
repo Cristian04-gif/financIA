@@ -34,6 +34,9 @@ public class MovementEntity implements HasUuid {
     @Column(value = "categoria_id")
     private UUID categoryId;
 
+    @Column(value = "suscripcion_id")
+    private UUID subscriptionId;
+
     @Column(value = "tipo")
     private TypeMovement type;
 

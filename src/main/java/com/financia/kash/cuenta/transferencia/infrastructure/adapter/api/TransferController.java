@@ -45,7 +45,7 @@ public class TransferController {
             @AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
-            @RequestParam(required = false, defaultValue = "creationDate") String sortBy,
+            @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
 
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);

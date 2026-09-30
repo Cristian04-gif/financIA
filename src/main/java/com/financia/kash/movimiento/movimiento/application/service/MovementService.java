@@ -48,7 +48,7 @@ public class MovementService
     @Transactional
     public Mono<Movement> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type,
             BigDecimal amount,
-            LocalDate date, String description, boolean common) {
+            LocalDate date, String description) {
 
         return categoryRepositoryPort.existsById(categoryId).flatMap(exist -> {
             if (!exist) {
@@ -59,26 +59,25 @@ public class MovementService
                 account.validateSufficientFunds(amount);
                 account.transfer(amount);
 
-                Movement motion = new Movement(userId, accountId, categoryId, type, amount, date,
+                Movement motion = new Movement(userId, accountId, categoryId, null, type, amount, date,
                         description);
-                return movementRepositoryPort.save(motion);
+
+                return movementRepositoryPort.save(motion)
+                        .flatMap(mot -> saveAccountForMovementPort.save(account).thenReturn(mot));
             });
         });
 
     }
 
     @Override
+    @Transactional
     public Mono<Void> deleteMovement(UUID movementId) {
-        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-            accountForMovementPort.findMyAccountById(motion.getAccountId())
-                    .flatMap(account -> {
-                        account.receive(motion.getAmount());
-                        return saveAccountForMovementPort.save(account);
-                    });
+        return movementRepositoryPort.findById(movementId).flatMap(
+                movement -> accountForMovementPort.findMyAccountById(movement.getAccountId()).flatMap(account -> {
+                    account.receive(movement.getAmount());
+                    return saveAccountForMovementPort.save(account).then(movementRepositoryPort.delete(movementId));
+                }));
 
-            return movementRepositoryPort.delete(movementId);
-
-        });
     }
 
 }

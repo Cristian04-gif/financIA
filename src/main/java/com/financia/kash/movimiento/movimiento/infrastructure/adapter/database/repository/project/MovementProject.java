@@ -11,8 +11,8 @@ public record MovementProject(
                 UUID category_id,
                 String category_name,
                 String category_type,
-                BigDecimal amount,
-                String description,
+                BigDecimal monto,
+                String descripcion,
                 LocalDate date_issue) {
 
 }

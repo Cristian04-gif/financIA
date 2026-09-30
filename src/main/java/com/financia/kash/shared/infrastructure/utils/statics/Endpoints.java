@@ -6,10 +6,6 @@ public class Endpoints {
                         "/swagger-ui/**",
                         "/swagger-ui.html" };
 
-        public final static String ACCESS_USER_ACTIVE[] = {
-                        "/api/v1/categories/global", "/api/v1/categories/of-user"
-        };
-
         public final static String OWNER_ACCESS_ACCOUNT[] = {
                         "/api/v1/accounts/my-account/{id}", "/api/v1/accounts/my-account/{id}/changeStatus",
                         "/api/v1/transfers/my-transfers/account/{id}"
@@ -21,5 +17,13 @@ public class Endpoints {
 
         public final static String OWNER_ACCESS_CATEGORIES[] = {
                         "/api/v1/categories/category/{id}", "/api/v1/categories/of-user/{id}"
+        };
+
+        public final static String OWNER_ACCESS_MOVEMENTS[] = {
+                        "/api/v1/movements/my-movements/{id}"
+        };
+
+        public final static String OWNER_ACCESS_SUBSCRIPTIONS[] = {
+                        "/api/v1/subscriptions/my-subs/{id}"
         };
 }

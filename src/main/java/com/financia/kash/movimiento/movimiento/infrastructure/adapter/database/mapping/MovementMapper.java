@@ -19,8 +19,13 @@ public interface MovementMapper {
 
     @Mapping(source = "movement_id", target = "movementId")
     @Mapping(source = "account_id", target = "account.id")
+    @Mapping(source = "account_name", target = "account.name")
     @Mapping(source = "category_id", target = "category.id")
+    @Mapping(source = "category_name", target = "category.name")
+    @Mapping(source = "category_type", target = "category.type")
     @Mapping(source = "date_issue", target = "dateIssue")
+    @Mapping(source = "monto", target = "amount")
+    @Mapping(source = "descripcion", target = "description")
     MovementDTO mapToDomainDTO(MovementProject movementProject);
 
 }

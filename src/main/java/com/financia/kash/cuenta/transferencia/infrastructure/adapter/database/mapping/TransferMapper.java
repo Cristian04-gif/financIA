@@ -19,9 +19,9 @@ public interface TransferMapper {
     @Mapping(source = "userId", target = "userId")
     TransferEntity mapToEntity(Transfer transfer);
 
-    @Mapping(source = "cuenta_origen_id", target = "accountOrigin.accountId")
+    @Mapping(source = "cuenta_origen_id", target = "accountOrigin.id")
     @Mapping(source = "nombre_o", target = "accountOrigin.name")
-    @Mapping(source = "cuenta_destino_id", target = "accountDestination.accountId")
+    @Mapping(source = "cuenta_destino_id", target = "accountDestination.id")
     @Mapping(source = "nombre_d", target = "accountDestination.name")
     @Mapping(source = "descripcion", target = "description")
     @Mapping(source = "fecha_creacion", target = "creationDate")

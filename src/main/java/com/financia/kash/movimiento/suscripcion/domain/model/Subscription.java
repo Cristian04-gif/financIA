@@ -17,6 +17,8 @@ public class Subscription {
 
     private final UUID id;
     private final UUID userId;
+    private final UUID payingAccountId;
+    private final UUID categoryId;
     private String name;
     private BigDecimal amount;
     private SubscriptionFrequency frequency;
@@ -24,14 +26,15 @@ public class Subscription {
     private LocalDate dateNextPayment;
     private Boolean active;
 
-    public static Subscription create(UUID userId, String name, BigDecimal amount, SubscriptionFrequency frequency,
+    public static Subscription create(UUID userId, UUID payingAccountId, UUID categoryId, String name,
+            BigDecimal amount,
+            SubscriptionFrequency frequency,
             Integer payDay) {
         existType(frequency);
         amountValidated(amount);
-        LocalDate nextPay = LocalDate.now()
-                .plusMonths(1)
-                .withDayOfMonth(payDay);
-        return new Subscription(null, userId, name, amount, frequency, payDay, nextPay, true);
+        LocalDate nextPay = setPaymentDate(payDay, frequency);
+        return new Subscription(null, userId, payingAccountId, categoryId, name, amount, frequency, payDay, nextPay,
+                true);
     }
 
     public void assignFrequency(SubscriptionFrequency frequency) {
@@ -58,10 +61,31 @@ public class Subscription {
         this.active = !this.active;
     }
 
-    public void setPaymentDate(Integer payDay) {
-        this.dateNextPayment = LocalDate.now()
-                .plusMonths(1)
-                .withDayOfMonth(payDay);
+    public static LocalDate setPaymentDate(Integer payDay, SubscriptionFrequency frequency) {
+
+        LocalDate today = LocalDate.now();
+
+        switch (frequency) {
+            case MENSUAL -> {
+                LocalDate nextPay = today.plusMonths(1);
+                int day = Math.min(payDay, nextPay.lengthOfMonth());
+                return nextPay.withDayOfMonth(day);
+            }
+
+            case ANUAL -> {
+                LocalDate nextPay = today.plusYears(1);
+                int day = Math.min(payDay, nextPay.lengthOfMonth());
+                return nextPay.withDayOfMonth(day);
+            }
+
+            case SEMANAL -> {
+                LocalDate nextPay = today.plusWeeks(1);
+                int day = Math.min(payDay, nextPay.lengthOfMonth());
+                return nextPay.withDayOfMonth(day);
+            }
+
+            default -> throw new FrequencyNotFoundException();
+        }
     }
 
     /*

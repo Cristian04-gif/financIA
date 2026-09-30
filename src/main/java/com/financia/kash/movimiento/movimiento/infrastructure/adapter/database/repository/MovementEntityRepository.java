@@ -22,8 +22,8 @@ public interface MovementEntityRepository extends ReactiveCrudRepository<Movemen
                 ca.id AS category_id,
                 ca.nombre AS category_name,
                 ca.tipo AS category_type,
-                m.monto AS amount,
-                m.descripcion AS description,
+                m.monto AS monto,
+                m.descripcion AS descripcion,
                 m.fecha_emision AS date_issue
                 FROM movimientos m
             INNER JOIN cuentas cu ON m.cuenta_id = cu.id
@@ -42,8 +42,8 @@ public interface MovementEntityRepository extends ReactiveCrudRepository<Movemen
                 ca.id AS category_id,
                 ca.nombre AS category_name,
                 ca.tipo AS category_type,
-                m.monto AS amount,
-                m.descripcion AS description,
+                m.monto AS monto,
+                m.descripcion AS descripcion,
                 m.fecha_emision AS date_issue
                 FROM movimientos m
             INNER JOIN cuentas cu ON m.cuenta_id = cu.id
@@ -51,4 +51,15 @@ public interface MovementEntityRepository extends ReactiveCrudRepository<Movemen
             WHERE m.id = :id
                         """)
     Mono<MovementProject> findByIdProject(UUID id);
+
+    @Query("""
+            SELECT EXISTS(
+                SELECT 1
+                FROM movimientos m
+                LEFT JOIN usuarios u ON u.id = m.usuario_id
+                WHERE m.id = :id
+                AND u.email = :email
+            )
+                   """)
+    Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 }

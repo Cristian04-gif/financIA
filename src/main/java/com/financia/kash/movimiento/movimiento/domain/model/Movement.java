@@ -20,6 +20,7 @@ public class Movement {
     private final UUID userId;
     private final UUID accountId;
     private final UUID categoryId;
+    private final UUID subscriptionId;
     private TypeMovement type;
     private BigDecimal amount;
     private LocalDate date;
@@ -27,12 +28,14 @@ public class Movement {
     private final LocalDateTime creationDate;
     private LocalDateTime updateDate;
 
-    public Movement(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
+    public Movement(UUID userId, UUID accountId, UUID categoryId, UUID subscriptionId, TypeMovement type,
+            BigDecimal amount,
             LocalDate date, String description) {
         this.id = null;
         this.userId = userId;
         this.accountId = accountId;
         this.categoryId = categoryId;
+        this.subscriptionId = subscriptionId;
         validateTransactionType(type);
         this.amount = amount;
         this.date = date;

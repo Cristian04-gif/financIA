@@ -9,6 +9,7 @@ import com.financia.kash.movimiento.suscripcion.domain.model.SubscriptionFrequen
 import reactor.core.publisher.Mono;
 
 public interface CreateSubscriptionUseCase {
-    Mono<Subscription> create(UUID userId, String name, BigDecimal amount, SubscriptionFrequency frequency,
+    Mono<Subscription> create(UUID userId, UUID payingAccountId, UUID categoryId, String name, BigDecimal amount,
+            SubscriptionFrequency frequency,
             Integer payDay);
 }

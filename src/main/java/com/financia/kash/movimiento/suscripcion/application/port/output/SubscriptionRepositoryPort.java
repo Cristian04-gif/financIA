@@ -1,5 +1,6 @@
 package com.financia.kash.movimiento.suscripcion.application.port.output;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.financia.kash.movimiento.suscripcion.domain.model.Subscription;
@@ -14,5 +15,7 @@ public interface SubscriptionRepositoryPort {
     Mono<Subscription> findById(UUID subsId);
 
     Mono<Subscription> save(Subscription subscription);
+
+    Flux<Subscription> findSubscriptionsExpiringToday(LocalDate date);
 
 }

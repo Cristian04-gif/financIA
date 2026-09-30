@@ -11,5 +11,5 @@ import reactor.core.publisher.Mono;
 
 public interface CreateMovimentUseCase {
     Mono<Movement> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
-            LocalDate date, String description, boolean common);
+            LocalDate date, String description);
 }
