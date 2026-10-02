@@ -12,6 +12,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,7 +54,7 @@ public class SubscriptionController {
     @Operation(summary = "Suscripciones", description = "Registra una suscripcion del usuario")
     @PostMapping
     public Mono<ResponseEntity<Subscription>> save(@AuthenticationPrincipal UserEntity user,
-            @RequestBody CreateSubscriptionRequest request) {
+            @RequestBody @Valid CreateSubscriptionRequest request) {
         return createSubscriptionUseCase.create(user.getId(), request.payingAccountId(), request.categoryId(),
                 request.name(), request.amount(), request.frequency(), request.payDay())
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));

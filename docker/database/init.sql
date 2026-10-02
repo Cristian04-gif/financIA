@@ -82,8 +82,7 @@ CREATE TABLE IF NOT EXISTS cuentas (
             tipo IN (
                 'EFECTIVO',
                 'BANCO',
-                'TARJETA DE CRÉDITO',
-                'AHORROS',
+                'BILLETERA_DIGITAL',
                 'OTRO'
             )
         )

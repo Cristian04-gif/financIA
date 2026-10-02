@@ -15,6 +15,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -62,7 +63,7 @@ public class MovementController {
     @Operation(summary = "Movimiento", description = "Registra un movimiento del usuario")
     @PostMapping
     public Mono<ResponseEntity<Movement>> save(@AuthenticationPrincipal UserEntity user,
-            @RequestBody CreateMovementRequest request) {
+            @RequestBody @Valid CreateMovementRequest request) {
         return createMovimentUseCase
                 .createMotion(user.getId(), request.accountId(), request.categoryId(), request.type(), request.amount(),
                         request.date(), request.description())
