@@ -9,12 +9,12 @@ import org.springframework.security.web.server.authorization.ServerAccessDeniedH
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

@@ -9,6 +9,8 @@ import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundE
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryEntityRepository;
+import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
+import com.financia.kash.usuario.domain.exception.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -16,7 +18,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
+public class CategoryRepositoryAdapter implements CategoryRepositoryPort, CategoryForVoucherPort {
 
     private final CategoryEntityRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -52,6 +54,17 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     @Override
     public Mono<Void> delete(UUID id) {
         return categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public Flux<Category> findAllGlobalsAndByuserId(UUID userId) {
+        return categoryRepository.findAllByUserIdOrParentCategoryIdIsNull(userId)
+                .switchIfEmpty(Mono.error(new UserNotFoundException(userId))).map(categoryMapper::mapToDomain);
+    }
+
+    @Override
+    public Flux<Category> findCategoryByNameAndUserId(UUID userId, String name) {
+        return categoryRepository.findByUserIdAndName(userId, name).map(categoryMapper::mapToDomain);
     }
 
 }

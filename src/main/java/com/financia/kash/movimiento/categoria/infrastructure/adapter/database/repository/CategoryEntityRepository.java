@@ -15,6 +15,10 @@ public interface CategoryEntityRepository extends ReactiveCrudRepository<Categor
 
     Flux<ProjectCategory> findByUserIdIsNullAndParentCategoryIdIsNull();
 
+    Flux<ProjectCategory> findAllByUserIdOrParentCategoryIdIsNull(UUID userId);
+
+    Flux<ProjectCategory> findByUserIdAndName(UUID userId, String name);;
+
     Flux<ProjectCategory> findAllByUserId(UUID id);
 
     @Query("""
