@@ -8,9 +8,16 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import com.financia.kash.presupuesto.application.port.output.*;
 import com.financia.kash.presupuesto.application.service.BudgetService;
+import com.financia.kash.presupuesto.application.service.BudgetConsumptionService;
+import com.financia.kash.presupuesto.application.port.input.GetBudgetUseCase;
 
 @Configuration
 public class BudgetConfiguration {
+    @Bean
+    public BudgetConsumptionService budgetConsumptionService(GetBudgetUseCase budgets, BudgetExpensePort expenses) {
+        return new BudgetConsumptionService(budgets, expenses);
+    }
+
     @Bean
     public BudgetService budgetService(BudgetRepositoryPort repository, BudgetCategoryPort categories,
             BudgetOwnerPort owners) {
@@ -22,4 +29,3 @@ public class BudgetConfiguration {
         return TransactionalOperator.create(transactionManager);
     }
 }
-
