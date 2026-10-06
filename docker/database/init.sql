@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS movimientos (
     cuenta_id UUID NOT NULL,
     categoria_id UUID NOT NULL,
     usuario_id UUID NOT NULL,
-    suscripcion_id UUID NULL
+    suscripcion_id UUID NULL,
 
     CONSTRAINT movimientos_pkey
         PRIMARY KEY (id),
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS suscripciones (
         CHECK (monto > 0),
 
     CONSTRAINT chk_suscripciones_dia_pago
-        CHECK (dia_pago BETWEEN 1 AND 31)
+        CHECK (dia_pago BETWEEN 1 AND 31),
     
     CONSTRAINT suscripciones_frecuencia_cobro_check
         CHECK(
