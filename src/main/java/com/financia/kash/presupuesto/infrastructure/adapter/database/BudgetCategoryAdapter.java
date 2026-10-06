@@ -22,4 +22,3 @@ public class BudgetCategoryAdapter implements BudgetCategoryPort {
                 Boolean.TRUE.equals(category.getActive())));
     }
 }
-

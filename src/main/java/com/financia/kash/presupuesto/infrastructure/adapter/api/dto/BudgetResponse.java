@@ -10,4 +10,3 @@ public record BudgetResponse(UUID id, UUID userId, String name, LocalDate period
         BigDecimal amountLimitTotal, boolean active, LocalDateTime creationDate, LocalDateTime updateDate,
         List<BudgetCategoryResponse> categories) {
 }
-

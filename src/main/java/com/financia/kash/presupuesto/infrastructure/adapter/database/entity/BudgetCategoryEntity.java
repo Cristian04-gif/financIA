@@ -21,4 +21,3 @@ public class BudgetCategoryEntity implements HasUuid {
     @Column("monto_limite")
     private BigDecimal amountLimit;
 }
-

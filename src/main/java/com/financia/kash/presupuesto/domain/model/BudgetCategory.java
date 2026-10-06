@@ -13,4 +13,3 @@ public record BudgetCategory(UUID id, UUID categoryId, BigDecimal amountLimit) {
         amountLimit = BudgetAmounts.positive(amountLimit);
     }
 }
-

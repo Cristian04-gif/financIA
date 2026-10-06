@@ -8,4 +8,3 @@ public record BudgetCategoryRequest(
         @NotNull UUID categoryId,
         @NotNull @Positive @Digits(integer = 17, fraction = 2) BigDecimal amountLimit) {
 }
-

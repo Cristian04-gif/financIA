@@ -10,4 +10,3 @@ public interface GetBudgetUseCase {
     Flux<Budget> getAll(UUID userId);
     Mono<Budget> getById(UUID userId, UUID budgetId);
 }
-

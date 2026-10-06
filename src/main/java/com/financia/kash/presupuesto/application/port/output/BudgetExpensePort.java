@@ -8,4 +8,3 @@ import reactor.core.publisher.Flux;
 public interface BudgetExpensePort {
     Flux<BudgetExpense> findExpensesByCategory(UUID userId, LocalDate start, LocalDate end);
 }
-

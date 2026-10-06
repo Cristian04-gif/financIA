@@ -7,4 +7,3 @@ import reactor.core.publisher.Mono;
 public interface GetBudgetConsumptionUseCase {
     Mono<BudgetConsumption> getConsumption(UUID userId, UUID budgetId);
 }
-

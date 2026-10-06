@@ -28,4 +28,3 @@ CREATE INDEX IF NOT EXISTS idx_presupuesto_categorias_categoria
     ON presupuesto_categorias(categoria_id);
 
 COMMIT;
-

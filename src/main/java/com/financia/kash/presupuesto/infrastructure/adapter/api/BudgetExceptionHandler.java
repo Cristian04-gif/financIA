@@ -48,4 +48,3 @@ public class BudgetExceptionHandler {
         return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage(), ex.getClass().getSimpleName()));
     }
 }
-

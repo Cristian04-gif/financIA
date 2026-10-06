@@ -5,4 +5,3 @@ public class BudgetValidationException extends RuntimeException {
         super(message);
     }
 }
-

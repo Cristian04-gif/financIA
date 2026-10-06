@@ -66,4 +66,3 @@ class BudgetConsumptionServiceTest {
         verifyNoInteractions(expenses);
     }
 }
-

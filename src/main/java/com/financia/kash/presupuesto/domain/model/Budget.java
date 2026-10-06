@@ -60,4 +60,3 @@ public record Budget(
                 active, creationDate, now, categories);
     }
 }
-

@@ -5,4 +5,3 @@ public class BudgetAccessDeniedException extends RuntimeException {
         super("Se requiere un usuario activo para administrar presupuestos");
     }
 }
-

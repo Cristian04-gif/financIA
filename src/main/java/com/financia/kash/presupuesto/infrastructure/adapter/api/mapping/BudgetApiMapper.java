@@ -15,4 +15,3 @@ public interface BudgetApiMapper {
     BudgetConsumptionResponse toResponse(BudgetConsumption consumption);
     BudgetCategoryConsumptionResponse toResponse(BudgetCategoryConsumption category);
 }
-

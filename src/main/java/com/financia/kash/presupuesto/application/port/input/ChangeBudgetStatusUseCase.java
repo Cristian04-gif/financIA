@@ -8,4 +8,3 @@ import reactor.core.publisher.Mono;
 public interface ChangeBudgetStatusUseCase {
     Mono<Budget> changeStatus(UUID userId, UUID budgetId, boolean active);
 }
-

@@ -8,4 +8,3 @@ import reactor.core.publisher.Mono;
 public interface BudgetCategoryPort {
     Mono<BudgetCategoryInfo> findById(UUID categoryId);
 }
-

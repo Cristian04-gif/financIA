@@ -72,4 +72,3 @@ public class BudgetController {
         return getBudgetConsumption.getConsumption(userId, id).map(mapper::toResponse);
     }
 }
-

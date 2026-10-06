@@ -78,4 +78,3 @@ class BudgetTest {
         assertThrows(BudgetValidationException.class, () -> new BudgetCategory(null, null, BigDecimal.TEN));
     }
 }
-

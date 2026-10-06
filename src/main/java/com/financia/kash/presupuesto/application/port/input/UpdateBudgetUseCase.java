@@ -9,4 +9,3 @@ import reactor.core.publisher.Mono;
 public interface UpdateBudgetUseCase {
     Mono<Budget> update(UUID userId, UUID budgetId, BudgetCommand command);
 }
-

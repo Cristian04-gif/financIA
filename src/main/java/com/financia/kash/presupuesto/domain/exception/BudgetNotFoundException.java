@@ -7,4 +7,3 @@ public class BudgetNotFoundException extends RuntimeException {
         super("No se encontro el presupuesto " + id);
     }
 }
-

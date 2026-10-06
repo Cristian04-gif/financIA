@@ -5,4 +5,3 @@ import java.util.UUID;
 
 public record BudgetCategoryResponse(UUID id, UUID categoryId, BigDecimal amountLimit) {
 }
-

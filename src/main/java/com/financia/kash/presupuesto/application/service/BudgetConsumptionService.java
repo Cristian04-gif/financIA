@@ -43,4 +43,3 @@ public class BudgetConsumptionService implements GetBudgetConsumptionUseCase {
                 available, available.negate().max(ZERO), categories);
     }
 }
-

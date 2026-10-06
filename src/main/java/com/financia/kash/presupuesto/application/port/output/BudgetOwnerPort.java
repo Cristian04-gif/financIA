@@ -6,4 +6,3 @@ import reactor.core.publisher.Mono;
 public interface BudgetOwnerPort {
     Mono<Boolean> isActive(UUID userId);
 }
-

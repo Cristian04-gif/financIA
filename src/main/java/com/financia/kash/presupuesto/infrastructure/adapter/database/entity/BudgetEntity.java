@@ -33,4 +33,3 @@ public class BudgetEntity implements HasUuid {
     @Column("fecha_actualizado")
     private LocalDateTime updateDate;
 }
-

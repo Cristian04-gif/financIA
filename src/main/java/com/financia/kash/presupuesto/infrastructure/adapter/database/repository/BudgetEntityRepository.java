@@ -14,4 +14,3 @@ public interface BudgetEntityRepository extends ReactiveCrudRepository<BudgetEnt
     @Query("SELECT * FROM presupuestos WHERE id = :id AND usuario_id = :userId FOR UPDATE")
     Mono<BudgetEntity> findOwnedForUpdate(UUID id, UUID userId);
 }
-

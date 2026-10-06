@@ -9,4 +9,3 @@ import reactor.core.publisher.Mono;
 public interface CreateBudgetUseCase {
     Mono<Budget> create(UUID userId, BudgetCommand command);
 }
-

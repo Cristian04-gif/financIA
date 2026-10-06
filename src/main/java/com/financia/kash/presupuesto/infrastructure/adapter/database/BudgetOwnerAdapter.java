@@ -20,4 +20,3 @@ public class BudgetOwnerAdapter implements BudgetOwnerPort {
                 .defaultIfEmpty(false);
     }
 }
-

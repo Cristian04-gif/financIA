@@ -10,4 +10,3 @@ public interface BudgetCategoryEntityRepository extends ReactiveCrudRepository<B
     Flux<BudgetCategoryEntity> findAllByBudgetIdOrderByCategoryIdAsc(UUID budgetId);
     Mono<Void> deleteAllByBudgetId(UUID budgetId);
 }
-

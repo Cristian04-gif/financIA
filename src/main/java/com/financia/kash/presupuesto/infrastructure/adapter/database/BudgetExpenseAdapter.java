@@ -30,4 +30,3 @@ public class BudgetExpenseAdapter implements BudgetExpensePort {
                 .all();
     }
 }
-

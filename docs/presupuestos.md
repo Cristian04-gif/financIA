@@ -110,4 +110,3 @@ que no participa en presupuestos.
 Se verifican ownership, usuarios/categorias inactivos, validaciones, consumo cero,
 excesos, fechas inclusivas, filtrado por usuario/tipo, rollback de creacion y
 actualizacion, precision de fechas y conservacion del estado ante cambios concurrentes.
-

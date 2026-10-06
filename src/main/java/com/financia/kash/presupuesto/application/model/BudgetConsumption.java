@@ -11,4 +11,3 @@ public record BudgetConsumption(UUID budgetId, BigDecimal amountLimitTotal,
         categories = List.copyOf(categories);
     }
 }
-

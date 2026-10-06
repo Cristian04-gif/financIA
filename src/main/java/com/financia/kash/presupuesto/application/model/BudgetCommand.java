@@ -9,4 +9,3 @@ import com.financia.kash.presupuesto.domain.model.BudgetCategory;
 public record BudgetCommand(String name, LocalDate periodStart, LocalDate periodEnd,
         BigDecimal amountLimitTotal, List<BudgetCategory> categories) {
 }
-

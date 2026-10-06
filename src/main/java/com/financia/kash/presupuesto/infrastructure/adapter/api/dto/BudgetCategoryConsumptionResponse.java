@@ -6,4 +6,3 @@ import java.util.UUID;
 public record BudgetCategoryConsumptionResponse(UUID categoryId, BigDecimal amountLimit,
         BigDecimal spent, BigDecimal available, BigDecimal exceeded) {
 }
-
