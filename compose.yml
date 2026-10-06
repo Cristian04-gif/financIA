@@ -7,12 +7,13 @@ services:
     container_name: financia-api
     mem_reservation: 512M
     environment:
-      PROFILE: prod
-      HOST_DB: postgres
-      PORT_BD: 5432
-      NAME_DB: financia
-      DB_USERNAME: postgres
-      DB_PASSWORD: password
+      PROFILE: ${PROFILE}
+      HOST_DB: ${HOST_DB}
+      PORT_BD: ${PORT_BD}
+      NAME_DB: ${NAME_DB}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_KEY_GEMINI: ${API_KEY_GEMINI}
       HOST_FRONTEND: http://localhost:5173
     ports:
       - "8080:8080"
@@ -29,23 +30,23 @@ services:
     image: pgvector/pgvector:pg17
     container_name: financiaDB
     environment:
-      POSTGRES_DB: financia
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOST_AUTH_METHOD: md5
-    command: >
-      postgres
-        -c wal_level=replica
-        -c max_wal_senders=10
-        -c max_replication_slots=10
-        -c hot_standby=on
+      POSTGRES_DB: ${NAME_DB}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      # POSTGRES_HOST_AUTH_METHOD: md5
+      # command: >
+      #   postgres
+      #     -c wal_level=replica
+      #     -c max_wal_senders=10
+      #     -c max_replication_slots=10
+      #     -c hot_standby=on
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - pg-network
+    # networks:
+    #   - pg-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d financia" ]
       interval: 10s
@@ -77,8 +78,8 @@ services:
 
 volumes:
   postgres_data:
-  replica_data:
+    # replica_data:
 
-networks:
-  pg-network:
-    driver: bridge
+    # networks:
+    #   pg-network:
+    #     driver: bridge
