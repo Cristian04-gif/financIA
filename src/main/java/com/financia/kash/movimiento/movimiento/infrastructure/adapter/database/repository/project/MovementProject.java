@@ -5,14 +5,15 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record MovementProject(
-                UUID movement_id,
-                UUID account_id,
-                String account_name,
-                UUID category_id,
-                String category_name,
-                String category_type,
-                BigDecimal monto,
-                String descripcion,
-                LocalDate date_issue) {
+        UUID movement_id,
+        UUID account_id,
+        String account_name,
+        UUID category_id,
+        String category_name,
+        String category_type,
+        BigDecimal monto,
+        String descripcion,
+        LocalDate date_issue,
+        String url_comprobate) {
 
 }

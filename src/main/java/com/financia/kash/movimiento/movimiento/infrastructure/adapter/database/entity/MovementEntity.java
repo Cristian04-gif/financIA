@@ -52,6 +52,9 @@ public class MovementEntity implements HasUuid {
     @Column(value = "fecha_registro")
     private LocalDateTime creationDate;
 
+    @Column(value = "url_comprobante")
+    private String receiptUrl;
+
     @Column(value = "fecha_actualizacion")
     private LocalDateTime updateDate;
 

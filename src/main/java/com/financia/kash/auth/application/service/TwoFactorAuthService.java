@@ -10,7 +10,6 @@ import com.financia.kash.auth.application.port.output.UserEmailForAuthentication
 import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
 import com.financia.kash.auth.domain.exception.InvalidTwoFactorCodeException;
 import com.financia.kash.auth.domain.model.TwoFactorAuth;
-import com.financia.kash.shared.infrastructure.utils.event.DomainEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -22,7 +21,6 @@ public class TwoFactorAuthService implements Request2faUseCase, Confirm2FAReques
     private final UserEmailForAuthenticationPort emailForAuthenticationPort;
     private final UserSaveForAuthPort saveForAuthPort;
     private final TwoFactorAuth twoFactorAuth;
-    private final DomainEventPublisher domainEventPublisher;
 
     @Override
     public Mono<Map<String, String>> setup2fa(String email) {

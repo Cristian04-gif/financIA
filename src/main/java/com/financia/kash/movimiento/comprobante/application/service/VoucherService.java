@@ -19,6 +19,7 @@ import com.financia.kash.movimiento.comprobante.domain.model.AccountVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.CategoryVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.Voucher;
 import com.financia.kash.movimiento.comprobante.infrastructure.config.AiCascadeProperties;
+import com.financia.kash.shared.infrastructure.utils.statics.Ocr;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -52,40 +53,25 @@ public class VoucherService implements OcrUseCase {
                                                         });
                                 }).next().switchIfEmpty(Mono.error(new IllegalArgumentException(
                                                 "Error: Todos los modelos listados en tu application.yml han superado sus límites de cuota diarios.")))
-                                .flatMap(res -> mapeo(userId, res));
+                                .flatMap(res -> mapModel(userId, res));
 
         }
 
         private Mono<String> ocrIA(UUID userId, Resource freshResource, String modelName, MimeType mimeType) {
                 log.info("Se uso el modelo AI: {}", modelName);
-                String prompt = """
-                                Actúa como un extractor de datos puros. Analiza el documento financiero adjunto (boleta/factura) y devuelve exclusivamente un objeto JSON válido con los campos:
-                                {
-                                companyName: String,
-                                ruc: String,
-                                dateIssued: LocalDate,
-                                totalAmount: BigDecimal,
-                                paymentMethod: String (EFECTIVO, BANCO, BILLETERA_DIGITAL, OTRO),
-                                expenseCategory: String (clasifica en Alimentación, Transporte, Servicios, Entretenimiento, Salud u según lo convenga),
-                                description: String (una pequeña oracion de descripcion que explique de que trata el comprobante)
-                                }
-                                En el campo paymentMethod si llega a ser leer tarjeta de crédito/debito asígnalo como ‘BANCO’. Si llega a ser Yape, Plin, Agora Pay o Bim asignalo como ‘BILLETERA_DIGITAL’
-                                No agregues texto introductorio, ni markdown (como ```json), solo el JSON plano.
-                                                """;
 
                 return Mono.fromSupplier(() -> chatClient.prompt()
                                 .options(GoogleGenAiChatOptions.builder().model(modelName))
-                                .user(userSepc -> userSepc.text(prompt).media(mimeType,
+                                .user(userSepc -> userSepc.text(Ocr.PROMPT_ANALIZER_VOUCHER).media(mimeType,
                                                 freshResource))
                                 .call()
                                 .content());
         };
 
-        private Mono<Voucher> mapeo(UUID userId, String res) {
+        private Mono<Voucher> mapModel(UUID userId, String res) {
                 log.info("respuesta de la IA recibida: {}", res);
                 Voucher voucher = objectMapper.readValue(res,
                                 Voucher.class);
-                // voucher.setImage(file);
 
                 Flux<Category> categoryFlux = categoryForVoucherPort
                                 .findCategoryByNameAndUserId(userId, voucher.getExpenseCategory())

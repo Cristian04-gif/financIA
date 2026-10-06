@@ -10,7 +10,6 @@ import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
 import lombok.RequiredArgsConstructor;

@@ -35,6 +35,11 @@ app:
       - gemini-3.7-flash
       - gemini-3.8-flash
 
+cloudinary:
+  cloud_name: ${CLOUDINATY_NAME}
+  api_key: ${CLOUDINARY_APY_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+
 url:
   frontend: ${HOST_FRONTEND}
 

@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS movimientos (
     fecha_emision DATE NOT NULL,
     descripcion VARCHAR(255),
     tipo VARCHAR(255) NOT NULL,
+    url_comprobante TEXT NULL,
     fecha_actualizacion TIMESTAMP(6) WITHOUT TIME ZONE,
     cuenta_id UUID NOT NULL,
     categoria_id UUID NOT NULL,

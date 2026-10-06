@@ -7,11 +7,12 @@ import java.util.UUID;
 import com.financia.kash.cuenta.transferencia.domain.model.AccountParticiped;
 
 public record MovementDTO(
-        UUID movementId,
-        AccountParticiped account,
-        CategoryParticiped category,
-        BigDecimal amount,
-        String description,
-        LocalDate dateIssue) {
+                UUID movementId,
+                AccountParticiped account,
+                CategoryParticiped category,
+                BigDecimal amount,
+                String description,
+                LocalDate dateIssue,
+                String receiptUrl) {
 
 }

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.movimiento.movimiento.domain.exception.FailureSendReceiptException;
 import com.financia.kash.movimiento.movimiento.domain.exception.InvalidMovementTypeException;
 import com.financia.kash.shared.domain.utils.Default;
 
@@ -26,6 +27,7 @@ public class Movement {
     private LocalDate date;
     private String description;
     private final LocalDateTime creationDate;
+    private String receiptUrl;
     private LocalDateTime updateDate;
 
     public Movement(UUID userId, UUID accountId, UUID categoryId, UUID subscriptionId, TypeMovement type,
@@ -58,8 +60,10 @@ public class Movement {
         return Arrays.stream(TypeMovement.values()).anyMatch(e -> e.equals(typeMoviment));
     }
 
-    private void updateDate() {
-        this.updateDate = LocalDateTime.now();
+    public void upReceipt(String url) {
+        if (url == null) {
+            throw new FailureSendReceiptException();
+        }
+        this.receiptUrl = url;
     }
-
 }

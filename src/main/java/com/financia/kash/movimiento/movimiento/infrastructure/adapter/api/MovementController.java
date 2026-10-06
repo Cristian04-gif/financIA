@@ -23,11 +23,13 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -68,6 +70,12 @@ public class MovementController {
                 .createMotion(user.getId(), request.accountId(), request.categoryId(), request.type(), request.amount(),
                         request.date(), request.description())
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
+    }
+
+    @PostMapping("/my-movements/{id}/submit-voucher")
+    public Mono<ResponseEntity<Void>> submmitVoucher(@PathVariable UUID id,
+            @RequestPart("file") Mono<FilePart> filePart) {
+        return createMovimentUseCase.saveVoucherFile(id, filePart).thenReturn(ResponseEntity.noContent().build());
     }
 
     @Operation(summary = "Eliminar movimiento", description = "Elimina el movimiento restaurando el monto a la cuenta")

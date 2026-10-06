@@ -9,7 +9,6 @@ import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
 import lombok.RequiredArgsConstructor;

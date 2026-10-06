@@ -24,7 +24,8 @@ public interface MovementEntityRepository extends ReactiveCrudRepository<Movemen
                 ca.tipo AS category_type,
                 m.monto AS monto,
                 m.descripcion AS descripcion,
-                m.fecha_emision AS date_issue
+                m.fecha_emision AS date_issue,
+                m.url_comprobate AS url_comprobate
                 FROM movimientos m
             INNER JOIN cuentas cu ON m.cuenta_id = cu.id
             INNER JOIN categorias ca ON m.categoria_id = ca.id

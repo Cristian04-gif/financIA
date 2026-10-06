@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.springframework.http.codec.multipart.FilePart;
+
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
 
@@ -12,4 +14,6 @@ import reactor.core.publisher.Mono;
 public interface CreateMovimentUseCase {
     Mono<Movement> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
             LocalDate date, String description);
+
+    Mono<Void> saveVoucherFile(UUID movementId, Mono<FilePart> filePart);
 }

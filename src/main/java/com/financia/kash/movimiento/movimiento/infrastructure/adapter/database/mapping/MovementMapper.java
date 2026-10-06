@@ -26,6 +26,7 @@ public interface MovementMapper {
     @Mapping(source = "date_issue", target = "dateIssue")
     @Mapping(source = "monto", target = "amount")
     @Mapping(source = "descripcion", target = "description")
+    @Mapping(source = "url_comprobate", target = "receiptUrl")
     MovementDTO mapToDomainDTO(MovementProject movementProject);
 
 }

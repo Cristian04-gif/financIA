@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
+import com.financia.kash.movimiento.comprobante.application.port.input.SaveFileVoucherUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.CreateMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.DeleteMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.GetMovementUseCase;
@@ -33,6 +35,7 @@ public class MovementService
     private final AccountForMovementPort accountForMovementPort;
     private final SaveAccountForMovementPort saveAccountForMovementPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
+    private final SaveFileVoucherUseCase saveFileVoucherUseCase;
 
     @Override
     public Mono<PaginationResponse<MovementDTO>> getAllMovements(UUID userId, PaginationRequest request) {
@@ -61,7 +64,6 @@ public class MovementService
 
                 Movement motion = new Movement(userId, accountId, categoryId, null, type, amount, date,
                         description);
-
                 return movementRepositoryPort.save(motion)
                         .flatMap(mot -> saveAccountForMovementPort.save(account).thenReturn(mot));
             });
@@ -78,6 +80,15 @@ public class MovementService
                     return saveAccountForMovementPort.save(account).then(movementRepositoryPort.delete(movementId));
                 }));
 
+    }
+
+    @Override
+    public Mono<Void> saveVoucherFile(UUID movementId, Mono<FilePart> filePart) {
+        return movementRepositoryPort.findById(movementId)
+                .flatMap(movement -> filePart.flatMap(saveFileVoucherUseCase::saveFileVoucher).flatMap(secureUrl -> {
+                    movement.upReceipt(secureUrl);
+                    return movementRepositoryPort.save(movement).then();
+                }));
     }
 
 }
