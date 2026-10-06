@@ -2,6 +2,8 @@
 
 Backend de FinancIA para gestion financiera personal. El proyecto usa Spring Boot, PostgreSQL, JPA, seguridad con JWT y una estructura por modulos con enfoque hexagonal.
 
+La implementacion actual de presupuestos usa WebFlux y R2DBC. Consulta [el modulo de presupuestos](docs/presupuestos.md) para sus endpoints, reglas, scripts SQL y pruebas.
+
 ## Avance de semana 2
 
 Esta rama deja evidencia de la base tecnica inicial:
