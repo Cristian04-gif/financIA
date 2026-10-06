@@ -5,6 +5,8 @@ import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import com.financia.kash.presupuesto.application.port.output.*;
 import com.financia.kash.presupuesto.application.service.BudgetService;
@@ -27,5 +29,13 @@ public class BudgetConfiguration {
     @Bean
     public TransactionalOperator budgetTransactionalOperator(ReactiveTransactionManager transactionManager) {
         return TransactionalOperator.create(transactionManager);
+    }
+
+    @Bean
+    public TransactionalOperator budgetReadTransactionalOperator(ReactiveTransactionManager transactionManager) {
+        var definition = new DefaultTransactionDefinition();
+        definition.setReadOnly(true);
+        definition.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        return TransactionalOperator.create(transactionManager, definition);
     }
 }

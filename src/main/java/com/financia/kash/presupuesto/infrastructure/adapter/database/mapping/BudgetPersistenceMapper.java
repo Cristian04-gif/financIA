@@ -2,6 +2,8 @@ package com.financia.kash.presupuesto.infrastructure.adapter.database.mapping;
 
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -22,10 +24,13 @@ public interface BudgetPersistenceMapper {
     @Mapping(target = "amountLimit", source = "category.amountLimit")
     BudgetCategoryEntity toEntity(BudgetCategory category, UUID budgetId);
 
+    default LocalDateTime databaseTimestamp(LocalDateTime date) {
+        return date == null ? null : date.truncatedTo(ChronoUnit.MICROS);
+    }
+
     default Budget toDomain(BudgetEntity entity, List<BudgetCategory> categories) {
         return new Budget(entity.getId(), entity.getUserId(), entity.getName(),
                 entity.getPeriodStart(), entity.getPeriodEnd(), entity.getAmountLimitTotal(),
                 entity.isActive(), entity.getCreationDate(), entity.getUpdateDate(), categories);
     }
 }
-
