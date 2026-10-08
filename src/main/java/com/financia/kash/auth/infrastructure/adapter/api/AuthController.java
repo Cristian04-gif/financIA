@@ -8,6 +8,9 @@ import com.financia.kash.auth.application.port.input.LoginUserUseCase;
 import com.financia.kash.auth.application.port.input.RegisterUserUseCase;
 import com.financia.kash.auth.application.port.input.Request2faUseCase;
 import com.financia.kash.auth.application.port.input.Verify2faUseCase;
+import com.financia.kash.auth.application.port.input.command.Confirm2FACommand;
+import com.financia.kash.auth.application.port.input.command.LoginUserCommand;
+import com.financia.kash.auth.application.port.input.command.Verify2FACommand;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
 import com.financia.kash.auth.infrastructure.adapter.api.dto.LoginRequestDTO;
@@ -50,7 +53,8 @@ public class AuthController {
     @Operation(summary = "Inicio de sesion de usuario", description = "Devuelve el token de autenticacion")
     @PostMapping("/login")
     public Mono<ResponseEntity<?>> login(@RequestBody @Valid LoginRequestDTO dto) {
-        return loginUserUseCase.loginUser(dto.email(), dto.password()).map(value -> ResponseEntity.ok(value));
+        return loginUserUseCase.loginUser(new LoginUserCommand(dto.email(), dto.password()))
+                .map(value -> ResponseEntity.ok(value));
     }
 
     @Operation(summary = "Solicitud de autenticacion 2fa")
@@ -63,14 +67,14 @@ public class AuthController {
     @PostMapping("/2fa/confirm")
     public Mono<ResponseEntity<String>> comfim2fa(@AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> request) {
-        return confirm2faRequestUseCase.confirm2fa(userDetails.getUsername(), request)
+        return confirm2faRequestUseCase.confirm2fa(new Confirm2FACommand(userDetails.getUsername(), request))
                 .map(value -> ResponseEntity.ok(value));
     }
 
     @Operation(summary = "Verificacion en dos pasos")
     @PostMapping("/verify-2fa")
     public Mono<ResponseEntity<AuthResponse>> verify2fa(@RequestBody @Valid Verify2faRequest request) {
-        return verify2faUseCase.verify2fa(request.getPreToken(), request.getCode())
+        return verify2faUseCase.verify2fa(new Verify2FACommand(request.getPreToken(), request.getCode()))
                 .map(value -> ResponseEntity.ok(value));
     }
 

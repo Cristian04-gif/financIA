@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.financia.kash.auth.application.port.input.LoginUserUseCase;
 import com.financia.kash.auth.application.port.input.RegisterUserUseCase;
 import com.financia.kash.auth.application.port.input.Verify2faUseCase;
+import com.financia.kash.auth.application.port.input.command.LoginUserCommand;
+import com.financia.kash.auth.application.port.input.command.Verify2FACommand;
 import com.financia.kash.auth.application.port.output.AuthenticationPort;
 import com.financia.kash.auth.application.port.output.PasswordEncoderPort;
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
@@ -53,18 +55,18 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
     }
 
     @Override
-    public Mono<Map<String, Object>> loginUser(String email, String password) {
-        return emailForAuthenticationPort.findByEmail(email).flatMap(user -> {
+    public Mono<Map<String, Object>> loginUser(LoginUserCommand command) {
+        return emailForAuthenticationPort.findByEmail(command.email()).flatMap(user -> {
             if (user.isEnable2fa()) {
                 return authenticationPort
-                        .preAuthenticate(email, password)
+                        .preAuthenticate(command.email(), command.password())
                         .map(token -> Map.of(
                                 "requires2fa", true,
                                 "preAuthToken", token));
             }
 
             return authenticationPort
-                    .authenticate(email, password)
+                    .authenticate(command.email(), command.password())
                     .map(token -> Map.of(
                             "requires2fa", false,
                             "token", token));
@@ -73,19 +75,19 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
     }
 
     @Override
-    public Mono<AuthResponse> verify2fa(String preToken, String code) {
-        return authenticationPort.getUsername(preToken).flatMap(username -> {
+    public Mono<AuthResponse> verify2fa(Verify2FACommand command) {
+        return authenticationPort.getUsername(command.preToken()).flatMap(username -> {
             Mono<UserDetails> userDetails = userDetailsService.findByUsername(username);
             Mono<User> userMono = emailForAuthenticationPort.findByEmail(username);
 
             return Mono.zip(userDetails, userMono).flatMap(tupla -> {
                 UserDetails details = tupla.getT1();
                 User user = tupla.getT2();
-                if (!authenticationPort.validatePreAuthToken(preToken, details)) {
+                if (!authenticationPort.validatePreAuthToken(command.preToken(), details)) {
                     return Mono.error(new IllegalArgumentException("Token temporal inválido o expirado"));
                 }
 
-                if (!twoFactorAuth.verifyCode(user.getSecret2fa(), code)) {
+                if (!twoFactorAuth.verifyCode(user.getSecret2fa(), command.code())) {
                     return Mono.error(new InvalidTwoFactorCodeException());
                 }
 
