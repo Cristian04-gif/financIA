@@ -7,6 +7,8 @@ import com.financia.kash.cuenta.cuenta.application.port.input.CreateAccountUseCa
 import com.financia.kash.cuenta.cuenta.application.port.input.DeleteAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.GetAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.TransferMoneyUseCase;
+import com.financia.kash.cuenta.cuenta.application.port.input.command.CreateAccountCommand;
+import com.financia.kash.cuenta.cuenta.application.port.input.command.TransferMoneyCommand;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.dto.AccountRequest;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.dto.TransferMoneyRequest;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
@@ -59,8 +61,8 @@ public class AccountController {
     @PostMapping("")
     public Mono<ResponseEntity<AccountProject>> createAccount(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid AccountRequest request) {
-        return createAccountUseCase.createAccount(user.getId(), request.name(), request.type(),
-                request.initialBalance())
+        return createAccountUseCase.createAccount(new CreateAccountCommand(user.getId(), request.name(), request.type(),
+                request.initialBalance()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(accountMapper.mapToProject(value)));
 
     }
@@ -69,8 +71,10 @@ public class AccountController {
     @PostMapping("/transfer")
     public Mono<ResponseEntity<Void>> transferMoney(@RequestBody @Valid TransferMoneyRequest request,
             @AuthenticationPrincipal UserEntity user) {
-        return transferMoneyUseCase.transfer(request.idSource(), request.idTarget(), request.amount(),
-                request.description()).thenReturn(ResponseEntity.noContent().build());
+        return transferMoneyUseCase
+                .transfer(new TransferMoneyCommand(request.idSource(), request.idTarget(), request.amount(),
+                        request.description()))
+                .thenReturn(ResponseEntity.noContent().build());
     }
 
     @Operation(summary = "Desactivar cuenta cuenta")
@@ -78,12 +82,5 @@ public class AccountController {
     public Mono<ResponseEntity<Void>> changeStatusAccount(@PathVariable UUID id) {
         return deleteAccountUseCase.changeStatusAcount(id).thenReturn(ResponseEntity.noContent().build());
     }
-
-    // @Operation(summary = "Eliminar cuenta")
-    // @DeleteMapping("/my-accounts/{id}")
-    // public Mono<ResponseEntity<Void>> deleteMyAccount(@PathVariable UUID id) {
-    // return
-    // deleteAccountUseCase.deleteMyAccount(id).thenReturn(ResponseEntity.noContent().build());
-    // }
 
 }

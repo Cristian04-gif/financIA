@@ -1,6 +1,5 @@
 package com.financia.kash.cuenta.cuenta.application.service;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -10,12 +9,12 @@ import com.financia.kash.cuenta.cuenta.application.port.input.CreateAccountUseCa
 import com.financia.kash.cuenta.cuenta.application.port.input.DeleteAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.GetAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.TransferMoneyUseCase;
+import com.financia.kash.cuenta.cuenta.application.port.input.command.CreateAccountCommand;
+import com.financia.kash.cuenta.cuenta.application.port.input.command.TransferMoneyCommand;
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
-import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-// import com.financia.kash.shared.application.port.output.UserActiveForAccountPort;
 
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -28,14 +27,13 @@ public class AccountService
 
     private final AccountRespotoryPort accountRespotoryPort;
     private final TransferRepositoryPort transferRepositoryPort;
-    // private final UserActiveForAccountPort userActiveForAccountPort;
 
     @Override
     @Transactional
-    public Mono<Void> transfer(UUID idSource, UUID idTarget, BigDecimal amount, String description) {
+    public Mono<Void> transfer(TransferMoneyCommand command) {
 
-        Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(idSource);
-        Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(idTarget);
+        Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(command.idSource());
+        Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(command.idTarget());
 
         return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
             Account source = tupla.getT1();
@@ -47,12 +45,13 @@ public class AccountService
             }
 
             source.validateAccountIsActive();
-            source.validateSufficientFunds(amount);
+            source.validateSufficientFunds(command.amount());
 
-            source.transfer(amount);
-            target.receive(amount);
+            source.transfer(command.amount());
+            target.receive(command.amount());
 
-            Transfer transfer = new Transfer(source.getUserId(), idSource, idTarget, amount, description);
+            Transfer transfer = new Transfer(source.getUserId(), command.idSource(), command.idTarget(),
+                    command.amount(), command.description());
 
             return transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
                     .then(accountRespotoryPort.save(target));
@@ -81,9 +80,9 @@ public class AccountService
     }
 
     @Override
-    public Mono<Account> createAccount(UUID userId, String name, AccountType type, BigDecimal initialBalance) {
+    public Mono<Account> createAccount(CreateAccountCommand command) {
 
-        Account account = new Account(userId, name, type, initialBalance);
+        Account account = new Account(command.userId(), command.name(), command.type(), command.initialBalance());
         return accountRespotoryPort.save(account);
 
     }
