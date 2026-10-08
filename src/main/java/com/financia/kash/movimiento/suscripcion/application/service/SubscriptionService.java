@@ -1,6 +1,5 @@
 package com.financia.kash.movimiento.suscripcion.application.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -17,11 +16,11 @@ import com.financia.kash.movimiento.suscripcion.application.port.input.ChangeSta
 import com.financia.kash.movimiento.suscripcion.application.port.input.CreateSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.GetSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.SubscriptionDiscountuseCase;
+import com.financia.kash.movimiento.suscripcion.application.port.input.command.CreateSubscriptionCommand;
 import com.financia.kash.movimiento.suscripcion.application.port.output.FindAccountForSubscription;
 import com.financia.kash.movimiento.suscripcion.application.port.output.SaveAccountoForSubscription;
 import com.financia.kash.movimiento.suscripcion.application.port.output.SubscriptionRepositoryPort;
 import com.financia.kash.movimiento.suscripcion.domain.model.Subscription;
-import com.financia.kash.movimiento.suscripcion.domain.model.SubscriptionFrequency;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -50,18 +49,18 @@ public class SubscriptionService
     }
 
     @Override
-    public Mono<Subscription> create(UUID userId, UUID payingAccountId, UUID categoryId, String name, BigDecimal amount,
-            SubscriptionFrequency frequency, Integer payDay) {
-        Mono<Account> accountMono = findAccountForSubscription.findMyAccountById(payingAccountId);
-        Mono<Category> categoryMono = getCategoriesUseCase.getById(categoryId);
+    public Mono<Subscription> create(CreateSubscriptionCommand command) {
+        Mono<Account> accountMono = findAccountForSubscription.findMyAccountById(command.payingAccountId());
+        Mono<Category> categoryMono = getCategoriesUseCase.getById(command.categoryId());
 
         return Mono.zip(accountMono, categoryMono).flatMap(tuple -> {
             Account account = tuple.getT1();
             Category category = tuple.getT2();
 
             return subscriptionRepositoryPort
-                    .save(Subscription.create(userId, account.getId(), category.getId(), name, amount, frequency,
-                            payDay));
+                    .save(Subscription.create(command.userId(), account.getId(), category.getId(), command.name(),
+                            command.amount(), command.frequency(),
+                            command.payDay()));
         });
     }
 

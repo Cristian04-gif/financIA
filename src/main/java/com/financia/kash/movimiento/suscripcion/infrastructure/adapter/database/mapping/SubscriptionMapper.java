@@ -22,4 +22,6 @@ public interface SubscriptionMapper {
     @Mapping(target = "payDay", ignore = true)
     Subscription mapToDomain(SubscriptionProject project);
 
+    SubscriptionProject mapToProject(Subscription subscription);
+
 }

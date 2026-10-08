@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.financia.kash.movimiento.comprobante.application.port.input.OcrUseCase;
+import com.financia.kash.movimiento.comprobante.application.port.input.command.OrcProcessCommand;
 import com.financia.kash.movimiento.comprobante.domain.model.Voucher;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
@@ -38,7 +39,8 @@ public class VoucherController {
                 dataBuffer.read(bytes);
                 DataBufferUtils.release(dataBuffer);
                 return bytes;
-            }).flatMap(bytes -> ocrUseCase.OcrProcess(user.getId(), bytes, mimeType)).map(ResponseEntity::ok);
+            }).flatMap(bytes -> ocrUseCase.OcrProcess(new OrcProcessCommand(user.getId(), bytes, mimeType)))
+                    .map(ResponseEntity::ok);
         });
     }
 

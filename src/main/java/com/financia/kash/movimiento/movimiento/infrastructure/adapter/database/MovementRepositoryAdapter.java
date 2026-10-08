@@ -7,10 +7,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.domain.exception.MovementNotFoundException;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.dto.MovementDTO;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.mapping.MovementMapper;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.MovementEntityRepository;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;
@@ -18,13 +18,11 @@ import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-@Log4j2
 public class MovementRepositoryAdapter implements MovementRepositoryPort {
 
     private final MovementEntityRepository movementEntityRepository;
@@ -36,16 +34,12 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort {
                 Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
                         request.getSortBy()));
 
-        Flux<MovementProject> pageMotion = movementEntityRepository.findAllByUserId(userId, pageRequest)
-                .doOnNext(cs -> {
-                    log.info("amount: {}", cs.monto());
-                });
+        Flux<MovementProject> pageMotion = movementEntityRepository.findAllByUserId(userId, pageRequest);
 
         Mono<Long> count = movementEntityRepository.countByUserId(userId);
 
         return Mono.zip(pageMotion.map(movementMapper::mapToDomainDTO).collectList(), count).map(tuple -> {
             List<MovementDTO> motions = tuple.getT1();
-            log.info("amount: {}", motions.getFirst().amount());
             long totalElements = tuple.getT2();
             int totalPages = (int) Math.ceil((double) totalElements / request.getPageSize());
             boolean isLast = request.getPageNum() >= Math.max(0, totalPages - 1);

@@ -1,9 +1,9 @@
 package com.financia.kash.usuario.application.port.input;
 
-import java.util.UUID;
+import com.financia.kash.usuario.application.port.input.command.ChangePasswordCommand;
 
 import reactor.core.publisher.Mono;
 
 public interface ChangePasswordUseCase {
-    Mono<Void> changePassword(UUID id, String newPassword);
+    Mono<Void> changePassword(ChangePasswordCommand command);
 }

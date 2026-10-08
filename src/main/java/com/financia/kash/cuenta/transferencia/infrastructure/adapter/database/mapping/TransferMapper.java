@@ -5,8 +5,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.project.TransferProject;
 

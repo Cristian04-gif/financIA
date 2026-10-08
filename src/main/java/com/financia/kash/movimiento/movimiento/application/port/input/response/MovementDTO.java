@@ -1,10 +1,10 @@
-package com.financia.kash.movimiento.movimiento.domain.model.dto;
+package com.financia.kash.movimiento.movimiento.application.port.input.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.financia.kash.cuenta.transferencia.domain.model.AccountParticiped;
+import com.financia.kash.cuenta.transferencia.application.port.input.response.AccountParticiped;
 
 public record MovementDTO(
                 UUID movementId,

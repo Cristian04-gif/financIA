@@ -9,6 +9,9 @@ import com.financia.kash.movimiento.categoria.application.port.input.CreateCateg
 import com.financia.kash.movimiento.categoria.application.port.input.DeleteMyCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.GetCategoriesUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.UpdateCategoryUseCase;
+import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
+import com.financia.kash.movimiento.categoria.application.port.input.command.CreateMainCategoryCommand;
+import com.financia.kash.movimiento.categoria.application.port.input.command.UpdateCategoryCommand;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
@@ -44,21 +47,21 @@ public class CategoryService
     }
 
     @Override
-    public Mono<Category> createMainCategory(String name, String type) {
-        return Mono.just(new Category(name, type)).flatMap(categoryRepositoryPort::save);
+    public Mono<Category> createMainCategory(CreateMainCategoryCommand command) {
+        return Mono.just(new Category(command.name(), command.type())).flatMap(categoryRepositoryPort::save);
 
     }
 
     @Override
-    public Mono<Category> createCategoryForUser(UUID userId, String name, String type, UUID parentCategoryId) {
-        Mono<Category> categoryParentMono = getById(parentCategoryId);
-        Mono<User> userMono = userForCategoryPort.findUserById(userId);
+    public Mono<Category> createCategoryForUser(CreateCategoryUserCommand command) {
+        Mono<Category> categoryParentMono = getById(command.parentCategoryId());
+        Mono<User> userMono = userForCategoryPort.findUserById(command.userId());
 
         return Mono.zip(categoryParentMono, userMono).flatMap(tuple -> {
             Category categoryParent = tuple.getT1();
             User user = tuple.getT2();
 
-            Category category = new Category(user.getId(), name, type, categoryParent.getId());
+            Category category = new Category(user.getId(), command.name(), command.type(), categoryParent.getId());
             return categoryRepositoryPort.save(category);
 
         });
@@ -72,19 +75,19 @@ public class CategoryService
     }
 
     @Override
-    public Mono<Category> updateCategoryForUser(UUID id, String name, String type, UUID parentId, boolean active) {
+    public Mono<Category> updateCategoryForUser(UpdateCategoryCommand command) {
 
-        Mono<Category> categoryMono = getById(id);
-        Mono<Category> categoryParentMono = getById(parentId);
+        Mono<Category> categoryMono = getById(command.id());
+        Mono<Category> categoryParentMono = getById(command.parentId());
 
         return Mono.zip(categoryMono, categoryParentMono).flatMap(tuple -> {
             Category category = tuple.getT1();
             Category categoryParent = tuple.getT2();
 
-            category.rename(name);
+            category.rename(command.name());
             category.parentCategoryId(categoryParent.getId());
-            category.changeType(type);
-            category.changeStatus(active);
+            category.changeType(command.type());
+            category.changeStatus(command.active());
 
             return categoryRepositoryPort.save(category);
         });

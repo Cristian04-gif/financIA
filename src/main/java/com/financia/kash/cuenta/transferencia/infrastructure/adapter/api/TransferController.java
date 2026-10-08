@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTransferUseCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferAccountCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.UpdateTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.dto.TransferUpdateRequest;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
@@ -49,8 +52,8 @@ public class TransferController {
             @RequestParam(required = false, defaultValue = "desc") String direction) {
 
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
-        return getTransferUserCase.getAllMyTransfers(user.getId(),
-                paginationRequest).map(ResponseEntity::ok);
+        return getTransferUserCase.getAllMyTransfers(new GetTransferCommand(user.getId(), paginationRequest))
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Transfereencias por cuenta de usuario", description = "Devuelve las transferencias de una cuenta especifica del usuario")
@@ -61,7 +64,8 @@ public class TransferController {
             @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
-        return getTransferUserCase.getAllTransfersByAccount(id, paginationRequest).map(ResponseEntity::ok);
+        return getTransferUserCase.getAllTransfersByAccount(new GetTransferAccountCommand(id, paginationRequest))
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
@@ -74,7 +78,8 @@ public class TransferController {
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
             @RequestBody TransferUpdateRequest request) {
-        return updateTransferUseCase.updateTransfer(id, request.newAmount(), request.newDescription())
+        return updateTransferUseCase
+                .updateTransfer(new UpdateTransferCommand(id, request.newAmount(), request.newDescription()))
                 .thenReturn(ResponseEntity.noContent().build());
     }
 

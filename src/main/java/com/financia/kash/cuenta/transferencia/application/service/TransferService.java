@@ -11,9 +11,11 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTransferUseCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferAccountCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.UpdateTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
-import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -27,13 +29,13 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
     private final AccountRespotoryPort accountRespotoryPort;
 
     @Override
-    public Mono<PaginationResponse<TransferDTO>> getAllMyTransfers(UUID userId, PaginationRequest request) {
-        return transferRepositoryPort.findAllMyTransfer(userId, request);
+    public Mono<PaginationResponse<TransferDTO>> getAllMyTransfers(GetTransferCommand command) {
+        return transferRepositoryPort.findAllMyTransfer(command.userId(), command.request());
     }
 
     @Override
-    public Mono<PaginationResponse<TransferDTO>> getAllTransfersByAccount(UUID accountId, PaginationRequest request) {
-        return transferRepositoryPort.findAllTransferByAccount(accountId, request);
+    public Mono<PaginationResponse<TransferDTO>> getAllTransfersByAccount(GetTransferAccountCommand command) {
+        return transferRepositoryPort.findAllTransferByAccount(command.accountId(), command.request());
     }
 
     @Override
@@ -44,9 +46,9 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
 
     @Override
     @Transactional
-    public Mono<Void> updateTransfer(UUID transferId, BigDecimal newAmount, String newDescription) {
-        return transferRepositoryPort.findById(transferId).flatMap(transfer -> {
-            if (newAmount != null || !transfer.getAmount().equals(newAmount)) {
+    public Mono<Void> updateTransfer(UpdateTransferCommand command) {
+        return transferRepositoryPort.findById(command.transferId()).flatMap(transfer -> {
+            if (command.newAmount() != null || !transfer.getAmount().equals(command.newAmount())) {
                 BigDecimal previousAmount = transfer.getAmount();
 
                 Mono<Account> accountOrigin = accountRespotoryPort.findMyAccountById(transfer.getSourceAccount());
@@ -62,17 +64,17 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
                     origin.receive(previousAmount);
 
                     // corregir transferencia
-                    origin.transfer(newAmount);
-                    detination.receive(newAmount);
+                    origin.transfer(command.newAmount());
+                    detination.receive(command.newAmount());
 
-                    transfer.changeAmount(newAmount);
+                    transfer.changeAmount(command.newAmount());
 
                     return accountRespotoryPort.save(origin).then(accountRespotoryPort.save(detination));
                 });
             }
 
-            if (newDescription != null || !transfer.getDescription().equals(newDescription)) {
-                transfer.changeDescription(newDescription);
+            if (command.newDescription() != null || !transfer.getDescription().equals(command.newDescription())) {
+                transfer.changeDescription(command.newDescription());
 
             }
             return transferRepositoryPort.save(transfer);

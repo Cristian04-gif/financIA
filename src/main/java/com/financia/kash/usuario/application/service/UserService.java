@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
 import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
 import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
+import com.financia.kash.usuario.application.port.input.command.ChangePasswordCommand;
 import com.financia.kash.usuario.application.port.output.PasswordEncoderForUserPort;
 import com.financia.kash.usuario.application.port.output.UserRepositoryPort;
 import com.financia.kash.usuario.domain.model.EstadoUsuario;
@@ -44,9 +45,9 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
     }
 
     @Override
-    public Mono<Void> changePassword(UUID id, String newPassword) {
-        return repositoryPort.getMe(id).flatMap(user -> {
-            user.changePassword(encoderForUserPort.ecoderPassword(newPassword));
+    public Mono<Void> changePassword(ChangePasswordCommand command) {
+        return repositoryPort.getMe(command.id()).flatMap(user -> {
+            user.changePassword(encoderForUserPort.ecoderPassword(command.newPassword()));
             return repositoryPort.save(user);
         }).then();
     }

@@ -13,6 +13,7 @@ import org.springframework.util.MimeType;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.comprobante.application.port.input.OcrUseCase;
+import com.financia.kash.movimiento.comprobante.application.port.input.command.OrcProcessCommand;
 import com.financia.kash.movimiento.comprobante.application.port.output.AccoutsForVoucherPort;
 import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
 import com.financia.kash.movimiento.comprobante.domain.model.AccountVoucher;
@@ -39,13 +40,13 @@ public class VoucherService implements OcrUseCase {
         private final AccoutsForVoucherPort accoutsForVoucherPort;
 
         @Override
-        public Mono<Voucher> OcrProcess(UUID userId, byte[] imageByte, MimeType mimeType) {
+        public Mono<Voucher> OcrProcess(OrcProcessCommand command) {
                 List<String> list = aiCascadeProperties.getModelsCascade();
                 return Flux.fromIterable(list)
                                 .concatMap(modelName -> {
                                         log.info("Se prueba con el modelo AI: {}", modelName);
-                                        Resource freshResource = new ByteArrayResource(imageByte);
-                                        return ocrIA(userId, freshResource, modelName, mimeType)
+                                        Resource freshResource = new ByteArrayResource(command.imageByte());
+                                        return ocrIA(command.userId(), freshResource, modelName, command.mimeType())
                                                         .onErrorResume(e -> {
                                                                 log.warn("Fallo con el modelo {}. Buscando el siguiente respaldo en el YAML.... Error: {}",
                                                                                 modelName, e.getMessage());
@@ -53,7 +54,7 @@ public class VoucherService implements OcrUseCase {
                                                         });
                                 }).next().switchIfEmpty(Mono.error(new IllegalArgumentException(
                                                 "Error: Todos los modelos listados en tu application.yml han superado sus límites de cuota diarios.")))
-                                .flatMap(res -> mapModel(userId, res));
+                                .flatMap(res -> mapModel(command.userId(), res));
 
         }
 

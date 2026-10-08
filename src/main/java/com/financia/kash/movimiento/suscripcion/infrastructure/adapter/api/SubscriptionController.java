@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.movimiento.suscripcion.application.port.input.ChangeStatusSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.CreateSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.GetSubscriptionUseCase;
+import com.financia.kash.movimiento.suscripcion.application.port.input.command.CreateSubscriptionCommand;
 import com.financia.kash.movimiento.suscripcion.domain.model.Subscription;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.dto.CreateSubscriptionRequest;
+import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.database.mapping.SubscriptionMapper;
+import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.database.repository.project.SubscriptionProject;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,11 +40,13 @@ public class SubscriptionController {
     private final GetSubscriptionUseCase getSubscriptionUseCase;
     private final CreateSubscriptionUseCase createSubscriptionUseCase;
     private final ChangeStatusSubscriptionUseCase changeStatusSubscriptionUseCase;
+    private final SubscriptionMapper subscriptionMapper;
 
     @Operation(summary = "Suscripciones del usuario", description = "Devuelve las suscripciones del usuario")
     @GetMapping("/my-subs")
-    public ResponseEntity<Flux<Subscription>> getMySubscription(@AuthenticationPrincipal UserEntity user) {
-        Flux<Subscription> flux = getSubscriptionUseCase.getSubscriptionForUser(user.getId());
+    public ResponseEntity<Flux<SubscriptionProject>> getMySubscription(@AuthenticationPrincipal UserEntity user) {
+        Flux<SubscriptionProject> flux = getSubscriptionUseCase.getSubscriptionForUser(user.getId())
+                .map(subscriptionMapper::mapToProject);
         return ResponseEntity.ok(flux);
     }
 
@@ -55,8 +60,9 @@ public class SubscriptionController {
     @PostMapping
     public Mono<ResponseEntity<Subscription>> save(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid CreateSubscriptionRequest request) {
-        return createSubscriptionUseCase.create(user.getId(), request.payingAccountId(), request.categoryId(),
-                request.name(), request.amount(), request.frequency(), request.payDay())
+        return createSubscriptionUseCase
+                .create(new CreateSubscriptionCommand(user.getId(), request.payingAccountId(), request.categoryId(),
+                        request.name(), request.amount(), request.frequency(), request.payDay()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
     }
 

@@ -1,10 +1,7 @@
 package com.financia.kash.movimiento.movimiento.application.service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.UUID;
 
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,13 +11,14 @@ import com.financia.kash.movimiento.comprobante.application.port.input.SaveFileV
 import com.financia.kash.movimiento.movimiento.application.port.input.CreateMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.DeleteMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.GetMovementUseCase;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.AllMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.CreateMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
-import com.financia.kash.movimiento.movimiento.domain.model.dto.MovementDTO;
-import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -38,8 +36,8 @@ public class MovementService
     private final SaveFileVoucherUseCase saveFileVoucherUseCase;
 
     @Override
-    public Mono<PaginationResponse<MovementDTO>> getAllMovements(UUID userId, PaginationRequest request) {
-        return movementRepositoryPort.findAllMyMotions(userId, request);
+    public Mono<PaginationResponse<MovementDTO>> getAllMovements(AllMovementCommand command) {
+        return movementRepositoryPort.findAllMyMotions(command.userId(), command.request());
     }
 
     @Override
@@ -49,21 +47,21 @@ public class MovementService
 
     @Override
     @Transactional
-    public Mono<Movement> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type,
-            BigDecimal amount,
-            LocalDate date, String description) {
+    public Mono<Movement> createMotion(CreateMovementCommand command) {
 
-        return categoryRepositoryPort.existsById(categoryId).flatMap(exist -> {
+        return categoryRepositoryPort.existsById(command.categoryId()).flatMap(exist -> {
             if (!exist) {
-                return Mono.error(new CategoryNotFoundException(categoryId));
+                return Mono.error(new CategoryNotFoundException(command.categoryId()));
             }
-            return accountForMovementPort.findMyAccountById(accountId).flatMap(account -> {
+            return accountForMovementPort.findMyAccountById(command.categoryId()).flatMap(account -> {
                 account.validateAccountIsActive();
-                account.validateSufficientFunds(amount);
-                account.transfer(amount);
+                account.validateSufficientFunds(command.amount());
+                account.transfer(command.amount());
 
-                Movement motion = new Movement(userId, accountId, categoryId, null, type, amount, date,
-                        description);
+                Movement motion = new Movement(command.userId(), command.accountId(), command.categoryId(), null,
+                        command.type(), command.amount(),
+                        command.date(),
+                        command.description());
                 return movementRepositoryPort.save(motion)
                         .flatMap(mot -> saveAccountForMovementPort.save(account).thenReturn(mot));
             });
@@ -83,12 +81,13 @@ public class MovementService
     }
 
     @Override
-    public Mono<Void> saveVoucherFile(UUID movementId, Mono<FilePart> filePart) {
-        return movementRepositoryPort.findById(movementId)
-                .flatMap(movement -> filePart.flatMap(saveFileVoucherUseCase::saveFileVoucher).flatMap(secureUrl -> {
-                    movement.upReceipt(secureUrl);
-                    return movementRepositoryPort.save(movement).then();
-                }));
+    public Mono<Void> saveVoucherFile(SaveCoucherCommand command) {
+        return movementRepositoryPort.findById(command.movementId())
+                .flatMap(movement -> command.filePart().flatMap(saveFileVoucherUseCase::saveFileVoucher)
+                        .flatMap(secureUrl -> {
+                            movement.upReceipt(secureUrl);
+                            return movementRepositoryPort.save(movement).then();
+                        }));
     }
 
 }

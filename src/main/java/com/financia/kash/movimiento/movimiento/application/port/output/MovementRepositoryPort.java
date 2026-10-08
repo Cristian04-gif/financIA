@@ -2,8 +2,8 @@ package com.financia.kash.movimiento.movimiento.application.port.output;
 
 import java.util.UUID;
 
+import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.dto.MovementDTO;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 

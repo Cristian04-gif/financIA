@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.movimiento.movimiento.application.port.input.CreateMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.DeleteMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.GetMovementUseCase;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.AllMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.CreateMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.dto.MovementDTO;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.dto.CreateMovementRequest;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
@@ -53,7 +56,8 @@ public class MovementController {
             @RequestParam(required = false, defaultValue = "desc") String direction) {
         PaginationRequest request = new PaginationRequest(pageNum, pageSize, sortBy, direction);
 
-        return getMovementUseCase.getAllMovements(user.getId(), request).map(ResponseEntity::ok);
+        return getMovementUseCase.getAllMovements(new AllMovementCommand(user.getId(), request))
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Movimientos", description = "Devuelve un movimiento por su ID")
@@ -67,15 +71,17 @@ public class MovementController {
     public Mono<ResponseEntity<Movement>> save(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid CreateMovementRequest request) {
         return createMovimentUseCase
-                .createMotion(user.getId(), request.accountId(), request.categoryId(), request.type(), request.amount(),
-                        request.date(), request.description())
+                .createMotion(new CreateMovementCommand(user.getId(), request.accountId(), request.categoryId(),
+                        request.type(), request.amount(),
+                        request.date(), request.description()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
     }
 
     @PostMapping("/my-movements/{id}/submit-voucher")
     public Mono<ResponseEntity<Void>> submmitVoucher(@PathVariable UUID id,
             @RequestPart("file") Mono<FilePart> filePart) {
-        return createMovimentUseCase.saveVoucherFile(id, filePart).thenReturn(ResponseEntity.noContent().build());
+        return createMovimentUseCase.saveVoucherFile(new SaveCoucherCommand(id, filePart))
+                .thenReturn(ResponseEntity.noContent().build());
     }
 
     @Operation(summary = "Eliminar movimiento", description = "Elimina el movimiento restaurando el monto a la cuenta")
