@@ -20,7 +20,7 @@ public class Endpoints {
         };
 
         public final static String OWNER_ACCESS_MOVEMENTS[] = {
-                        "/api/v1/movements/my-movements/{id}"
+                        "/api/v1/movements/my-movements/{id}", "/api/v1/movements/my-movements/{id}/submit-voucher"
         };
 
         public final static String OWNER_ACCESS_SUBSCRIPTIONS[] = {

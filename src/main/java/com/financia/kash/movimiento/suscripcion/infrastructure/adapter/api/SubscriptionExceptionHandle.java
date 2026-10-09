@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 public class SubscriptionExceptionHandle {
 
     @ExceptionHandler(SubscriptionNotfoundException.class)
-    public Mono<ResponseEntity<ErrorResponse>> userNotFound(Exception exception) {
+    public Mono<ResponseEntity<ErrorResponse>> subscriptionNotfound(Exception exception) {
         ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(response));
     }
