@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.meta.application.port.output.CategoryForObjectivesPort;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
@@ -18,7 +19,8 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class CategoryRepositoryAdapter implements CategoryRepositoryPort, CategoryForVoucherPort {
+public class CategoryRepositoryAdapter
+        implements CategoryRepositoryPort, CategoryForVoucherPort, CategoryForObjectivesPort {
 
     private final CategoryEntityRepository categoryRepository;
     private final CategoryMapper categoryMapper;

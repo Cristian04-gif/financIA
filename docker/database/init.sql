@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS movimientos (
         PRIMARY KEY (id),
 
     CONSTRAINT movimientos_tipo_check
-        CHECK (tipo IN ('INGRESO', 'EGRESO'))
+        CHECK (tipo IN ('INGRESO', 'EGRESO', 'AHORRO'))
 );
 
 CREATE INDEX idx_movimientos_suscripcion_id
@@ -189,6 +189,90 @@ CREATE INDEX idx_suscripciones_cuenta_id
 CREATE INDEX idx_suscripciones_categoria_id
     ON suscripciones(categoria_id);
 
+
+-- ============================================================
+-- TABLA: metas financieras
+-- ============================================================
+CREATE TABLE IF NOT EXISTS metas_financieras (
+    id UUID PRIMARY KEY,
+    
+    usuario_id UUID NOT NULL,
+    
+    nombre VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    
+    monto_actual NUMERIC(19, 2) NOT NULL DEFAULT 0.00,
+    monto_objetivo NUMERIC(19, 2) NOT NULL,
+    progreso DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    
+    fecha_inicio DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_objetivo DATE NOT NULL,
+    
+    estado VARCHAR(255) NOT NULL,
+    ultima_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_metas_financieras_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(id),
+
+    CONSTRAINT chk_monto_positivo CHECK (monto_objetivo > 0),
+    CONSTRAINT chk_monto_actual_no_negativo CHECK (monto_actual >= 0),
+    CONSTRAINT chk_fechas_coherentes CHECK (fecha_objetivo >= fecha_inicio),
+    CONSTRAINT chk_porcentaje_rango CHECK (porgreso >= 0.0)
+
+    CONSTRAINT chk_estado
+        CHECK(
+            estado IN (
+                'INICIADA', 
+                'EN_PROCESO', 
+                'PAUSADA', 
+                'REANUDADA', 
+                'COMPLETADA', 
+                'CANCELADA'
+        )
+    )
+);
+
+CREATE INDEX idx_metas_financieras_usuario_id 
+ON metas_financieras (usuario_id);
+
+CREATE INDEX idx_metas_financieras_estado_fecha 
+ON metas_financieras (estado, fecha_objetivo);
+
+-- ============================================================
+-- TABLA: aportes meta
+-- ============================================================
+CREATE TABLE IF NOT EXISTS aportes_meta (
+    id UUID PRIMARY KEY,
+    meta_id UUID NOT NULL,
+    
+    movimiento_id UUID NOT NULL,
+    
+    monto NUMERIC(19, 2) NOT NULL,
+    
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    
+    descripcion TEXT,
+
+    CONSTRAINT fk_aportes_meta_meta_id 
+        FOREIGN KEY (meta_id) 
+        REFERENCES metas_financieras(id) 
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_aportes_meta_movimiento_id 
+        FOREIGN KEY (movimiento_id) 
+        REFERENCES movimientos(id) 
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_monto_aporte_positivo CHECK (monto > 0)
+);
+
+
+CREATE INDEX idx_aportes_meta_meta_id 
+ON aportes_meta (meta_id);
+
+CREATE INDEX idx_aportes_meta_movimiento_id 
+ON aportes_meta (movimiento_id);
 
 -- ============================================================
 -- FOREIGN KEYS

@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
 import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.domain.exception.MovementNotFoundException;
@@ -23,7 +24,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class MovementRepositoryAdapter implements MovementRepositoryPort {
+public class MovementRepositoryAdapter implements MovementRepositoryPort, MovementSaveForObjective {
 
     private final MovementEntityRepository movementEntityRepository;
     private final MovementMapper movementMapper;

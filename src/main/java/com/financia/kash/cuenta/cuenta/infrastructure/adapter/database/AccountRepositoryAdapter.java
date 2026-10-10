@@ -10,6 +10,7 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
+import com.financia.kash.meta.application.port.output.RetriveAccountForObjectivesPort;
 import com.financia.kash.movimiento.comprobante.application.port.output.AccoutsForVoucherPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
@@ -24,7 +25,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AccountRepositoryAdapter
         implements AccountRespotoryPort, AccountForMovementPort, SaveAccountForMovementPort,
-        FindAccountForSubscription, SaveAccountoForSubscription, AccoutsForVoucherPort {
+        FindAccountForSubscription, SaveAccountoForSubscription, AccoutsForVoucherPort,
+        RetriveAccountForObjectivesPort {
 
     private final AccountEntityRepository accountRepository;
     private final AccountMapper accountMapper;
