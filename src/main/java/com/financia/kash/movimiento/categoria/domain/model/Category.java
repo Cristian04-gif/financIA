@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.movimiento.categoria.domain.enums.CategoryType;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryTypeNotfoundException;
 import com.financia.kash.shared.domain.utils.Default;
 

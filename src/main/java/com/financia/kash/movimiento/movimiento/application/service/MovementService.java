@@ -53,7 +53,7 @@ public class MovementService
             if (!exist) {
                 return Mono.error(new CategoryNotFoundException(command.categoryId()));
             }
-            return accountForMovementPort.findMyAccountById(command.categoryId()).flatMap(account -> {
+            return accountForMovementPort.findMyAccountById(command.accountId()).flatMap(account -> {
                 account.validateAccountIsActive();
                 account.validateSufficientFunds(command.amount());
                 account.transfer(command.amount());

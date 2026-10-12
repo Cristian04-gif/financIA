@@ -42,7 +42,8 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepositoryPort
 
     @Override
     public Flux<Subscription> findSubscriptionsExpiringToday(LocalDate date) {
-        return subscriptionEntityRepository.findByDateNextPayment(date).map(subscriptionMapper::mapToDomain);
+        return subscriptionEntityRepository.findByDateNextPaymentAndActiveTrue(date)
+                .map(subscriptionMapper::mapToDomain);
     }
 
 }

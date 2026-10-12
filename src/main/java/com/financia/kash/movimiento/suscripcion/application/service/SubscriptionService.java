@@ -10,11 +10,12 @@ import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.movimiento.categoria.application.port.input.GetCategoriesUseCase;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
 import com.financia.kash.movimiento.suscripcion.application.port.input.ChangeStatusSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.CreateSubscriptionUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.GetSubscriptionUseCase;
+import com.financia.kash.movimiento.suscripcion.application.port.input.IncreaseFundsUseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.SubscriptionDiscountuseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.command.CreateSubscriptionCommand;
 import com.financia.kash.movimiento.suscripcion.application.port.output.FindAccountForSubscription;
@@ -30,7 +31,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SubscriptionService
         implements GetSubscriptionUseCase, CreateSubscriptionUseCase, ChangeStatusSubscriptionUseCase,
-        SubscriptionDiscountuseCase {
+        SubscriptionDiscountuseCase, IncreaseFundsUseCase {
 
     private final SubscriptionRepositoryPort subscriptionRepositoryPort;
     private final GetCategoriesUseCase getCategoriesUseCase;
@@ -59,7 +60,7 @@ public class SubscriptionService
 
             return subscriptionRepositoryPort
                     .save(Subscription.create(command.userId(), account.getId(), category.getId(), command.name(),
-                            command.amount(), command.frequency(),
+                            command.amount(), command.frequency(), command.type(),
                             command.payDay()));
         });
     }
@@ -76,7 +77,8 @@ public class SubscriptionService
     @Transactional
     public Mono<Void> subscriptionDiscount() {
         return subscriptionRepositoryPort
-                .findSubscriptionsExpiringToday(LocalDate.now()).filter(subs -> subs.getActive().equals(Boolean.TRUE))
+                .findSubscriptionsExpiringToday(LocalDate.now())
+                .filter(subs -> subs.getType().equals(TypeMovement.EGRESO))
                 .concatMap(sub -> findAccountForSubscription.findMyAccountById(sub.getPayingAccountId())
                         .flatMap(account -> {
                             account.validateAccountIsActive();
@@ -95,6 +97,30 @@ public class SubscriptionService
 
                             return movementRepositoryPort
                                     .save(movement)
+                                    .then(saveAccountoForSubscription.save(account));
+                        }))
+                .then();
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> increaseFunds() {
+        return subscriptionRepositoryPort.findSubscriptionsExpiringToday(LocalDate.now())
+                .filter(movements -> movements.getType().equals(TypeMovement.INGRESO))
+                .concatMap(ingreso -> findAccountForSubscription.findMyAccountById(ingreso.getPayingAccountId())
+                        .flatMap(account -> {
+                            account.receive(ingreso.getAmount());
+
+                            Movement movement = new Movement(
+                                    ingreso.getUserId(),
+                                    account.getId(),
+                                    ingreso.getCategoryId(),
+                                    ingreso.getId(),
+                                    TypeMovement.INGRESO,
+                                    ingreso.getAmount(),
+                                    LocalDate.now(),
+                                    "Se sumo el sueldo a " + ingreso.getName());
+                            return movementRepositoryPort.save(movement)
                                     .then(saveAccountoForSubscription.save(account));
                         }))
                 .then();

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.exception.FailureSendReceiptException;
 import com.financia.kash.movimiento.movimiento.domain.exception.InvalidMovementTypeException;
 import com.financia.kash.shared.domain.utils.Default;

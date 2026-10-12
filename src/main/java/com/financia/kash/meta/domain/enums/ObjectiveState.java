@@ -1,4 +1,4 @@
-package com.financia.kash.meta.domain.model;
+package com.financia.kash.meta.domain.enums;
 
 public enum ObjectiveState {
     INICIADA,

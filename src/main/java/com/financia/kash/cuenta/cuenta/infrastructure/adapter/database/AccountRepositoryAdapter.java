@@ -5,9 +5,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.domain.exception.AccountNotFoundException;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
-import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
 import com.financia.kash.meta.application.port.output.RetriveAccountForObjectivesPort;

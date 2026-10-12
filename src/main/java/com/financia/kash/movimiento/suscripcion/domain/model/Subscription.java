@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
+import com.financia.kash.movimiento.suscripcion.domain.enums.SubscriptionFrequency;
 import com.financia.kash.movimiento.suscripcion.domain.exception.FrequencyNotFoundException;
 import com.financia.kash.shared.domain.utils.Default;
 
@@ -22,6 +24,7 @@ public class Subscription {
     private String name;
     private BigDecimal amount;
     private SubscriptionFrequency frequency;
+    private TypeMovement type;
     private Integer payDay;
     private LocalDate dateNextPayment;
     private Boolean active;
@@ -29,11 +32,13 @@ public class Subscription {
     public static Subscription create(UUID userId, UUID payingAccountId, UUID categoryId, String name,
             BigDecimal amount,
             SubscriptionFrequency frequency,
+            TypeMovement type,
             Integer payDay) {
         existType(frequency);
         amountValidated(amount);
         LocalDate nextPay = setPaymentDate(payDay, frequency);
-        return new Subscription(null, userId, payingAccountId, categoryId, name, amount, frequency, payDay, nextPay,
+        return new Subscription(null, userId, payingAccountId, categoryId, name, amount, frequency, type, payDay,
+                nextPay,
                 true);
     }
 

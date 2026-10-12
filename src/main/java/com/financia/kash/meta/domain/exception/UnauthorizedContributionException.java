@@ -1,6 +1,6 @@
 package com.financia.kash.meta.domain.exception;
 
-import com.financia.kash.meta.domain.model.ObjectiveState;
+import com.financia.kash.meta.domain.enums.ObjectiveState;
 
 public class UnauthorizedContributionException extends RuntimeException {
 

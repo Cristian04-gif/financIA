@@ -1,6 +1,6 @@
 package com.financia.kash.meta.infrastructure.api.dto;
 
-import com.financia.kash.meta.domain.model.ObjectiveState;
+import com.financia.kash.meta.domain.enums.ObjectiveState;
 
 import jakarta.validation.constraints.NotNull;
 

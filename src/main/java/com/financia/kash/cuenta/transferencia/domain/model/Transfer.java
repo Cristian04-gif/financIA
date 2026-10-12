@@ -1,6 +1,7 @@
 package com.financia.kash.cuenta.transferencia.domain.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class Transfer {
     private final UUID destinationAccount;
     private BigDecimal amount;
     private String description;
-    private final LocalDateTime creationDate;
+    private final LocalDate creationDate;
 
     public Transfer(UUID userId, UUID sourceAccount, UUID destinationAccount, BigDecimal amount,
             String description) {
@@ -28,7 +29,7 @@ public class Transfer {
         this.destinationAccount = destinationAccount;
         this.amount = amount;
         this.description = description;
-        this.creationDate = LocalDateTime.now();
+        this.creationDate = LocalDate.now();
     }
 
     public void changeAmount(BigDecimal amount) {

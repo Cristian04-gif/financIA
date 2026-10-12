@@ -17,12 +17,12 @@ public interface SubscriptionEntityRepository extends ReactiveCrudRepository<Sub
 
     Flux<SubscriptionProject> findAllByUserId(UUID userId);
 
-    Flux<SubscriptionEntity> findByDateNextPayment(LocalDate dateNextPayment);
+    Flux<SubscriptionEntity> findByDateNextPaymentAndActiveTrue(LocalDate dateNextPayment);
 
     @Query("""
             SELECT EXISTS(
                 SELECT 1
-                FROM suscripciones s
+                FROM movimientos_frecuentes s
                 LEFT JOIN usuarios u ON u.id = s.usuario_id
                 WHERE s.id = :id
                 AND u.email = :email

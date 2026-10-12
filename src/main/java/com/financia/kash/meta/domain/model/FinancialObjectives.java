@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.financia.kash.meta.domain.enums.ObjectiveState;
 import com.financia.kash.meta.domain.exception.InvalidContributionAmountException;
 import com.financia.kash.meta.domain.exception.InvalidStateChangeException;
 import com.financia.kash.meta.domain.exception.UnauthorizedContributionException;

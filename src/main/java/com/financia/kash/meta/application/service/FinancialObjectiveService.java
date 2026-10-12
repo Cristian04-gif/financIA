@@ -21,8 +21,8 @@ import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
 import com.financia.kash.meta.application.port.output.RetriveAccountForObjectivesPort;
 import com.financia.kash.meta.domain.model.ContributeObjetive;
 import com.financia.kash.meta.domain.model.FinancialObjectives;
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 

@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;
@@ -34,7 +34,7 @@ public class MovementEntity implements HasUuid {
     @Column(value = "categoria_id")
     private UUID categoryId;
 
-    @Column(value = "suscripcion_id")
+    @Column(value = "frecuentes_id")
     private UUID subscriptionId;
 
     @Column(value = "tipo")

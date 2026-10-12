@@ -14,65 +14,64 @@ import reactor.core.publisher.Mono;
 
 public interface TransferEntityRepository extends ReactiveCrudRepository<TransferEntity, UUID> {
 
-        @Query("""
-                        SELECT t.id,
-                                   t.cuenta_origen_id AS cuenta_origen_id,
-                                   c.nombre AS nombre_o,
-                                   t.cuenta_destino_id AS cuenta_destino_id,
-                                   s.nombre AS nombre_d,
-                                   t.descripcion AS descripcion,
-                                   t.fecha_creacion AS fecha_creacion,
-                                   t.monto AS monto
-                            FROM cuentas c
-                            INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
-                            INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
-                            INNER JOIN usuarios u ON u.id = t.usuario_id
-                            WHERE u.id = :userId
-                        """)
-        Flux<TransferProject> findAllByUserId(UUID userId, Pageable pageable);
+    @Query("""
+            SELECT t.id,
+                       t.cuenta_origen_id AS cuenta_origen_id,
+                       c.nombre AS nombre_o,
+                       t.cuenta_destino_id AS cuenta_destino_id,
+                       s.nombre AS nombre_d,
+                       t.descripcion AS descripcion,
+                       t.fecha_creacion AS fecha_creacion,
+                       t.monto AS monto
+                FROM cuentas c
+                INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
+                INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
+                WHERE t.usuario_id = :userId
+            """)
+    Flux<TransferProject> findAllByUserId(UUID userId, Pageable pageable);
 
-        Mono<Long> countByUserId(UUID userId);
+    Mono<Long> countByUserId(UUID userId);
 
-        @Query("""
-                        SELECT t.id,
-                                   t.cuenta_origen_id AS cuenta_origen_id,
-                                   c.nombre AS nombre_o,
-                                   t.cuenta_destino_id AS cuenta_destino_id,
-                                   s.nombre AS nombre_d,
-                                   t.descripcion AS descripcion,
-                                   t.fecha_creacion AS fecha_creacion,
-                                   t.monto AS monto
-                            FROM cuentas c
-                            INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
-                            INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
-                            WHERE t.id = :id
-                        """)
-        Mono<TransferProject> findByIdProject(UUID id);
+    @Query("""
+            SELECT t.id,
+                       t.cuenta_origen_id AS cuenta_origen_id,
+                       c.nombre AS nombre_o,
+                       t.cuenta_destino_id AS cuenta_destino_id,
+                       s.nombre AS nombre_d,
+                       t.descripcion AS descripcion,
+                       t.fecha_creacion AS fecha_creacion,
+                       t.monto AS monto
+                FROM cuentas c
+                INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
+                INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
+                WHERE t.id = :id
+            """)
+    Mono<TransferProject> findByIdProject(UUID id);
 
-        @Query("""
-                            SELECT t.id,
-                                   t.cuenta_destino_id AS cuenta_destino_id,
-                                   s.nombre AS nombre_d,
-                                   t.descripcion AS descripcion,
-                                   t.fecha_creacion AS fecha_creacion,
-                                   t.monto AS monto
-                            FROM cuentas c
-                            INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
-                            INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
-                            WHERE c.id = :accountId
-                        """)
-        Flux<TransferProject> findAllByAccountId(UUID accountId, Pageable pageable);
+    @Query("""
+                SELECT t.id,
+                       t.cuenta_destino_id AS cuenta_destino_id,
+                       s.nombre AS nombre_d,
+                       t.descripcion AS descripcion,
+                       t.fecha_creacion AS fecha_creacion,
+                       t.monto AS monto
+                FROM cuentas c
+                INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
+                INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
+                WHERE c.id = :accountId
+            """)
+    Flux<TransferProject> findAllByAccountId(UUID accountId, Pageable pageable);
 
-        Mono<Long> countBySourceAccount(UUID accountId);
+    Mono<Long> countBySourceAccount(UUID accountId);
 
-        @Query("""
-                        SELECT EXISTS(
-                                SELECT 1
-                                FROM transferencias t
-                                INNER JOIN usuarios u ON u.id = t.usuario_id
-                                WHERE t.id = :id
-                                AND u.email = :email
-                        )
-                            """)
-        Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
+    @Query("""
+            SELECT EXISTS(
+                    SELECT 1
+                    FROM transferencias t
+                    INNER JOIN usuarios u ON u.id = t.usuario_id
+                    WHERE t.id = :id
+                    AND u.email = :email
+            )
+                """)
+    Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 }

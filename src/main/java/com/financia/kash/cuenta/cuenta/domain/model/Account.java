@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.domain.exception.InactiveAccountException;
 import com.financia.kash.cuenta.cuenta.domain.exception.InsufficientFundsException;
 import com.financia.kash.cuenta.cuenta.domain.exception.InvalidAmountException;

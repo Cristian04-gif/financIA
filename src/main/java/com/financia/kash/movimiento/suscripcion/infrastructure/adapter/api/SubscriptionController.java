@@ -62,7 +62,7 @@ public class SubscriptionController {
             @RequestBody @Valid CreateSubscriptionRequest request) {
         return createSubscriptionUseCase
                 .create(new CreateSubscriptionCommand(user.getId(), request.payingAccountId(), request.categoryId(),
-                        request.name(), request.amount(), request.frequency(), request.payDay()))
+                        request.name(), request.amount(), request.frequency(), request.type(), request.payDay()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
     }
 

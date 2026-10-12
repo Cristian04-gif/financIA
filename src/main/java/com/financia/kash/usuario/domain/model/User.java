@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import com.financia.kash.shared.domain.utils.Default;
+import com.financia.kash.usuario.domain.enums.RoleUser;
+import com.financia.kash.usuario.domain.enums.UserStatus;
 import com.financia.kash.usuario.domain.exception.User2FAEnabledException;
 import com.financia.kash.usuario.domain.exception.UserStateNotFoundException;
 
@@ -23,7 +25,7 @@ public class User {
     private String password;
     private final LocalDate creationDate;
     private LocalDate updateDate;
-    private EstadoUsuario status;
+    private UserStatus status;
     private RoleUser role;
     private String secret2fa;
     private boolean enable2fa;
@@ -36,7 +38,7 @@ public class User {
         this.password = password;
         this.creationDate = LocalDate.now();
         this.updateDate = null;
-        this.status = EstadoUsuario.ACTIVO;
+        this.status = UserStatus.ACTIVO;
         this.role = RoleUser.valueOf(role);
         this.secret2fa = null;
         this.enable2fa = false;
@@ -45,14 +47,14 @@ public class User {
     private boolean existStatus(String estado) {
         if (estado == null)
             return false;
-        return Arrays.stream(EstadoUsuario.values()).anyMatch(e -> e.name().equalsIgnoreCase(estado));
+        return Arrays.stream(UserStatus.values()).anyMatch(e -> e.name().equalsIgnoreCase(estado));
     }
 
     public void changeStatus(String estado) {
         if (!existStatus(estado)) {
             throw new UserStateNotFoundException(estado);
         }
-        this.status = EstadoUsuario.valueOf(estado.toUpperCase());
+        this.status = UserStatus.valueOf(estado.toUpperCase());
     }
 
     public void changePassword(String newPassword) {

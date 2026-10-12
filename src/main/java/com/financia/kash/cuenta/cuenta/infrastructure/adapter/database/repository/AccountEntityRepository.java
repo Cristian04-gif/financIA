@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.entity.AccountEntity;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.project.AccountProject;
 

@@ -10,7 +10,7 @@ import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
 import com.financia.kash.usuario.application.port.input.command.ChangePasswordCommand;
 import com.financia.kash.usuario.application.port.output.PasswordEncoderForUserPort;
 import com.financia.kash.usuario.application.port.output.UserRepositoryPort;
-import com.financia.kash.usuario.domain.model.EstadoUsuario;
+import com.financia.kash.usuario.domain.enums.UserStatus;
 import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
@@ -26,10 +26,10 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
     @Override
     public Mono<Void> deleteMe(UUID id) {
         return repositoryPort.getMe(id).flatMap(user -> {
-            if (user.getStatus().equals(EstadoUsuario.ELIMINADO)) {
+            if (user.getStatus().equals(UserStatus.ELIMINADO)) {
                 throw new RuntimeException("El usuario ya esta en proceso de eliminacion");
             }
-            user.changeStatus(EstadoUsuario.SUSPENDIDO.name());
+            user.changeStatus(UserStatus.SUSPENDIDO.name());
             return repositoryPort.save(user);
         }).then();
     }
