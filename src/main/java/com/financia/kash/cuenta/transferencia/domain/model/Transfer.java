@@ -2,7 +2,6 @@ package com.financia.kash.cuenta.transferencia.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.financia.kash.shared.domain.utils.Default;

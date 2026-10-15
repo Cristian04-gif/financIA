@@ -2,7 +2,6 @@ package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.e
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
