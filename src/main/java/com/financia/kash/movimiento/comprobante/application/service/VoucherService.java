@@ -10,6 +10,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.comprobante.application.port.input.OcrUseCase;
@@ -26,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +56,15 @@ public class VoucherService implements OcrUseCase {
                                                         });
                                 }).next().switchIfEmpty(Mono.error(new IllegalArgumentException(
                                                 "Error: Todos los modelos listados en tu application.yml han superado sus límites de cuota diarios.")))
-                                .flatMap(res -> mapModel(command.userId(), res));
+                                .flatMap(res -> {
+                                        try {
+                                                return mapModel(command.userId(), res);
+                                        } catch (JsonProcessingException e) {
+                                                throw new IllegalArgumentException(
+                                                                "No se pudo mapear la respuesta ORC: "
+                                                                                + e.getMessage());
+                                        }
+                                });
 
         }
 
@@ -69,7 +79,7 @@ public class VoucherService implements OcrUseCase {
                                 .content());
         };
 
-        private Mono<Voucher> mapModel(UUID userId, String res) {
+        private Mono<Voucher> mapModel(UUID userId, String res) throws JsonMappingException, JsonProcessingException {
                 log.info("respuesta de la IA recibida: {}", res);
                 Voucher voucher = objectMapper.readValue(res,
                                 Voucher.class);

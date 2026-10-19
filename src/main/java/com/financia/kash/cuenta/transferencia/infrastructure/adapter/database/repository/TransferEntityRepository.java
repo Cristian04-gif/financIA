@@ -27,6 +27,7 @@ public interface TransferEntityRepository extends ReactiveCrudRepository<Transfe
                 INNER JOIN transferencias t ON c.id = t.cuenta_origen_id
                 INNER JOIN cuentas s ON s.id = t.cuenta_destino_id
                 WHERE t.usuario_id = :userId
+                ORDER BY t.fecha_creacion DESC
             """)
     Flux<TransferProject> findAllByUserId(UUID userId, Pageable pageable);
 

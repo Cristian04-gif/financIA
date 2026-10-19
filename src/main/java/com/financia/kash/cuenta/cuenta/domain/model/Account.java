@@ -4,17 +4,17 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.domain.exception.InactiveAccountException;
 import com.financia.kash.cuenta.cuenta.domain.exception.InsufficientFundsException;
 import com.financia.kash.cuenta.cuenta.domain.exception.InvalidAmountException;
 import com.financia.kash.shared.domain.utils.Default;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(onConstructor_ = { @Default })
 public class Account {
     private final UUID id;
     private final UUID userId;
@@ -68,5 +68,30 @@ public class Account {
 
     public void changeStatus() {
         this.active = !this.active;
+    }
+
+    // mapeo con MapStruct y Redis
+    @Default
+    @JsonCreator
+    public Account(
+            @JsonProperty("id") UUID id,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("name") String name,
+            @JsonProperty("type") AccountType type,
+            @JsonProperty("initialBalance") BigDecimal initialBalance,
+            @JsonProperty("currentBalance") BigDecimal currentBalance,
+            @JsonProperty("creationDate") LocalDate creationDate,
+            @JsonProperty("updateDate") LocalDate updateDate,
+            @JsonProperty("active") boolean active) {
+
+        this.id = id;
+        this.userId = userId;
+        this.name = name;
+        this.type = type;
+        this.initialBalance = initialBalance;
+        this.currentBalance = currentBalance;
+        this.creationDate = creationDate;
+        this.updateDate = updateDate;
+        this.active = active;
     }
 }

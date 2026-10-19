@@ -5,11 +5,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record TransferDTO(
-                UUID id,
-                AccountParticiped accountOrigin,
-                AccountParticiped accountDestination,
-                String description,
-                LocalDate creationDate,
-                BigDecimal amount) {
+        UUID id,
+        AccountParticiped accountOrigin,
+        AccountParticiped accountDestination,
+        String description,
+        LocalDate creationDate,
+        BigDecimal amount) {
 
 }
