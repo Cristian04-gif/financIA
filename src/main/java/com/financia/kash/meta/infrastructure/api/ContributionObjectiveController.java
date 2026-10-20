@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.financia.kash.meta.application.port.input.RetriveContributionUseCase;
 import com.financia.kash.meta.application.port.input.response.ContributionDTO;
-import com.financia.kash.meta.domain.model.ContributeObjetive;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
@@ -42,7 +41,7 @@ public class ContributionObjectiveController {
 
     @Operation(summary = "Una contribucion a una meta")
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<ContributeObjetive>> getById(@PathVariable UUID id) {
+    public Mono<ResponseEntity<ContributionDTO>> getById(@PathVariable UUID id) {
         return retriveContributionUseCase.getById(id).map(ResponseEntity::ok);
     }
 

@@ -1,17 +1,10 @@
 package com.financia.kash.cuenta.cuenta.application.service;
 
-import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.cuenta.cuenta.application.port.input.CreateAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.DeleteAccountUseCase;
 import com.financia.kash.cuenta.cuenta.application.port.input.GetAccountUseCase;
@@ -22,8 +15,8 @@ import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryP
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.shared.domain.exception.RedisException;
-import com.financia.kash.shared.infrastructure.utils.statics.CacheKeys;
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -36,8 +29,7 @@ public class AccountService
 
     private final AccountRespotoryPort accountRespotoryPort;
     private final TransferRepositoryPort transferRepositoryPort;
-    private final ReactiveStringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final CacheService<Account> cacheService;
 
     @Override
     @Transactional
@@ -64,8 +56,17 @@ public class AccountService
             Transfer transfer = new Transfer(source.getUserId(), command.idSource(), command.idTarget(),
                     command.amount(), command.description());
 
-            return transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
-                    .then(accountRespotoryPort.save(target)).then(deleteAllCache(transfer.getUserId()));
+            return transferRepositoryPort.save(transfer)
+                    .flatMap(trans -> accountRespotoryPort.save(source).then(accountRespotoryPort.save(target).then(
+                            CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), trans.getUserId(),
+                                    trans.getSourceAccount(), trans.getDestinationAccount(), trans.getId()))));
+
+            // return
+            // transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
+            // .then(accountRespotoryPort.save(target))
+            // .flatMap(res ->
+            // CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), null, null,
+            // null, null));
         }).then();
 
     }
@@ -73,56 +74,23 @@ public class AccountService
     @Override
     public Flux<Account> getAllMyAccount(UUID userId) {
         String cacheKey = CacheKeys.allUserAccounts(userId);
-        return redisTemplate.opsForValue().get(cacheKey)
-                .flatMapMany(json -> {
-                    try {
-                        List<Account> accounts = objectMapper.readValue(json, new TypeReference<List<Account>>() {
-                        });
-
-                        return Flux.fromIterable(accounts);
-                    } catch (JsonProcessingException e) {
-                        return Flux.error(new RedisException(e));
-                    }
-                })
+        return cacheService.getCacheList(cacheKey, Account.class)
                 .switchIfEmpty(accountRespotoryPort.findAllMyAccounts(userId)
                         .collectList()
-                        .flatMapMany(accounts -> {
-                            try {
-                                String json = objectMapper.writeValueAsString(accounts);
-                                return redisTemplate.opsForValue()
-                                        .set(cacheKey, json, Duration.ofMinutes(15))
-                                        .thenMany(Flux.fromIterable(accounts));
-                            } catch (JsonProcessingException e) {
-                                return Flux.fromIterable(accounts);
-                            }
-                        }));
+                        .flatMapMany(accounts -> cacheService.saveListCache(cacheKey, accounts)));
     }
 
     @Override
     public Mono<Account> getMyAccountById(UUID accountId) {
         String cacheKey = CacheKeys.account(accountId);
-        return redisTemplate.opsForValue().get(cacheKey).map(json -> {
-            try {
-                return objectMapper.readValue(json, Account.class);
-            } catch (JsonProcessingException e) {
-                throw new RedisException(e);
-            }
-        }).switchIfEmpty(accountRespotoryPort.findMyAccountById(accountId).flatMap(account -> {
-            try {
-                String json = objectMapper.writeValueAsString(account);
-                return redisTemplate.opsForValue()
-                        .set(cacheKey, json, Duration.ofMinutes(15))
-                        .thenReturn(account);
-            } catch (JsonProcessingException e) {
-                return Mono.error(e);
-            }
-        }));
+        return cacheService.retrieveMonoCache(cacheKey, Account.class)
+                .switchIfEmpty(accountRespotoryPort.findMyAccountById(accountId)
+                        .flatMap(account -> cacheService.saveMonoCache(cacheKey, account)));
     }
 
     @Override
     @Transactional
     public Mono<Void> deleteMyAccount(UUID accountId) {
-
         return accountRespotoryPort.findMyAccountById(accountId)
                 .flatMap(account -> accountRespotoryPort.delete(accountId));
     }
@@ -131,39 +99,19 @@ public class AccountService
     public Mono<Account> createAccount(CreateAccountCommand command) {
         Account account = new Account(command.userId(), command.name(), command.type(), command.initialBalance());
 
-        return accountRespotoryPort.save(account).flatMap(accountSaved -> {
-
-            Mono<Long> borrarTodo = deleteAllCache(accountSaved.getUserId());
-
-            return Mono.when(borrarTodo).thenReturn(accountSaved);
-        });
+        return accountRespotoryPort.save(account)
+                .flatMap(accountSaved -> CacheKeys.deleteAllCacheAccounts(cacheService.redisTemplate(),
+                        accountSaved.getUserId()).thenReturn(accountSaved));
     }
 
     @Override
     public Mono<Void> changeStatusAcount(UUID accountId) {
         return getMyAccountById(accountId).flatMap(account -> {
             account.changeStatus();
-            return accountRespotoryPort.save(account).flatMap(accountSaved -> {
-                Mono<Boolean> borrarIndividual = deleteInidividual(accountId);
-                Mono<Long> borrarTodo = deleteAllCache(accountSaved.getUserId());
-                return Mono.when(borrarIndividual, borrarTodo).thenReturn(accountSaved);
-            }).then();
+            return accountRespotoryPort.save(account).flatMap(accountSaved -> CacheKeys
+                    .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(), accountId)).then();
         });
 
     }
 
-    // delete cache
-    private Mono<Long> deleteAllCache(UUID userId) {
-        Flux<String> llaves = redisTemplate.scan(
-                ScanOptions.scanOptions()
-                        .match(CacheKeys.allUserAccounts(userId))
-                        .build());
-        return redisTemplate.delete(llaves);
-    }
-
-    private Mono<Boolean> deleteInidividual(UUID accountId) {
-        String cacheIndividual = CacheKeys.account(accountId);
-        return redisTemplate.opsForValue().delete(cacheIndividual);
-
-    }
 }

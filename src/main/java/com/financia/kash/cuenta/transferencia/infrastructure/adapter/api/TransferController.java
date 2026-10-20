@@ -19,6 +19,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/api/v1/transfers/my-transfers")
 @RequiredArgsConstructor
 @Tag(name = "Transferencias", description = "Operaciones de la API de Transferencias")
+@Log4j2
 public class TransferController {
 
     private final GetTransferUserCase getTransferUserCase;
@@ -63,6 +65,7 @@ public class TransferController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
+        log.info("orden: {}", sortBy);
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
         return getTransferUserCase.getAllTransfersByAccount(new GetTransferAccountCommand(id, paginationRequest))
                 .map(ResponseEntity::ok);

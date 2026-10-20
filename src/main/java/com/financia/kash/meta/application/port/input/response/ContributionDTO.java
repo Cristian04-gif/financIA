@@ -5,8 +5,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record ContributionDTO(UUID id,
-        BigDecimal amount,
-        LocalDate date,
-        String description) {
+                ObjectiveBelongs objective,
+                BigDecimal amount,
+                LocalDate date,
+                String description) {
 
 }

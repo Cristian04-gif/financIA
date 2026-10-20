@@ -1,4 +1,4 @@
-package com.financia.kash.shared.infrastructure.utils.statics;
+package com.financia.kash.shared.domain.utils.statics;
 
 public class Endpoints {
         public final static String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",

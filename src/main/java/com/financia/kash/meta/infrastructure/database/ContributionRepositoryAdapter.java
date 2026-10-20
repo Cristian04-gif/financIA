@@ -3,8 +3,6 @@ package com.financia.kash.meta.infrastructure.database;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.meta.application.port.input.response.ContributionDTO;
@@ -12,6 +10,7 @@ import com.financia.kash.meta.application.port.output.ContributeObjectiveReposit
 import com.financia.kash.meta.domain.exception.ContributionNotFoundException;
 import com.financia.kash.meta.domain.model.ContributeObjetive;
 import com.financia.kash.meta.infrastructure.database.mapping.ContributionObjectiveMapper;
+import com.financia.kash.meta.infrastructure.database.repository.ContributionEntityQueryRepository;
 import com.financia.kash.meta.infrastructure.database.repository.ContributionObjectiveRepository;
 import com.financia.kash.meta.infrastructure.database.repository.project.ContributionProject;
 import com.financia.kash.shared.domain.PaginationRequest;
@@ -27,16 +26,13 @@ public class ContributionRepositoryAdapter implements ContributeObjectiveReposit
 
     private final ContributionObjectiveRepository contributionObjectiveRepository;
     private final ContributionObjectiveMapper contributionObjectiveMapper;
+    private final ContributionEntityQueryRepository contributionEntityQueryRepository;
 
     @Override
     public Mono<PaginationResponse<ContributionDTO>> findAllByObjectiveId(UUID objectiveId,
             PaginationRequest request) {
-        PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
-                Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                        request.getSortBy()));
-
-        Flux<ContributionProject> pageContribution = contributionObjectiveRepository.findAllByObjectiveId(objectiveId,
-                pageRequest);
+        Flux<ContributionProject> pageContribution = contributionEntityQueryRepository
+                .findAllContributionByObjective(objectiveId, request);
 
         Mono<Long> count = contributionObjectiveRepository.countByObjectiveId(objectiveId);
 
@@ -69,6 +65,13 @@ public class ContributionRepositoryAdapter implements ContributeObjectiveReposit
     @Override
     public Mono<Void> deleteById(UUID id) {
         return contributionObjectiveRepository.deleteById(id);
+    }
+
+    @Override
+    public Mono<ContributionDTO> findByIdDTO(UUID id) {
+        return contributionObjectiveRepository.findByIdProyect(id)
+                .switchIfEmpty(Mono.error(new ContributionNotFoundException(id)))
+                .map(contributionObjectiveMapper::mapToDomainDTO);
     }
 
 }

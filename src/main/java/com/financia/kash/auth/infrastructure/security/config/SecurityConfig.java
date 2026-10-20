@@ -14,7 +14,7 @@ import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.Transfe
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryAuthorizationManager;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.MovementAuthorizationManager;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.SubscriptionAuthorizationManager;
-import com.financia.kash.shared.infrastructure.utils.statics.Endpoints;
+import com.financia.kash.shared.domain.utils.statics.Endpoints;
 
 import lombok.RequiredArgsConstructor;
 

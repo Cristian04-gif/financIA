@@ -49,8 +49,9 @@ public class AccountRepositoryAdapter
 
     @Override
     public Mono<Account> save(Account account) {
-        return Mono.just(accountMapper.mapToEntity(account))
-                .flatMap(accountEntity -> accountRepository.save(accountEntity)).map(accountMapper::mapToDomain);
+        return Mono.fromCallable(() -> {
+            return accountMapper.mapToEntity(account);
+        }).flatMap(accountEntity -> accountRepository.save(accountEntity)).map(accountMapper::mapToDomain);
     }
 
     @Override

@@ -23,7 +23,7 @@ import com.financia.kash.movimiento.comprobante.domain.model.AccountVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.CategoryVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.Voucher;
 import com.financia.kash.movimiento.comprobante.infrastructure.config.AiCascadeProperties;
-import com.financia.kash.shared.infrastructure.utils.statics.Ocr;
+import com.financia.kash.shared.domain.utils.statics.Ocr;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

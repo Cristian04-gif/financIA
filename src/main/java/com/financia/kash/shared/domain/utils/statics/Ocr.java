@@ -1,4 +1,4 @@
-package com.financia.kash.shared.infrastructure.utils.statics;
+package com.financia.kash.shared.domain.utils.statics;
 
 public class Ocr {
     public final static String PROMPT_ANALIZER_VOUCHER = """

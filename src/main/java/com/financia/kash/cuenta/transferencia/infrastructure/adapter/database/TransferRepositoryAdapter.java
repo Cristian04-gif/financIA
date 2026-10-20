@@ -3,8 +3,6 @@ package com.financia.kash.cuenta.transferencia.infrastructure.adapter.database;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
@@ -12,29 +10,30 @@ import com.financia.kash.cuenta.transferencia.application.port.output.TransferRe
 import com.financia.kash.cuenta.transferencia.domain.exception.TransferNotFoundException;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.mapping.TransferMapper;
+import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityQueryRepository;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.project.TransferProject;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
+@Log4j2
 public class TransferRepositoryAdapter implements TransferRepositoryPort {
 
     private final TransferEntityRepository transferRepository;
+    private final TransferEntityQueryRepository transferEntityQueryRepository;
     private final TransferMapper transferMapper;
 
     @Override
     public Mono<PaginationResponse<TransferDTO>> findAllMyTransfer(UUID userId, PaginationRequest request) {
-        PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
-                Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                        request.getSortBy()));
 
-        Flux<TransferProject> pageTransfer = transferRepository.findAllByUserId(userId, pageRequest);
+        Flux<TransferProject> pageTransfer = transferEntityQueryRepository.findByUser(userId, request);
         Mono<Long> count = transferRepository.countByUserId(userId);
         return Mono.zip(pageTransfer.map(transferMapper::mapToDomainDTO).collectList(), count).map(tuple -> {
             List<TransferDTO> transfers = tuple.getT1();
@@ -50,11 +49,8 @@ public class TransferRepositoryAdapter implements TransferRepositoryPort {
 
     @Override
     public Mono<PaginationResponse<TransferDTO>> findAllTransferByAccount(UUID account, PaginationRequest request) {
-        PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
-                Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                        request.getSortBy()));
 
-        Flux<TransferProject> pageTransfer = transferRepository.findAllByAccountId(account, pageRequest);
+        Flux<TransferProject> pageTransfer = transferEntityQueryRepository.findByAccount(account, request);
         Mono<Long> count = transferRepository.countBySourceAccount(account);
 
         return Mono.zip(pageTransfer.map(transferMapper::mapToDomainDTO).collectList(), count).map(tuple -> {

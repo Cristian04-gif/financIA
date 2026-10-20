@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 public interface ContributeObjectiveRepositoryPort {
     Mono<PaginationResponse<ContributionDTO>> findAllByObjectiveId(UUID objectiveId, PaginationRequest request);
 
+    Mono<ContributionDTO> findByIdDTO(UUID id);
+
     Mono<ContributeObjetive> findById(UUID id);
 
     Mono<ContributeObjetive> save(ContributeObjetive contributeObjetive);

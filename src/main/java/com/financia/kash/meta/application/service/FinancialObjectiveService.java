@@ -23,8 +23,10 @@ import com.financia.kash.meta.domain.model.ContributeObjetive;
 import com.financia.kash.meta.domain.model.FinancialObjectives;
 import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
+import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -32,70 +34,100 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class FinancialObjectiveService
-        implements RetriveObjectivesUseCase, CreateObjectiveUseCase, UpdateStatusObjectiveUseCase,
-        ContributionObjectiveUseCase {
+                implements RetriveObjectivesUseCase, CreateObjectiveUseCase, UpdateStatusObjectiveUseCase,
+                ContributionObjectiveUseCase {
 
-    private final FinancialObjectiveRepositoryPort financialObjectiveRepositoryPort;
-    private final ContributeObjectiveRepositoryPort contributeObjectiveRepositoryPort;
-    private final RetriveAccountForObjectivesPort retriveAccountForObjectives;
-    private final CategoryForObjectivesPort categoryForObjectivesPort;
-    private final MovementSaveForObjective movementSaveForObjective;
+        private final FinancialObjectiveRepositoryPort financialObjectiveRepositoryPort;
+        private final ContributeObjectiveRepositoryPort contributeObjectiveRepositoryPort;
+        private final RetriveAccountForObjectivesPort retriveAccountForObjectives;
+        private final CategoryForObjectivesPort categoryForObjectivesPort;
+        private final MovementSaveForObjective movementSaveForObjective;
 
-    @Override
-    public Mono<PaginationResponse<FinancialObjectives>> getAllObjecives(UUID userId, PaginationRequest request) {
-        return financialObjectiveRepositoryPort.findAllByUserId(userId, request);
-    }
+        private final CacheService<FinancialObjectives> cacheService;
 
-    @Override
-    public Mono<FinancialObjectives> getById(UUID id) {
-        return financialObjectiveRepositoryPort.findById(id);
-    }
+        @Override
+        public Mono<PaginationResponse<FinancialObjectives>> getAllObjecives(UUID userId, PaginationRequest request) {
+                String cackeKey = CacheKeys.allObjectivesUser(userId, request);
+                return cacheService.retriveCachePagination(cackeKey, FinancialObjectives.class)
+                                .switchIfEmpty(financialObjectiveRepositoryPort.findAllByUserId(userId, request)
+                                                .flatMap(objectives -> cacheService.saveCachePagination(cackeKey,
+                                                                objectives)));
+                // return financialObjectiveRepositoryPort.findAllByUserId(userId, request);
+        }
 
-    @Override
-    public Mono<FinancialObjectives> createObjective(CreateObjectiveCommand command) {
-        return Mono.fromCallable(() -> {
-            return new FinancialObjectives(command.userId(), command.name(), command.description(),
-                    command.targetAmount(), command.targetDate());
-        }).flatMap(financialObjectiveRepositoryPort::save);
-    }
+        @Override
+        public Mono<FinancialObjectives> getById(UUID id) {
+                String cacheKey = CacheKeys.objective(id);
+                return cacheService.retrieveMonoCache(cacheKey, FinancialObjectives.class)
+                                .switchIfEmpty(financialObjectiveRepositoryPort.findById(id)
+                                                .flatMap(objective -> cacheService.saveMonoCache(cacheKey, objective)));
+                // return financialObjectiveRepositoryPort.findById(id);
+        }
 
-    @Override
-    public Mono<Void> updateStatus(UpdateStatusCommand command) {
-        return financialObjectiveRepositoryPort.findById(command.id()).flatMap(objective -> {
-            objective.changeStatus(command.objectiveState());
-            return financialObjectiveRepositoryPort.save(objective);
-        }).then();
-    }
+        @Override
+        public Mono<FinancialObjectives> createObjective(CreateObjectiveCommand command) {
+                return Mono.fromCallable(() -> {
+                        return new FinancialObjectives(command.userId(), command.name(), command.description(),
+                                        command.targetAmount(), command.targetDate());
+                }).flatMap(financialObjectiveRepositoryPort::save).flatMap(objective -> {
+                        Mono<Long> borrarTodo = CacheKeys.deleteAllObjectivesUser(cacheService.redisTemplate(),
+                                        objective.getUserId());
+                        return Mono.when(borrarTodo).thenReturn(objective);
+                });
+        }
 
-    @Override
-    @Transactional
-    public Mono<Void> contributionObjective(ContributionObjectiveCommand command) {
-        Mono<Account> accountMono = retriveAccountForObjectives.findMyAccountById(command.accountId());
-        Mono<Boolean> categoryMono = categoryForObjectivesPort.existsById(command.categoryId());
-        Mono<FinancialObjectives> objectiveMono = financialObjectiveRepositoryPort.findById(command.objectiveId());
+        @Override
+        public Mono<Void> updateStatus(UpdateStatusCommand command) {
+                return financialObjectiveRepositoryPort.findById(command.id()).flatMap(objective -> {
+                        objective.changeStatus(command.objectiveState());
+                        return financialObjectiveRepositoryPort.save(objective);
+                }).flatMap(objective -> CacheKeys.clearAllCacheFinancialObjectives(cacheService.redisTemplate(),
+                                objective.getUserId(), objective.getId())).then();
+        }
 
-        return Mono.zip(accountMono, categoryMono, objectiveMono).flatMap(tuple -> {
-            Account account = tuple.getT1();
-            FinancialObjectives objective = tuple.getT3();
+        @Override
+        @Transactional
+        public Mono<Void> contributionObjective(ContributionObjectiveCommand command) {
+                Mono<Account> accountMono = retriveAccountForObjectives.findMyAccountById(command.accountId());
+                Mono<Boolean> categoryMono = categoryForObjectivesPort.existsById(command.categoryId());
+                Mono<FinancialObjectives> objectiveMono = financialObjectiveRepositoryPort
+                                .findById(command.objectiveId());
 
-            // cuenta que hara el movimiento
-            account.validateAccountIsActive();
-            account.validateSufficientFunds(command.amount());
-            account.transfer(command.amount());
+                return Mono.zip(accountMono, categoryMono, objectiveMono).flatMap(tuple -> {
+                        Account account = tuple.getT1();
+                        FinancialObjectives objective = tuple.getT3();
 
-            Movement movement = new Movement(account.getUserId(), account.getId(), command.categoryId(), null,
-                    TypeMovement.AHORRRO, command.amount(), LocalDate.now(), command.description());
+                        // cuenta que hara el movimiento
+                        account.validateAccountIsActive();
+                        account.validateSufficientFunds(command.amount());
+                        account.transfer(command.amount());
 
-            return movementSaveForObjective.save(movement)
-                    .flatMap(movementSaved -> retriveAccountForObjectives.save(account).flatMap(accountSaved -> {
-                        ContributeObjetive contributeObjetive = objective.contributeObjetive(movementSaved.getId(),
-                                command.amount(),
-                                command.description());
+                        Movement movement = new Movement(account.getUserId(), account.getId(), command.categoryId(),
+                                        null,
+                                        TypeMovement.AHORRO, command.amount(), LocalDate.now(), command.description());
+                        return movementSaveForObjective.save(movement)
+                                        .flatMap(movementSaved -> retriveAccountForObjectives.save(account)
+                                                        .flatMap(accountSaved -> {
 
-                        return contributeObjectiveRepositoryPort.save(contributeObjetive);
-                    })).then();
-        });
+                                                                ContributeObjetive contributeObjetive = objective
+                                                                                .contributeObjetive(
+                                                                                                movementSaved.getId(),
+                                                                                                command.amount(),
+                                                                                                command.description());
 
-    }
+                                                                return contributeObjectiveRepositoryPort
+                                                                                .save(contributeObjetive)
+                                                                                .then(financialObjectiveRepositoryPort
+                                                                                                .save(objective))
+                                                                                .then(CacheKeys.clearAllCacheFinancialObjectivesContribution(
+                                                                                                cacheService.redisTemplate(),
+                                                                                                accountSaved.getUserId(),
+                                                                                                accountSaved.getId(),
+                                                                                                objective.getId()));
+                                                        }))
+                                        .then();
+                });
+
+        }
 
 }

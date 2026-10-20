@@ -1,4 +1,4 @@
-package com.financia.kash.shared.application.port.service.ownership;
+package com.financia.kash.shared.application.service.ownership;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
