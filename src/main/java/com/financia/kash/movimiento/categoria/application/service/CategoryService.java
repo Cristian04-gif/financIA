@@ -15,6 +15,8 @@ import com.financia.kash.movimiento.categoria.application.port.input.command.Upd
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import com.financia.kash.usuario.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
@@ -29,27 +31,37 @@ public class CategoryService
 
     private final CategoryRepositoryPort categoryRepositoryPort;
     private final UserForCategoryPort userForCategoryPort;
+    private final CacheService<Category> cacheService;
 
     @Override
     public Flux<Category> getGlobalCategories() {
-        return categoryRepositoryPort.findGlobalCategories();
+        String cacheKey = CacheKeys.allGlobalCategories();
+        return cacheService.getCacheList(cacheKey, Category.class)
+                .switchIfEmpty(categoryRepositoryPort.findGlobalCategories().collectList()
+                        .flatMapMany(categories -> cacheService.saveListCache(cacheKey, categories, 60)));
     }
 
     @Override
     public Flux<Category> getAllMyCategory(UUID userId) {
-        return categoryRepositoryPort.findAllMyCategories(userId);
-
+        String cacheKey = CacheKeys.allUserCategories(userId);
+        return cacheService.getCacheList(cacheKey, Category.class)
+                .switchIfEmpty(categoryRepositoryPort.findAllMyCategories(userId).collectList()
+                        .flatMapMany(categories -> cacheService.saveListCache(cacheKey, categories, 60)));
     }
 
     @Override
     public Mono<Category> getById(UUID id) {
-        return categoryRepositoryPort.findById(id);
+        String cacheKey = CacheKeys.category(id);
+        return cacheService.retrieveMonoCache(cacheKey, Category.class)
+                .switchIfEmpty(categoryRepositoryPort.findById(id))
+                .flatMap(category -> cacheService.saveMonoCache(cacheKey, category, 60));
     }
 
     @Override
     public Mono<Category> createMainCategory(CreateMainCategoryCommand command) {
-        return Mono.just(new Category(command.name(), command.type())).flatMap(categoryRepositoryPort::save);
-
+        return Mono.just(new Category(command.name(), command.type())).flatMap(categoryRepositoryPort::save)
+                .flatMap(category -> CacheKeys.deleteAllGlobalCategories(cacheService.redisTemplate())
+                        .thenReturn(category));
     }
 
     @Override
@@ -63,15 +75,17 @@ public class CategoryService
 
             Category category = new Category(user.getId(), command.name(), command.type(), categoryParent.getId());
             return categoryRepositoryPort.save(category);
-
-        });
+        }).flatMap(category -> CacheKeys.deleteAllUserCategories(cacheService.redisTemplate(), command.userId())
+                .thenReturn(category));
 
     }
 
     @Override
     public Mono<Void> deleteMyCategory(UUID categoryId) {
         return categoryRepositoryPort.findById(categoryId)
-                .flatMap(category -> categoryRepositoryPort.delete(categoryId));
+                .flatMap(category -> categoryRepositoryPort.delete(categoryId).then(CacheKeys
+                        .clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(), categoryId)))
+                .then();
     }
 
     @Override
@@ -90,7 +104,8 @@ public class CategoryService
             category.changeStatus(command.active());
 
             return categoryRepositoryPort.save(category);
-        });
+        }).flatMap(category -> CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(),
+                category.getId()).thenReturn(category));
 
     }
 
@@ -99,8 +114,9 @@ public class CategoryService
         return categoryRepositoryPort.findById(id).flatMap(category -> {
             category.changeStatus(!category.isActive());
             return categoryRepositoryPort.save(category);
-        }).then();
-
+        }).flatMap(category -> category.getUserId().equals(null)
+                ? CacheKeys.clearAllGlobalCategories(cacheService.redisTemplate(), id)
+                : CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), id, category.getUserId())).then();
     }
 
 }

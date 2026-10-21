@@ -26,6 +26,7 @@ public class CacheService<T> {
         return redisTemplate;
     }
 
+    // PAGINATION CACHE
     public Mono<PaginationResponse<T>> retriveCachePagination(String cacheKey, Class<T> type) {
         return redisTemplate.opsForValue().get(cacheKey)
                 .map(json -> {
@@ -47,6 +48,7 @@ public class CacheService<T> {
         }
     }
 
+    // LIST CACHE
     public Flux<T> getCacheList(String cacheKey, Class<T> type) {
         return redisTemplate.opsForValue().get(cacheKey)
                 .flatMapMany(json -> {
@@ -71,6 +73,18 @@ public class CacheService<T> {
         }
     }
 
+    public Flux<T> saveListCache(String cacheKey, List<T> list, long durationMinutes) {
+        try {
+            String json = objectMapper.writeValueAsString(list);
+            return redisTemplate.opsForValue()
+                    .set(cacheKey, json, Duration.ofMinutes(durationMinutes))
+                    .thenMany(Flux.fromIterable(list));
+        } catch (JsonProcessingException e) {
+            return Flux.fromIterable(list);
+        }
+    }
+
+    // MONO CACHE
     public Mono<T> retrieveMonoCache(String cacheKey, Class<T> type) {
         return redisTemplate.opsForValue().get(cacheKey).map(json -> {
             try {
@@ -86,6 +100,17 @@ public class CacheService<T> {
             String json = objectMapper.writeValueAsString(object);
             return redisTemplate.opsForValue()
                     .set(cacheKey, json, Duration.ofMinutes(15))
+                    .thenReturn(object);
+        } catch (JsonProcessingException e) {
+            return Mono.error(e);
+        }
+    }
+
+    public Mono<T> saveMonoCache(String cacheKey, T object, long durationMinutes) {
+        try {
+            String json = objectMapper.writeValueAsString(object);
+            return redisTemplate.opsForValue()
+                    .set(cacheKey, json, Duration.ofMinutes(durationMinutes))
                     .thenReturn(object);
         } catch (JsonProcessingException e) {
             return Mono.error(e);

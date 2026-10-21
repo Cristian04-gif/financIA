@@ -3,8 +3,6 @@ package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
@@ -13,6 +11,7 @@ import com.financia.kash.movimiento.movimiento.application.port.output.MovementR
 import com.financia.kash.movimiento.movimiento.domain.exception.MovementNotFoundException;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.mapping.MovementMapper;
+import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.MovementEntityQueryrepository;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.MovementEntityRepository;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;
 import com.financia.kash.shared.domain.PaginationRequest;
@@ -28,14 +27,12 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
 
     private final MovementEntityRepository movementEntityRepository;
     private final MovementMapper movementMapper;
+    private final MovementEntityQueryrepository movementEntityQueryrepository;
 
     @Override
     public Mono<PaginationResponse<MovementDTO>> findAllMyMotions(UUID userId, PaginationRequest request) {
-        PageRequest pageRequest = PageRequest.of(request.getPageNum(), request.getPageSize(),
-                Sort.by(request.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                        request.getSortBy()));
 
-        Flux<MovementProject> pageMotion = movementEntityRepository.findAllByUserId(userId, pageRequest);
+        Flux<MovementProject> pageMotion = movementEntityQueryrepository.findAllByUserId(userId, request);
 
         Mono<Long> count = movementEntityRepository.countByUserId(userId);
 

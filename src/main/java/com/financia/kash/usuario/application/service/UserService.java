@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
 import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
 import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
@@ -22,6 +24,7 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
 
     private final UserRepositoryPort repositoryPort;
     private final PasswordEncoderForUserPort encoderForUserPort;
+    private final CacheService<User> cacheService;
 
     @Override
     public Mono<Void> deleteMe(UUID id) {
@@ -31,17 +34,25 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
             }
             user.changeStatus(UserStatus.SUSPENDIDO.name());
             return repositoryPort.save(user);
-        }).then();
+        }).flatMap(user -> CacheKeys.deleteIndividualUser(cacheService.redisTemplate(), user.getId())).then();
     }
 
     @Override
     public Mono<User> findMe(UUID id) {
-        return repositoryPort.getMe(id);
+        String cacheKey = CacheKeys.user(id);
+        return cacheService.retrieveMonoCache(cacheKey, User.class)
+                .switchIfEmpty(repositoryPort.getMe(id))
+                .flatMap(user -> cacheService.saveMonoCache(cacheKey, user, 60));
+        // return repositoryPort.getMe(id);
     }
 
     @Override
     public Mono<User> findMe(String email) {
-        return repositoryPort.getMe(email);
+        String cacheKey = CacheKeys.user(email);
+        return cacheService.retrieveMonoCache(cacheKey, User.class)
+                .switchIfEmpty(repositoryPort.getMe(email))
+                .flatMap(user -> cacheService.saveMonoCache(cacheKey, user, 60));
+        // return repositoryPort.getMe(email);
     }
 
     @Override
@@ -49,7 +60,7 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
         return repositoryPort.getMe(command.id()).flatMap(user -> {
             user.changePassword(encoderForUserPort.ecoderPassword(command.newPassword()));
             return repositoryPort.save(user);
-        }).then();
+        }).flatMap(user -> CacheKeys.deleteIndividualUser(cacheService.redisTemplate(), user.getId())).then();
     }
 
 }

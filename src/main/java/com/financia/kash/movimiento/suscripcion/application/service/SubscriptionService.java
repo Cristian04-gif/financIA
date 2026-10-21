@@ -22,6 +22,8 @@ import com.financia.kash.movimiento.suscripcion.application.port.output.FindAcco
 import com.financia.kash.movimiento.suscripcion.application.port.output.SaveAccountoForSubscription;
 import com.financia.kash.movimiento.suscripcion.application.port.output.SubscriptionRepositoryPort;
 import com.financia.kash.movimiento.suscripcion.domain.model.Subscription;
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -38,15 +40,24 @@ public class SubscriptionService
     private final FindAccountForSubscription findAccountForSubscription;
     private final SaveAccountoForSubscription saveAccountoForSubscription;
     private final MovementRepositoryPort movementRepositoryPort;
+    private final CacheService<Subscription> cacheService;
 
     @Override
     public Flux<Subscription> getSubscriptionForUser(UUID userId) {
-        return subscriptionRepositoryPort.findAllByUser(userId);
+        String cacheKey = CacheKeys.allUserSubscription(userId);
+        return cacheService.getCacheList(cacheKey, Subscription.class)
+                .switchIfEmpty(subscriptionRepositoryPort.findAllByUser(userId).collectList()
+                        .flatMapMany(subs -> cacheService.saveListCache(cacheKey, subs, 60)));
+        // return subscriptionRepositoryPort.findAllByUser(userId);
     }
 
     @Override
     public Mono<Subscription> getById(UUID subsId) {
-        return subscriptionRepositoryPort.findById(subsId);
+        String cacheKey = CacheKeys.subscription(subsId);
+        return cacheService.retrieveMonoCache(cacheKey, Subscription.class)
+                .switchIfEmpty(subscriptionRepositoryPort.findById(subsId))
+                .flatMap(sub -> cacheService.saveMonoCache(cacheKey, sub, 60));
+        // return subscriptionRepositoryPort.findById(subsId);
     }
 
     @Override
@@ -61,7 +72,9 @@ public class SubscriptionService
             return subscriptionRepositoryPort
                     .save(Subscription.create(command.userId(), account.getId(), category.getId(), command.name(),
                             command.amount(), command.frequency(), command.type(),
-                            command.payDay()));
+                            command.payDay()))
+                    .flatMap(sub -> CacheKeys.deleteAllCacheUserSubscription(cacheService.redisTemplate(),
+                            sub.getUserId()).thenReturn(sub));
         });
     }
 
@@ -69,7 +82,8 @@ public class SubscriptionService
     public Mono<Void> changeStatusSubscription(UUID subsId) {
         return subscriptionRepositoryPort.findById(subsId).flatMap(subs -> {
             subs.changeStatus();
-            return subscriptionRepositoryPort.save(subs);
+            return subscriptionRepositoryPort.save(subs)
+                    .then(CacheKeys.clearCacheSubscription(cacheService.redisTemplate(), subs.getUserId(), subsId));
         }).then();
     }
 
@@ -93,11 +107,14 @@ public class SubscriptionService
                                     TypeMovement.EGRESO,
                                     sub.getAmount(),
                                     LocalDate.now(),
-                                    "Se cobro la suscripcion a " + sub.getName());
+                                    "Se cobro la suscripcion a " + sub.getName() + " con la cuenta "
+                                            + account.getName());
 
                             return movementRepositoryPort
                                     .save(movement)
-                                    .then(saveAccountoForSubscription.save(account));
+                                    .then(saveAccountoForSubscription.save(account)).then(CacheKeys
+                                            .clearAllCacheSubscription(cacheService.redisTemplate(), sub.getUserId(),
+                                                    sub.getId(), sub.getPayingAccountId()));
                         }))
                 .then();
     }
@@ -119,9 +136,13 @@ public class SubscriptionService
                                     TypeMovement.INGRESO,
                                     ingreso.getAmount(),
                                     LocalDate.now(),
-                                    "Se sumo el sueldo a " + ingreso.getName());
+                                    "Se sumo el ingreso del sueldo " + ingreso.getName() + " a la cuenta "
+                                            + account.getName());
                             return movementRepositoryPort.save(movement)
-                                    .then(saveAccountoForSubscription.save(account));
+                                    .then(saveAccountoForSubscription.save(account)).then(CacheKeys
+                                            .clearAllCacheSubscription(cacheService.redisTemplate(),
+                                                    ingreso.getUserId(), ingreso.getId(),
+                                                    ingreso.getPayingAccountId()));
                         }))
                 .then();
     }

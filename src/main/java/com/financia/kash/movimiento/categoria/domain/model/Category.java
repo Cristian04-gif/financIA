@@ -4,15 +4,16 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.financia.kash.movimiento.categoria.domain.enums.CategoryType;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryTypeNotfoundException;
 import com.financia.kash.shared.domain.utils.Default;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(onConstructor_ = { @Default })
+// @AllArgsConstructor(onConstructor_ = { @Default })
 public class Category {
 
     private final UUID id;
@@ -70,6 +71,27 @@ public class Category {
 
     public void changeStatus(boolean status) {
         this.active = status;
+    }
+
+    @Default
+    @JsonCreator
+    public Category(
+            @JsonProperty("id") UUID id,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("name") String name,
+            @JsonProperty("type") CategoryType type,
+            @JsonProperty("parentCategoryId") UUID parentCategoryId,
+            @JsonProperty("creationDate") LocalDate creationDate,
+            @JsonProperty("updateDate") LocalDate updateDate,
+            @JsonProperty("active") boolean active) {
+        this.id = id;
+        this.userId = userId;
+        this.name = name;
+        this.type = type;
+        this.parentCategoryId = parentCategoryId;
+        this.creationDate = creationDate;
+        this.updateDate = updateDate;
+        this.active = active;
     }
 
 }

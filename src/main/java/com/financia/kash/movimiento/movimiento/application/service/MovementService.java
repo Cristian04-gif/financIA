@@ -19,7 +19,9 @@ import com.financia.kash.movimiento.movimiento.application.port.output.AccountFo
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
+import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.PaginationResponse;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -35,14 +37,25 @@ public class MovementService
     private final CategoryRepositoryPort categoryRepositoryPort;
     private final SaveFileVoucherUseCase saveFileVoucherUseCase;
 
+    private final CacheService<MovementDTO> cacheService;
+
     @Override
     public Mono<PaginationResponse<MovementDTO>> getAllMovements(AllMovementCommand command) {
-        return movementRepositoryPort.findAllMyMotions(command.userId(), command.request());
+        String cacheKey = CacheKeys.allUserMovements(command.userId(), command.request());
+        return cacheService.retriveCachePagination(cacheKey, MovementDTO.class)
+                .switchIfEmpty(movementRepositoryPort.findAllMyMotions(command.userId(), command.request()))
+                .flatMap(mov -> cacheService.saveCachePagination(cacheKey, mov));
+        // return movementRepositoryPort.findAllMyMotions(command.userId(),
+        // command.request());
     }
 
     @Override
     public Mono<MovementDTO> getMovementById(UUID movementId) {
-        return movementRepositoryPort.findByIdDTO(movementId);
+        String cacheKey = CacheKeys.movements(movementId);
+        return cacheService.retrieveMonoCache(cacheKey, MovementDTO.class)
+                .switchIfEmpty(movementRepositoryPort.findByIdDTO(movementId))
+                .flatMap(movement -> cacheService.saveMonoCache(cacheKey, movement));
+        // return movementRepositoryPort.findByIdDTO(movementId);
     }
 
     @Override
@@ -63,7 +76,10 @@ public class MovementService
                         command.date(),
                         command.description());
                 return movementRepositoryPort.save(motion)
-                        .flatMap(mot -> saveAccountForMovementPort.save(account).thenReturn(mot));
+                        .flatMap(mot -> saveAccountForMovementPort.save(account)
+                                .then(CacheKeys.deleteAllCacheMovementesUser(cacheService.redisTemplate(),
+                                        mot.getUserId()))
+                                .thenReturn(mot));
             });
         });
 
@@ -75,7 +91,10 @@ public class MovementService
         return movementRepositoryPort.findById(movementId).flatMap(
                 movement -> accountForMovementPort.findMyAccountById(movement.getAccountId()).flatMap(account -> {
                     account.receive(movement.getAmount());
-                    return saveAccountForMovementPort.save(account).then(movementRepositoryPort.delete(movementId));
+                    return saveAccountForMovementPort.save(account)
+                            .then(movementRepositoryPort.delete(movementId).then(CacheKeys.clearAllCacheMovements(
+                                    cacheService.redisTemplate(), movement.getUserId(), movementId)))
+                            .then();
                 }));
 
     }
@@ -86,7 +105,10 @@ public class MovementService
                 .flatMap(movement -> command.filePart().flatMap(saveFileVoucherUseCase::saveFileVoucher)
                         .flatMap(secureUrl -> {
                             movement.upReceipt(secureUrl);
-                            return movementRepositoryPort.save(movement).then();
+                            return movementRepositoryPort.save(movement).then(CacheKeys
+                                    .clearAllCacheMovements(cacheService.redisTemplate(), movement.getUserId(),
+                                            movement.getId()))
+                                    .then();
                         }));
     }
 

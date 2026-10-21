@@ -21,7 +21,7 @@ services:
   #     postgres:
   #       condition: service_healthy
   #   healthcheck:
-  #     test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+  #     test: [ "CMD", "curl", "-f", "${DB_HEALTH}" ]
   #     interval: 30s
   #     timeout: 10s
   #     retries: 5
@@ -45,14 +45,13 @@ services:
       retries: 5
 
   redis:
-    image: redis:alpine
-    container_name: redis-cache
-    restart: always
+    image: redis:7-alpine
+    container_name: redis-server
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass "${REDIS_PASSWORD}
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
