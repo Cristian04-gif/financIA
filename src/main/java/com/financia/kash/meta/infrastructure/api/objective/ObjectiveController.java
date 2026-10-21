@@ -1,4 +1,4 @@
-package com.financia.kash.meta.infrastructure.api;
+package com.financia.kash.meta.infrastructure.api.objective;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,7 +53,7 @@ public class ObjectiveController {
             @AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
-            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false, defaultValue = "startDate") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
 
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
@@ -86,7 +86,7 @@ public class ObjectiveController {
     }
 
     @Operation(summary = "Registra los aportes que hace el usuario a una meta")
-    @PostMapping("/contribution/{id}")
+    @PostMapping("/{id}/contribution")
     public Mono<ResponseEntity<Void>> contributionObjective(@PathVariable UUID id,
             @RequestBody ContributionObjectiveRequest request) {
         ContributionObjectiveCommand command = new ContributionObjectiveCommand(id, request.accountId(),

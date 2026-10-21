@@ -32,6 +32,9 @@ spring:
       repositories:
         enabled: false
 
+security:
+  secret-key: ${SECRET_KEY_SECURITY}
+
 app:
   ai:
     models-cascade:

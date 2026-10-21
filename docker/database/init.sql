@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ============================================================
 CREATE TYPE rol_usuario AS ENUM ('USER', 'ADMIN');
 CREATE TYPE estado_usuario AS ENUM ('PENDIENTE', 'ACTIVO', 'SUSPENDIDO', 'INACTIVO', 'ELIMINADO');
-CREATE TYPE tipo_categoria AS ENUM ('INGRESOS', 'GASTOS', "AHORRO");
+CREATE TYPE tipo_categoria AS ENUM ('INGRESOS', 'GASTOS', 'AHORRO');
 CREATE TYPE tipo_cuenta AS ENUM ('EFECTIVO', 'BANCO', 'BILLETERA_DIGITAL', 'OTRO');
 CREATE TYPE tipo_movimiento AS ENUM ('INGRESO', 'EGRESO', 'AHORRO');
 CREATE TYPE frecuencia_suscripcion AS ENUM ('MENSUAL', 'ANUAL', 'SEMANAL');

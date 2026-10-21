@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,8 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    private final String SECRECT_KEY = "404E6352165564586E3272357538782F413F4428472848625064536756685970";
+    @Value("${security.secret-key}")
+    private String SECRECT_KEY;
     private final long TOKEN_EXPIRATION = 1000 * 60 * 60 * 24;
     private final long REFRESH_WINDOW = 1000 * 60 * 60 * 24 * 7;
 

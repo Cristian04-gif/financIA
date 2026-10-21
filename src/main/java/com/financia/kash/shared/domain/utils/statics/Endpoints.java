@@ -26,4 +26,13 @@ public class Endpoints {
         public final static String OWNER_ACCESS_SUBSCRIPTIONS[] = {
                         "/api/v1/subscriptions/my-subs/{id}"
         };
+
+        public final static String OWNER_ACCESS_FINANCIAL_OBJECTIVES[] = {
+                        "/api/v1/objectives/{id}", "/api/v1/objectives/{id}/contribution",
+                        "/api/v1/objectives/contributions/objective/{id}"
+        };
+
+        public final static String OWNER_ACCESS_CONTIRBUTION_OBJECTIVES[] = {
+                        "/api/v1/objectives/contributions/{id}"
+        };
 }

@@ -11,6 +11,8 @@ import org.springframework.web.server.WebFilter;
 
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.AccountAuthorizationManager;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.TransferAuthorizationManager;
+import com.financia.kash.meta.infrastructure.api.contribution.ContributionObjectiveAuthorizationManager;
+import com.financia.kash.meta.infrastructure.api.objective.ObjectiveAuthorizationManager;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryAuthorizationManager;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.MovementAuthorizationManager;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.SubscriptionAuthorizationManager;
@@ -27,11 +29,14 @@ public class SecurityConfig {
         private final WebFilter jwtFilter;
         private final CustomAuthenticationEntryPoint authenticationEntryPoint;
         private final CustomAccessDeniedHandler customAccessDeniedHandler;
+
         private final AccountAuthorizationManager accountAuthorizationManager;
         private final TransferAuthorizationManager transferAuthorizationManager;
         private final CategoryAuthorizationManager categoryAuthorizationManager;
         private final MovementAuthorizationManager movementAuthorizationManager;
         private final SubscriptionAuthorizationManager subscriptionAuthorizationManager;
+        private final ObjectiveAuthorizationManager objectiveAuthorizationManager;
+        private final ContributionObjectiveAuthorizationManager contributionObjectiveAuthorizationManager;
 
         @Bean
         public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -56,6 +61,12 @@ public class SecurityConfig {
 
                                                                 .pathMatchers(Endpoints.OWNER_ACCESS_SUBSCRIPTIONS)
                                                                 .access(subscriptionAuthorizationManager)
+
+                                                                .pathMatchers(Endpoints.OWNER_ACCESS_FINANCIAL_OBJECTIVES)
+                                                                .access(objectiveAuthorizationManager)
+
+                                                                .pathMatchers(Endpoints.OWNER_ACCESS_CONTIRBUTION_OBJECTIVES)
+                                                                .access(contributionObjectiveAuthorizationManager)
 
                                                                 .anyExchange().authenticated())
                                 .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)

@@ -85,8 +85,7 @@ public class VoucherService implements OcrUseCase {
                                 Voucher.class);
 
                 Flux<Category> categoryFlux = categoryForVoucherPort
-                                .findCategoryByNameAndUserId(userId, voucher.getExpenseCategory())
-                                .switchIfEmpty(categoryForVoucherPort.findAllGlobalsAndByuserId(userId));
+                                .findCategoryForVoucher(userId, voucher.getExpenseCategory());
                 Flux<Account> accountFlux = accoutsForVoucherPort
                                 .findAllMyAccountsAndType(userId,
                                                 voucher.getPaymentMethod())

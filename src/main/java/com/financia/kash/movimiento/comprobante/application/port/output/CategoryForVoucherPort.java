@@ -7,7 +7,7 @@ import com.financia.kash.movimiento.categoria.domain.model.Category;
 import reactor.core.publisher.Flux;
 
 public interface CategoryForVoucherPort {
-    Flux<Category> findCategoryByNameAndUserId(UUID userId, String name);
+    Flux<Category> findCategoryForVoucher(UUID userId, String name);
 
-    Flux<Category> findAllGlobalsAndByuserId(UUID userId);
+    // Flux<Category> findAllGlobalsAndByuserId(UUID userId);
 }

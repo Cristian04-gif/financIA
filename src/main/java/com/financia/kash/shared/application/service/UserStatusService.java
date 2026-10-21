@@ -1,9 +1,9 @@
-package com.financia.kash.auth.application.service;
+package com.financia.kash.shared.application.service;
 
 import org.springframework.stereotype.Service;
 
 import com.financia.kash.auth.application.port.output.UserBlockedForAuthPort;
-import com.financia.kash.auth.application.port.output.UserStatusUseCase;
+import com.financia.kash.shared.application.port.output.UserStatusUseCase;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;

@@ -1,4 +1,4 @@
-package com.financia.kash.auth.application.port.output;
+package com.financia.kash.shared.application.port.output;
 
 import reactor.core.publisher.Mono;
 

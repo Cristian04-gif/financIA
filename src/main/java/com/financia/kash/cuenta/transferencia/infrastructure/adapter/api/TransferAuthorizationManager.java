@@ -10,8 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authorization.AuthorizationContext;
 import org.springframework.stereotype.Component;
 
-import com.financia.kash.auth.application.port.output.UserStatusUseCase;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.TransferEntityRepository;
+import com.financia.kash.shared.application.port.output.UserStatusUseCase;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;

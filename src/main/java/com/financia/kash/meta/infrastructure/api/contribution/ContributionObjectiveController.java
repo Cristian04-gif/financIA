@@ -1,4 +1,4 @@
-package com.financia.kash.meta.infrastructure.api;
+package com.financia.kash.meta.infrastructure.api.contribution;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +29,7 @@ public class ContributionObjectiveController {
     private final RetriveContributionUseCase retriveContributionUseCase;
 
     @Operation(summary = "Contribuciones a las metas financieras")
-    @GetMapping("/opjective/{id}")
+    @GetMapping("/objective/{id}")
     public Mono<ResponseEntity<PaginationResponse<ContributionDTO>>> getAllByObjective(@PathVariable UUID id,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
