@@ -328,10 +328,22 @@ public class CacheKeys {
 
     // MOVEMENTS
     public static Mono<Boolean> clearAllCacheMovements(ReactiveStringRedisTemplate redisTemplate, UUID userId,
+            UUID movementId, UUID accountId) {
+        Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
+        Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
+        Mono<Long> borrarCuentas = deleteAllCacheAccounts(redisTemplate, userId);
+        Mono<Boolean> borrarCuentaIndividual = deleteInidividualAccount(redisTemplate, accountId);
+        return Mono.when(borrarCacheTodo, borrarIndividual, borrarCuentas, borrarCuentaIndividual)
+                .thenReturn(Boolean.TRUE);
+    }
+
+    public static Mono<Boolean> clearAllCacheMovements(ReactiveStringRedisTemplate redisTemplate, UUID userId,
             UUID movementId) {
         Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
         Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
-        return Mono.when(borrarCacheTodo, borrarIndividual).thenReturn(Boolean.TRUE);
+
+        return Mono.when(borrarCacheTodo, borrarIndividual)
+                .thenReturn(Boolean.TRUE);
     }
 
     // SUBSCRIPTION

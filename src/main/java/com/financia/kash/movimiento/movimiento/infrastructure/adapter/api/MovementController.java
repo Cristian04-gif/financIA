@@ -71,7 +71,7 @@ public class MovementController {
     public Mono<ResponseEntity<Movement>> save(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid CreateMovementRequest request) {
         return createMovimentUseCase
-                .createMotion(new CreateMovementCommand(user.getId(), request.accountId(), request.categoryId(),
+                .createMotion(new CreateMovementCommand(user.getId(), request.accountId(), request.category(),
                         request.type(), request.amount(),
                         request.date(), request.description()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));

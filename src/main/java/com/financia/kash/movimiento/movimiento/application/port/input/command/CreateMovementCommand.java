@@ -6,7 +6,8 @@ import java.util.UUID;
 
 import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 
-public record CreateMovementCommand(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
+public record CreateMovementCommand(UUID userId, UUID accountId, CategoryCommand category, TypeMovement type,
+                BigDecimal amount,
                 LocalDate date, String description) {
 
 }

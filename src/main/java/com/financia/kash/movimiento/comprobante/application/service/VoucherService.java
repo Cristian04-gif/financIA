@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
@@ -29,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
@@ -43,78 +43,65 @@ public class VoucherService implements OcrUseCase {
 
         @Override
         public Mono<Voucher> OcrProcess(OrcProcessCommand command) {
-                List<String> list = aiCascadeProperties.getModelsCascade();
-                return Flux.fromIterable(list)
+                List<String> models = aiCascadeProperties.getModelsCascade();
+                Resource imageResource = new ByteArrayResource(command.imageByte());
+
+                return Flux.fromIterable(models)
                                 .concatMap(modelName -> {
-                                        log.info("Se prueba con el modelo AI: {}", modelName);
-                                        Resource freshResource = new ByteArrayResource(command.imageByte());
-                                        return ocrIA(command.userId(), freshResource, modelName, command.mimeType())
+                                        log.info("probando OCR con modelo IA: {}", modelName);
+                                        return ocrIA(imageResource, modelName, command.mimeType())
                                                         .onErrorResume(e -> {
-                                                                log.warn("Fallo con el modelo {}. Buscando el siguiente respaldo en el YAML.... Error: {}",
-                                                                                modelName, e.getMessage());
+                                                                log.warn("Fallo con el modelo {} Buscando respaldo... Error: {}",
+                                                                                modelName,
+                                                                                e.getMessage());
                                                                 return Mono.empty();
                                                         });
-                                }).next().switchIfEmpty(Mono.error(new IllegalArgumentException(
-                                                "Error: Todos los modelos listados en tu application.yml han superado sus límites de cuota diarios.")))
-                                .flatMap(res -> {
-                                        try {
-                                                return mapModel(command.userId(), res);
-                                        } catch (JsonProcessingException e) {
-                                                throw new IllegalArgumentException(
-                                                                "No se pudo mapear la respuesta ORC: "
-                                                                                + e.getMessage());
-                                        }
-                                });
-
+                                }).next()
+                                .switchIfEmpty(Mono.error(new IllegalArgumentException(
+                                                "Error: Ningun modelo de IA prudo procesar el comprobante o se superaron las cuotas")))
+                                .flatMap(res -> mapModel(command.userId(), res));
         }
 
-        private Mono<String> ocrIA(UUID userId, Resource freshResource, String modelName, MimeType mimeType) {
-                log.info("Se uso el modelo AI: {}", modelName);
+        private Mono<String> ocrIA(Resource image, String modelName, MimeType mimeType) {
 
                 return Mono.fromSupplier(() -> chatClient.prompt()
-                                .options(GoogleGenAiChatOptions.builder().model(modelName))
-                                .user(userSepc -> userSepc.text(Ocr.PROMPT_ANALIZER_VOUCHER).media(mimeType,
-                                                freshResource))
+                                .options(GoogleGenAiChatOptions.builder()
+                                                .model(modelName)
+                                                .temperature(0.2))
+                                .user(userSpec -> userSpec.text(Ocr.PROMPT_ANALIZER_VOUCHER)
+                                                .media(mimeType, image))
                                 .call()
-                                .content());
-        };
-
-        private Mono<Voucher> mapModel(UUID userId, String res) throws JsonMappingException, JsonProcessingException {
-                log.info("respuesta de la IA recibida: {}", res);
-                Voucher voucher = objectMapper.readValue(res,
-                                Voucher.class);
-
-                Flux<Category> categoryFlux = categoryForVoucherPort
-                                .findCategoryForVoucher(userId, voucher.getExpenseCategory());
-                Flux<Account> accountFlux = accoutsForVoucherPort
-                                .findAllMyAccountsAndType(userId,
-                                                voucher.getPaymentMethod())
-                                .switchIfEmpty(accoutsForVoucherPort.findAllMyAccounts(userId));
-
-                return Mono.zip(
-                                categoryFlux.map(
-                                                category -> new CategoryVoucher(
-                                                                category.getId(),
-                                                                category.getName(),
-                                                                category.getType()
-                                                                                .name()))
-                                                .collectList(),
-                                accountFlux.map(
-                                                account -> new AccountVoucher(
-                                                                account.getId(),
-                                                                account.getName(), account.getType().name()))
-                                                .collectList())
-                                .map(tuple -> {
-                                        List<CategoryVoucher> categories = tuple
-                                                        .getT1();
-                                        List<AccountVoucher> accounts = tuple
-                                                        .getT2();
-
-                                        voucher.setCategory(categories);
-                                        voucher.setAccounts(accounts);
-                                        return voucher;
-                                });
-
+                                .content())
+                                .subscribeOn(Schedulers.boundedElastic());
         }
 
+        private Mono<Voucher> mapModel(UUID userId, String res) {
+                log.info("Respuesta IA recibida: {}", res);
+                try {
+                        // Limpieza preventiva en caso de que el modelo devuelva bloques ```json ... ```
+                        String cleanJson = res.replaceAll("(?s)^```json\\s*", "").replaceAll("(?s)```$", "").trim();
+                        log.info("clean: {}", cleanJson);
+                        Voucher voucher = objectMapper.readValue(cleanJson, Voucher.class);
+
+                        Flux<Category> categoryFlux = categoryForVoucherPort.findCategoryForVoucher(userId,
+                                        voucher.getExpenseCategory());
+                        Flux<Account> accountFlux = accoutsForVoucherPort
+                                        .findAllMyAccountsAndType(userId, voucher.getPaymentMethod())
+                                        .switchIfEmpty(accoutsForVoucherPort.findAllMyAccounts(userId));
+
+                        return Mono.zip(categoryFlux
+                                        .map(c -> new CategoryVoucher(c.getId(), c.getName(), c.getType().name()))
+                                        .collectList(),
+                                        accountFlux.map(a -> new AccountVoucher(a.getId(), a.getName(),
+                                                        a.getType().name())).collectList())
+                                        .map(tuple -> {
+                                                voucher.setCategory(tuple.getT1());
+                                                voucher.setAccounts(tuple.getT2());
+                                                return voucher;
+                                        });
+                } catch (JsonProcessingException e) {
+                        return Mono.error(new IllegalArgumentException(
+                                        "No se pudo mapear la respuesta OCR: " + e.getMessage()));
+                }
+        }
 }

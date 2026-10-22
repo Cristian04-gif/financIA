@@ -39,8 +39,8 @@ public class CategoryRepositoryAdapter
 
     @Override
     public Mono<Category> findById(UUID id) {
-        return categoryRepository.findById(id).map(categoryMapper::mapToDomain)
-                .switchIfEmpty(Mono.error(new CategoryNotFoundException(id)));
+        return categoryRepository.findById(id).switchIfEmpty(Mono.error(new CategoryNotFoundException(id)))
+                .map(categoryMapper::mapToDomain);
     }
 
     @Override

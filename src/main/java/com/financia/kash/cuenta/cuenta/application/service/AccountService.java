@@ -18,100 +18,110 @@ import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AccountService
-        implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase {
+                implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase {
 
-    private final AccountRespotoryPort accountRespotoryPort;
-    private final TransferRepositoryPort transferRepositoryPort;
-    private final CacheService<Account> cacheService;
+        private final AccountRespotoryPort accountRespotoryPort;
+        private final TransferRepositoryPort transferRepositoryPort;
+        private final CacheService<Account> cacheService;
 
-    @Override
-    @Transactional
-    public Mono<Void> transfer(TransferMoneyCommand command) {
+        @Override
+        @Transactional
+        public Mono<Void> transfer(TransferMoneyCommand command) {
 
-        Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(command.idSource());
-        Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(command.idTarget());
+                Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(command.idSource());
+                Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(command.idTarget());
 
-        return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
-            Account source = tupla.getT1();
-            Account target = tupla.getT2();
+                return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
+                        Account source = tupla.getT1();
+                        Account target = tupla.getT2();
 
-            if (source.getId().equals(target.getId())) {
-                return Mono.error(
-                        new IllegalArgumentException("No puedes hacer una trasnferencia entre las mismas cuentas"));
-            }
+                        if (source.getId().equals(target.getId())) {
+                                return Mono.error(
+                                                new IllegalArgumentException(
+                                                                "No puedes hacer una trasnferencia entre las mismas cuentas"));
+                        }
 
-            source.validateAccountIsActive();
-            source.validateSufficientFunds(command.amount());
+                        source.validateAccountIsActive();
+                        source.validateSufficientFunds(command.amount());
 
-            source.transfer(command.amount());
-            target.receive(command.amount());
+                        source.transfer(command.amount());
+                        target.receive(command.amount());
 
-            Transfer transfer = new Transfer(source.getUserId(), command.idSource(), command.idTarget(),
-                    command.amount(), command.description());
+                        Transfer transfer = new Transfer(source.getUserId(), command.idSource(), command.idTarget(),
+                                        command.amount(), command.description());
 
-            return transferRepositoryPort.save(transfer)
-                    .flatMap(trans -> accountRespotoryPort.save(source).then(accountRespotoryPort.save(target).then(
-                            CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), trans.getUserId(),
-                                    trans.getSourceAccount(), trans.getDestinationAccount(), trans.getId()))));
+                        return transferRepositoryPort.save(transfer)
+                                        .flatMap(trans -> accountRespotoryPort.save(source)
+                                                        .then(accountRespotoryPort.save(target).then(
+                                                                        CacheKeys.clearAllCacheTransfers(
+                                                                                        cacheService.redisTemplate(),
+                                                                                        trans.getUserId(),
+                                                                                        trans.getSourceAccount(),
+                                                                                        trans.getDestinationAccount(),
+                                                                                        trans.getId()))));
 
-            // return
-            // transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
-            // .then(accountRespotoryPort.save(target))
-            // .flatMap(res ->
-            // CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), null, null,
-            // null, null));
-        }).then();
+                        // return
+                        // transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
+                        // .then(accountRespotoryPort.save(target))
+                        // .flatMap(res ->
+                        // CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), null, null,
+                        // null, null));
+                }).then();
 
-    }
+        }
 
-    @Override
-    public Flux<Account> getAllMyAccount(UUID userId) {
-        String cacheKey = CacheKeys.allUserAccounts(userId);
-        return cacheService.getCacheList(cacheKey, Account.class)
-                .switchIfEmpty(accountRespotoryPort.findAllMyAccounts(userId)
-                        .collectList()
-                        .flatMapMany(accounts -> cacheService.saveListCache(cacheKey, accounts)));
-    }
+        @Override
+        public Flux<Account> getAllMyAccount(UUID userId) {
+                String cacheKey = CacheKeys.allUserAccounts(userId);
+                return cacheService.getCacheList(cacheKey, Account.class)
+                                .switchIfEmpty(accountRespotoryPort.findAllMyAccounts(userId)
+                                                .collectList()
+                                                .flatMapMany(accounts -> cacheService.saveListCache(cacheKey,
+                                                                accounts)));
+        }
 
-    @Override
-    public Mono<Account> getMyAccountById(UUID accountId) {
-        String cacheKey = CacheKeys.account(accountId);
-        return cacheService.retrieveMonoCache(cacheKey, Account.class)
-                .switchIfEmpty(accountRespotoryPort.findMyAccountById(accountId)
-                        .flatMap(account -> cacheService.saveMonoCache(cacheKey, account)));
-    }
+        @Override
+        public Mono<Account> getMyAccountById(UUID accountId) {
+                String cacheKey = CacheKeys.account(accountId);
+                return cacheService.retrieveMonoCache(cacheKey, Account.class)
+                                .switchIfEmpty(accountRespotoryPort.findMyAccountById(accountId)
+                                                .flatMap(account -> cacheService.saveMonoCache(cacheKey, account)));
+        }
 
-    @Override
-    @Transactional
-    public Mono<Void> deleteMyAccount(UUID accountId) {
-        return accountRespotoryPort.findMyAccountById(accountId)
-                .flatMap(account -> accountRespotoryPort.delete(accountId));
-    }
+        @Override
+        @Transactional
+        public Mono<Void> deleteMyAccount(UUID accountId) {
+                return accountRespotoryPort.findMyAccountById(accountId)
+                                .flatMap(account -> accountRespotoryPort.delete(accountId));
+        }
 
-    @Override
-    public Mono<Account> createAccount(CreateAccountCommand command) {
-        Account account = new Account(command.userId(), command.name(), command.type(), command.initialBalance());
+        @Override
+        public Mono<Account> createAccount(CreateAccountCommand command) {
+                Account account = new Account(command.userId(), command.name(), command.type(),
+                                command.initialBalance());
 
-        return accountRespotoryPort.save(account)
-                .flatMap(accountSaved -> CacheKeys.deleteAllCacheAccounts(cacheService.redisTemplate(),
-                        accountSaved.getUserId()).thenReturn(accountSaved));
-    }
+                return accountRespotoryPort.save(account)
+                                .flatMap(accountSaved -> CacheKeys.deleteAllCacheAccounts(cacheService.redisTemplate(),
+                                                accountSaved.getUserId()).thenReturn(accountSaved));
+        }
 
-    @Override
-    public Mono<Void> changeStatusAcount(UUID accountId) {
-        return getMyAccountById(accountId).flatMap(account -> {
-            account.changeStatus();
-            return accountRespotoryPort.save(account).flatMap(accountSaved -> CacheKeys
-                    .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(), accountId)).then();
-        });
+        @Override
+        public Mono<Void> changeStatusAcount(UUID accountId) {
+                return getMyAccountById(accountId).flatMap(account -> {
+                        account.changeStatus();
+                        return accountRespotoryPort.save(account).flatMap(accountSaved -> CacheKeys
+                                        .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(),
+                                                        accountId))
+                                        .then();
+                });
 
-    }
+        }
 
 }
