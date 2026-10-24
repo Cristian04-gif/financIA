@@ -28,6 +28,8 @@ import com.financia.kash.meta.domain.model.FinancialObjectives;
 import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.presupuesto.domain.model.Budget;
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -41,10 +43,19 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
         private final RetrieveAllTransactionsPort retrieveAllTransactionsPort;
         private final RetrieveAllBudgetPort retrieveAllBudgetPort;
         private final RetrieveAllGoalsPort retrieveAllGoalsPort;
+        private final CacheService<DashboardSummary> cacheService;
 
         @Override
         @Transactional(readOnly = true)
         public Mono<DashboardSummary> dashboardSummary(DashboardSummaryCommand command) {
+                String cacheKey = CacheKeys.dashboardSummary(command.userId(), command.from(), command.until());
+
+                return cacheService.retrieveMonoCache(cacheKey, DashboardSummary.class)
+                                .switchIfEmpty(Mono.defer(() -> computeDashboardSummary(command))
+                                                .flatMap(summary -> cacheService.saveMonoCache(cacheKey, summary, 15)));
+        }
+
+        private Mono<DashboardSummary> computeDashboardSummary(DashboardSummaryCommand command) {
                 Mono<DetailedFinancialSummary> financialSummaryMono = detailedFinancial(command.userId(),
                                 command.from().atTime(LocalTime.now()),
                                 command.until().atTime(LocalTime.now()));

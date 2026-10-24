@@ -18,6 +18,8 @@ public interface MovementRepositoryPort {
 
     Flux<Movement> findAllByCategory(UUID userId, UUID categoryId, LocalDateTime from, LocalDateTime until);
 
+    Mono<PaginationResponse<MovementDTO>> findAllByCategory(UUID userId, UUID categoryId, PaginationRequest request);
+
     Mono<Movement> findById(UUID movementId);
 
     Mono<MovementDTO> findByIdDTO(UUID movementId);

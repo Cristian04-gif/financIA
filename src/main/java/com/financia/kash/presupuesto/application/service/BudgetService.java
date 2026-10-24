@@ -18,6 +18,9 @@ import com.financia.kash.presupuesto.domain.exception.BudgetNotFoundException;
 import com.financia.kash.presupuesto.domain.exception.BudgetValidationException;
 import com.financia.kash.presupuesto.domain.model.Budget;
 
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,13 +31,20 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
     private final BudgetCategoryPort categoryPort;
     private final BudgetOwnerPort ownerPort;
     private final Clock clock;
+    private final CacheService<Budget> cacheService;
 
     public BudgetService(BudgetRepositoryPort repository, BudgetCategoryPort categoryPort,
             BudgetOwnerPort ownerPort, Clock clock) {
+        this(repository, categoryPort, ownerPort, clock, null);
+    }
+
+    public BudgetService(BudgetRepositoryPort repository, BudgetCategoryPort categoryPort,
+            BudgetOwnerPort ownerPort, Clock clock, CacheService<Budget> cacheService) {
         this.repository = repository;
         this.categoryPort = categoryPort;
         this.ownerPort = ownerPort;
         this.clock = clock;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -43,19 +53,41 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
             Budget budget = Budget.create(userId, command.name(), command.periodStart(),
                     command.periodEnd(), command.amountLimitTotal(), command.categories(),
                     LocalDateTime.now(clock));
-            return validateCategories(budget).then(Mono.defer(() -> repository.save(budget)));
+            return validateCategories(budget).then(Mono.defer(() -> repository.save(budget)))
+                    .flatMap(saved -> {
+                        if (cacheService == null) {
+                            return Mono.just(saved);
+                        }
+                        return CacheKeys.clearAllCacheBudgets(cacheService.redisTemplate(), userId, saved.id())
+                                .thenReturn(saved);
+                    });
         }));
     }
 
     @Override
     public Flux<Budget> getAll(UUID userId) {
-        return requireActiveOwner(userId).thenMany(Flux.defer(() -> repository.findAllByUserId(userId)));
+        if (cacheService == null) {
+            return requireActiveOwner(userId).thenMany(Flux.defer(() -> repository.findAllByUserId(userId)));
+        }
+        String cacheKey = CacheKeys.allUserBudgets(userId);
+        return requireActiveOwner(userId).thenMany(
+                cacheService.getCacheList(cacheKey, Budget.class)
+                        .switchIfEmpty(repository.findAllByUserId(userId).collectList()
+                                .flatMapMany(budgets -> cacheService.saveListCache(cacheKey, budgets))));
     }
 
     @Override
     public Mono<Budget> getById(UUID userId, UUID budgetId) {
-        return requireActiveOwner(userId).then(Mono.defer(() -> repository.findByIdAndUserId(budgetId, userId)))
-                .switchIfEmpty(Mono.error(new BudgetNotFoundException(budgetId)));
+        if (cacheService == null) {
+            return requireActiveOwner(userId).then(Mono.defer(() -> repository.findByIdAndUserId(budgetId, userId)))
+                    .switchIfEmpty(Mono.error(new BudgetNotFoundException(budgetId)));
+        }
+        String cacheKey = CacheKeys.budget(budgetId);
+        return requireActiveOwner(userId).then(
+                cacheService.retrieveMonoCache(cacheKey, Budget.class)
+                        .switchIfEmpty(repository.findByIdAndUserId(budgetId, userId)
+                                .flatMap(budget -> cacheService.saveMonoCache(cacheKey, budget)))
+                        .switchIfEmpty(Mono.error(new BudgetNotFoundException(budgetId))));
     }
 
     @Override
@@ -63,7 +95,14 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
         return getById(userId, budgetId).flatMap(original -> {
             Budget updated = original.update(command.name(), command.periodStart(), command.periodEnd(),
                     command.amountLimitTotal(), command.categories(), LocalDateTime.now(clock));
-            return validateCategories(updated).then(Mono.defer(() -> repository.save(updated)));
+            return validateCategories(updated).then(Mono.defer(() -> repository.save(updated)))
+                    .flatMap(saved -> {
+                        if (cacheService == null) {
+                            return Mono.just(saved);
+                        }
+                        return CacheKeys.clearAllCacheBudgets(cacheService.redisTemplate(), userId, budgetId)
+                                .thenReturn(saved);
+                    });
         });
     }
 
@@ -71,7 +110,14 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
     public Mono<Budget> changeStatus(UUID userId, UUID budgetId, boolean active) {
         return requireActiveOwner(userId)
                 .then(Mono.defer(() -> repository.changeStatus(budgetId, userId, active, LocalDateTime.now(clock))))
-                .switchIfEmpty(Mono.error(new BudgetNotFoundException(budgetId)));
+                .switchIfEmpty(Mono.error(new BudgetNotFoundException(budgetId)))
+                .flatMap(saved -> {
+                    if (cacheService == null) {
+                        return Mono.just(saved);
+                    }
+                    return CacheKeys.clearAllCacheBudgets(cacheService.redisTemplate(), userId, budgetId)
+                            .thenReturn(saved);
+                });
     }
 
     private Mono<Void> requireActiveOwner(UUID userId) {

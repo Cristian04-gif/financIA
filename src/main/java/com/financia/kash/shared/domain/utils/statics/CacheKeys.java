@@ -1,5 +1,6 @@
 package com.financia.kash.shared.domain.utils.statics;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -190,6 +191,7 @@ public class CacheKeys {
     private static final String ALL_MOVEMENTS = "movements:user:%s";
     private static final String ALL_MOVEMENTS_CATEGORY = "movements:user:%s:category:%s";
     private static final String ALL_USER_MOVEMENTS = "movements:user:%s:page:%d:size:%d:sort:%s:direction:%s";
+    private static final String ALL_MOVEMENTS_CATEGORY_PAG = "movements:user:%s:category:%s:page:%d:size:%d:sort:%s:direction:%s";
     private static final String MOVEMENT = "movement:%s";
 
     // CACHE KEYS
@@ -204,6 +206,12 @@ public class CacheKeys {
 
     public static String allUserMovements(UUID userId, PaginationRequest request) {
         return String.format(ALL_USER_MOVEMENTS, userId, request.getPageNum(), request.getPageSize(),
+                request.getSortBy(), request.getDirection());
+    }
+
+    public static String allMovementsCategoy(UUID userId, UUID categoryId, PaginationRequest request) {
+        return String.format(ALL_MOVEMENTS_CATEGORY_PAG, userId, categoryId, request.getPageNum(),
+                request.getPageSize(),
                 request.getSortBy(), request.getDirection());
     }
 
@@ -250,6 +258,80 @@ public class CacheKeys {
     }
 
     // ------------------------------------------------------------------------------------
+    // BUDGETS
+    private final static String ALL_USER_BUDGETS = "budgets:user:%s";
+    private final static String BUDGET = "budget:%s";
+    private final static String BUDGET_CONSUMPTION = "budget:consumption:user:%s:budget:%s";
+
+    // CACHE KEYS
+    public static String allUserBudgets(UUID userId) {
+        return String.format(ALL_USER_BUDGETS, userId);
+    }
+
+    public static String budget(UUID budgetId) {
+        return String.format(BUDGET, budgetId);
+    }
+
+    public static String budgetConsumption(UUID userId, UUID budgetId) {
+        return String.format(BUDGET_CONSUMPTION, userId, budgetId);
+    }
+
+    // DELETE CACHE
+    public static Mono<Long> deleteAllCacheBudgets(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
+        Flux<String> keys = redisTemplate.scan(
+                ScanOptions.scanOptions().match("budgets:user:%s*".formatted(userId)).build());
+        return redisTemplate.delete(keys);
+    }
+
+    public static Mono<Boolean> deleteIndividualBudget(ReactiveStringRedisTemplate redisTemplate, UUID budgetId) {
+        String key = budget(budgetId);
+        return redisTemplate.opsForValue().delete(key);
+    }
+
+    public static Mono<Long> deleteAllCacheBudgetConsumption(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
+        Flux<String> keys = redisTemplate.scan(
+                ScanOptions.scanOptions().match("budget:consumption:user:%s:*".formatted(userId)).build());
+        return redisTemplate.delete(keys);
+    }
+
+    public static Mono<Boolean> deleteIndividualBudgetConsumption(ReactiveStringRedisTemplate redisTemplate,
+            UUID userId, UUID budgetId) {
+        String key = budgetConsumption(userId, budgetId);
+        return redisTemplate.opsForValue().delete(key);
+    }
+
+    // ------------------------------------------------------------------------------------
+    // DASHBOARD
+    private final static String DASHBOARD_SUMMARY = "dashboard:user:%s:from:%s:until:%s";
+
+    // CACHE KEYS
+    public static String dashboardSummary(UUID userId, LocalDate from, LocalDate until) {
+        return String.format(DASHBOARD_SUMMARY, userId, from, until);
+    }
+
+    // DELETE CACHE
+    public static Mono<Long> deleteAllCacheDashboard(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
+        Flux<String> keys = redisTemplate.scan(
+                ScanOptions.scanOptions().match("dashboard:user:%s:*".formatted(userId)).build());
+        return redisTemplate.delete(keys);
+    }
+
+    // ------------------------------------------------------------------------------------
+    // USER STATUS
+    private final static String USER_STATUS_BLOCKED = "user:status:blocked:%s";
+
+    // CACHE KEYS
+    public static String userStatusBlocked(String email) {
+        return String.format(USER_STATUS_BLOCKED, email);
+    }
+
+    // DELETE CACHE
+    public static Mono<Boolean> deleteUserStatusBlocked(ReactiveStringRedisTemplate redisTemplate, String email) {
+        String key = userStatusBlocked(email);
+        return redisTemplate.opsForValue().delete(key);
+    }
+
+    // ------------------------------------------------------------------------------------
     // USERS
     public static final String USER = "users:%s";
 
@@ -268,9 +350,48 @@ public class CacheKeys {
         return redisTemplate.opsForValue().delete(key);
     }
 
+    public static Mono<Boolean> deleteIndividualUser(ReactiveStringRedisTemplate redisTemplate, String email) {
+        String key = user(email);
+        return redisTemplate.opsForValue().delete(key);
+    }
+
+    public static Mono<Boolean> clearAllCacheUser(ReactiveStringRedisTemplate redisTemplate, UUID userId,
+            String email) {
+        Mono<Boolean> deleteId = deleteIndividualUser(redisTemplate, userId);
+        Mono<Boolean> deleteEmail = (email != null) ? deleteIndividualUser(redisTemplate, email)
+                : Mono.just(Boolean.TRUE);
+        Mono<Boolean> deleteBlocked = (email != null) ? deleteUserStatusBlocked(redisTemplate, email)
+                : Mono.just(Boolean.TRUE);
+        return Mono.when(deleteId, deleteEmail, deleteBlocked).thenReturn(Boolean.TRUE);
+    }
+
     // ------------------------------------------------------------------------------------
     // METHODS DELETE
     // ------------------------------------------------------------------------------------
+
+    // BUDGETS
+    public static Mono<Boolean> clearAllCacheBudgets(ReactiveStringRedisTemplate redisTemplate, UUID userId,
+            UUID budgetId) {
+        Mono<Long> borrarBudgets = deleteAllCacheBudgets(redisTemplate, userId);
+        Mono<Boolean> borrarBudgetIndividual = deleteIndividualBudget(redisTemplate, budgetId);
+        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        return Mono.when(borrarBudgets, borrarBudgetIndividual, borrarConsumption, borrarDashboard)
+                .thenReturn(Boolean.TRUE);
+    }
+
+    public static Mono<Boolean> clearAllCacheBudgets(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
+        Mono<Long> borrarBudgets = deleteAllCacheBudgets(redisTemplate, userId);
+        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        return Mono.when(borrarBudgets, borrarConsumption, borrarDashboard)
+                .thenReturn(Boolean.TRUE);
+    }
+
+    // DASHBOARD
+    public static Mono<Boolean> clearAllCacheDashboard(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
+        return deleteAllCacheDashboard(redisTemplate, userId).thenReturn(Boolean.TRUE);
+    }
 
     // ACCOUNTS
     public static Mono<Boolean> clearAllCacheAccounts(ReactiveStringRedisTemplate redisTemplate, UUID userId,
@@ -279,7 +400,8 @@ public class CacheKeys {
                 accountId);
         Mono<Long> borrarTodo = deleteAllCacheAccounts(redisTemplate,
                 userId);
-        return Mono.when(borrarIndividual, borrarTodo).then(Mono.just(Boolean.TRUE));
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        return Mono.when(borrarIndividual, borrarTodo, borrarDashboard).then(Mono.just(Boolean.TRUE));
     }
 
     // TRANSFERS
@@ -292,9 +414,10 @@ public class CacheKeys {
 
         Mono<Boolean> borrarIndividualTransfer = deleteIndividualTransfer(redisTemplate, transferId);
         Mono<Long> borrarTransferuser = deleteAllTranasferUser(redisTemplate, userId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
         return Mono
                 .when(borrarCuentaCache, borrarCuentasCache, borrarIndividualTransfer, borrarTodoTransferCuenta,
-                        borrarTransferuser)
+                        borrarTransferuser, borrarDashboard)
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -306,7 +429,8 @@ public class CacheKeys {
         Mono<Boolean> borrarIndividual = CacheKeys.deleteIndividualObjective(
                 redisTemplate,
                 objectiveId);
-        return Mono.when(borrarIndividual, borrarTodo).thenReturn(Boolean.TRUE);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        return Mono.when(borrarIndividual, borrarTodo, borrarDashboard).thenReturn(Boolean.TRUE);
     }
 
     // CONTRIBUTIONS OBJECTIVES
@@ -320,10 +444,11 @@ public class CacheKeys {
         Mono<Long> borrarTodoAccount = deleteAllCacheAccounts(redisTemplate, accountId);
         Mono<Boolean> borrarIndividualAccount = deleteInidividualAccount(redisTemplate, accountId);
         Mono<Long> borrarTodoContribution = deleteAllContributionObjective(redisTemplate, objectiveId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
         return Mono
                 .when(borrarIndividualAccount, borrarIndividualObjetivo, borrarTodoAccount, borrarTodoTransfers,
                         borrarTodoTransfersAccount,
-                        borratTodoObjetivo, borrarTodoContribution)
+                        borratTodoObjetivo, borrarTodoContribution, borrarDashboard)
                 .doOnSuccess(e -> System.out.println("se borro todo el cache de objectives"))
                 .thenReturn(Boolean.TRUE);
     }
@@ -349,7 +474,10 @@ public class CacheKeys {
         Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
         Mono<Long> borrarCuentas = deleteAllCacheAccounts(redisTemplate, userId);
         Mono<Boolean> borrarCuentaIndividual = deleteInidividualAccount(redisTemplate, accountId);
-        return Mono.when(borrarCacheTodo, borrarIndividual, borrarCuentas, borrarCuentaIndividual)
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
+        return Mono.when(borrarCacheTodo, borrarIndividual, borrarCuentas, borrarCuentaIndividual, borrarDashboard,
+                borrarConsumption)
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -357,8 +485,10 @@ public class CacheKeys {
             UUID movementId) {
         Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
         Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
 
-        return Mono.when(borrarCacheTodo, borrarIndividual)
+        return Mono.when(borrarCacheTodo, borrarIndividual, borrarDashboard, borrarConsumption)
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -370,8 +500,10 @@ public class CacheKeys {
         Mono<Long> borrarTodoMovements = deleteAllCacheMovementesUser(redisTemplate, userId);
         Mono<Long> borrarTodoacount = deleteAllCacheAccounts(redisTemplate, userId);
         Mono<Boolean> borrarIndividualAccount = deleteInidividualAccount(redisTemplate, accountId);
+        Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
+        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
         return Mono.when(borratTodoSubs, borrarSubIndividual, borrarTodoMovements, borrarTodoacount,
-                borrarIndividualAccount).thenReturn(Boolean.TRUE);
+                borrarIndividualAccount, borrarDashboard, borrarConsumption).thenReturn(Boolean.TRUE);
     }
 
     public static Mono<Boolean> clearCacheSubscription(ReactiveStringRedisTemplate redisTemplate, UUID userId,

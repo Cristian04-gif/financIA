@@ -21,6 +21,8 @@ import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.AccountAuthori
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.TransferAuthorizationManager;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryAuthorizationManager;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.MovementAuthorizationManager;
+import com.financia.kash.meta.infrastructure.api.contribution.ContributionObjectiveAuthorizationManager;
+import com.financia.kash.meta.infrastructure.api.objective.ObjectiveAuthorizationManager;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.SubscriptionAuthorizationManager;
 import com.financia.kash.presupuesto.application.model.*;
 import com.financia.kash.presupuesto.application.service.*;
@@ -34,7 +36,7 @@ import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEnti
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class BudgetControllerTest {
         private AnnotationConfigApplicationContext context;
@@ -47,7 +49,12 @@ class BudgetControllerTest {
 
         @BeforeEach
         void setup() {
-                context = new AnnotationConfigApplicationContext(TestConfiguration.class);
+                context = new AnnotationConfigApplicationContext();
+                org.springframework.boot.test.util.TestPropertyValues.of(
+                                "security.secret-key=" + java.util.Base64.getEncoder().encodeToString("super-secret-key-for-testing-12345678901234567890123456789012".getBytes()))
+                                .applyTo(context);
+                context.register(TestConfiguration.class);
+                context.refresh();
                 budgets = context.getBean(BudgetService.class);
                 consumption = context.getBean(BudgetConsumptionService.class);
                 userId = UUID.randomUUID();
@@ -209,6 +216,16 @@ class BudgetControllerTest {
                 @Bean
                 SubscriptionAuthorizationManager subscriptions() {
                         return mock(SubscriptionAuthorizationManager.class);
+                }
+
+                @Bean
+                ObjectiveAuthorizationManager objectives() {
+                        return mock(ObjectiveAuthorizationManager.class);
+                }
+
+                @Bean
+                ContributionObjectiveAuthorizationManager contributionObjectives() {
+                        return mock(ContributionObjectiveAuthorizationManager.class);
                 }
         }
 }

@@ -99,7 +99,10 @@ public class AccountService
         @Transactional
         public Mono<Void> deleteMyAccount(UUID accountId) {
                 return accountRespotoryPort.findMyAccountById(accountId)
-                                .flatMap(account -> accountRespotoryPort.delete(accountId));
+                                .flatMap(account -> accountRespotoryPort.delete(accountId)
+                                                .then(CacheKeys.clearAllCacheAccounts(cacheService.redisTemplate(),
+                                                                account.getUserId(), accountId)))
+                                .then();
         }
 
         @Override
@@ -108,8 +111,8 @@ public class AccountService
                                 command.initialBalance());
 
                 return accountRespotoryPort.save(account)
-                                .flatMap(accountSaved -> CacheKeys.deleteAllCacheAccounts(cacheService.redisTemplate(),
-                                                accountSaved.getUserId()).thenReturn(accountSaved));
+                                .flatMap(accountSaved -> CacheKeys.clearAllCacheAccounts(cacheService.redisTemplate(),
+                                                accountSaved.getUserId(), accountSaved.getId()).thenReturn(accountSaved));
         }
 
         @Override

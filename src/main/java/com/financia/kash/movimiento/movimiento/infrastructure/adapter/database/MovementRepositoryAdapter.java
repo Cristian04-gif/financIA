@@ -85,4 +85,22 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
                 .map(movementMapper::mapToDomain);
     }
 
+    @Override
+    public Mono<PaginationResponse<MovementDTO>> findAllByCategory(UUID userId, UUID categoryId,
+            PaginationRequest request) {
+        Flux<MovementProject> pageMotion = movementEntityQueryrepository.findAllByUserIdAndCategoryId(userId,
+                categoryId,
+                request);
+        Mono<Long> countMono = movementEntityRepository.countByUserIdAndCategoryId(userId, categoryId);
+        return Mono.zip(pageMotion.map(movementMapper::mapToDomainDTO).collectList(), countMono).map(tuple -> {
+            List<MovementDTO> motions = tuple.getT1();
+            long totalElements = tuple.getT2();
+            int totalPages = (int) Math.ceil((double) totalElements / request.getPageSize());
+            boolean isLast = request.getPageNum() >= Math.max(0, totalPages - 1);
+
+            return new PaginationResponse<>(motions, request.getPageNum(),
+                    request.getPageSize(), totalPages, totalElements, isLast);
+        });
+    }
+
 }

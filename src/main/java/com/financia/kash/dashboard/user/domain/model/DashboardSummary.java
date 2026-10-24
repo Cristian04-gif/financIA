@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class DashboardSummary {
     private Period period;
     private DetailedFinancialSummary detailedFinancialSummary;
@@ -26,6 +27,7 @@ public class DashboardSummary {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class Period {
         private LocalDate from;
         private LocalDate until;
@@ -33,6 +35,7 @@ public class DashboardSummary {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class DetailedFinancialSummary {
         private BigDecimal totalBalance;
         private BigDecimal income;
@@ -51,6 +54,7 @@ public class DashboardSummary {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class BudgetDashboard {
         private BigDecimal totalAmount;
         private BigDecimal amountSpent;
@@ -60,6 +64,7 @@ public class DashboardSummary {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class Goals {
         private int active;
         private int completed;

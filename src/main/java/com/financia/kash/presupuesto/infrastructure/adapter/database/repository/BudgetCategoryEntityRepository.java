@@ -8,5 +8,6 @@ import reactor.core.publisher.Mono;
 
 public interface BudgetCategoryEntityRepository extends ReactiveCrudRepository<BudgetCategoryEntity, UUID> {
     Flux<BudgetCategoryEntity> findAllByBudgetIdOrderByCategoryIdAsc(UUID budgetId);
+
     Mono<Void> deleteAllByBudgetId(UUID budgetId);
 }

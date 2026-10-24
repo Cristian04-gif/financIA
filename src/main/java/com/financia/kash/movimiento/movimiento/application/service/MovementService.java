@@ -24,6 +24,7 @@ import com.financia.kash.movimiento.movimiento.application.port.output.MovementR
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
@@ -162,6 +163,15 @@ public class MovementService
                                 .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, from, until)
                                                 .collectList()
                                                 .flatMapMany(movs -> cacheService2.saveListCache(cacheKey, movs)));
+        }
+
+        @Override
+        public Mono<PaginationResponse<MovementDTO>> retrieveAllTransactionByCategory(UUID userId, UUID categoryId,
+                        PaginationRequest request) {
+                String cacheKey = CacheKeys.allMovementsCategoy(userId, categoryId, request);
+                return cacheService.retriveCachePagination(cacheKey, MovementDTO.class)
+                                .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, request))
+                                .flatMap(movs -> cacheService.saveCachePagination(cacheKey, movs));
         }
 
 }

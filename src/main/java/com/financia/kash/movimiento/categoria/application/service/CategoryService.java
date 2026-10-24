@@ -114,9 +114,9 @@ public class CategoryService
         return categoryRepositoryPort.findById(id).flatMap(category -> {
             category.changeStatus(!category.isActive());
             return categoryRepositoryPort.save(category);
-        }).flatMap(category -> category.getUserId().equals(null)
+        }).flatMap(category -> category.getUserId() == null
                 ? CacheKeys.clearAllGlobalCategories(cacheService.redisTemplate(), id)
-                : CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), id, category.getUserId())).then();
+                : CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(), id)).then();
     }
 
 }

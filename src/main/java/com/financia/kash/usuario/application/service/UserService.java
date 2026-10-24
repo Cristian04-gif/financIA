@@ -34,7 +34,7 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
             }
             user.changeStatus(UserStatus.SUSPENDIDO.name());
             return repositoryPort.save(user);
-        }).flatMap(user -> CacheKeys.deleteIndividualUser(cacheService.redisTemplate(), user.getId())).then();
+        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail())).then();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
         return repositoryPort.getMe(command.id()).flatMap(user -> {
             user.changePassword(encoderForUserPort.ecoderPassword(command.newPassword()));
             return repositoryPort.save(user);
-        }).flatMap(user -> CacheKeys.deleteIndividualUser(cacheService.redisTemplate(), user.getId())).then();
+        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail())).then();
     }
 
 }

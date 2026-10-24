@@ -13,17 +13,22 @@ import com.financia.kash.presupuesto.application.service.BudgetService;
 import com.financia.kash.presupuesto.application.service.BudgetConsumptionService;
 import com.financia.kash.presupuesto.application.port.input.GetBudgetUseCase;
 
+import com.financia.kash.presupuesto.application.model.BudgetConsumption;
+import com.financia.kash.presupuesto.domain.model.Budget;
+import com.financia.kash.shared.application.service.CacheService;
+
 @Configuration
 public class BudgetConfiguration {
     @Bean
-    public BudgetConsumptionService budgetConsumptionService(GetBudgetUseCase budgets, BudgetExpensePort expenses) {
-        return new BudgetConsumptionService(budgets, expenses);
+    public BudgetConsumptionService budgetConsumptionService(GetBudgetUseCase budgets, BudgetExpensePort expenses,
+            CacheService<BudgetConsumption> cacheService) {
+        return new BudgetConsumptionService(budgets, expenses, cacheService);
     }
 
     @Bean
     public BudgetService budgetService(BudgetRepositoryPort repository, BudgetCategoryPort categories,
-            BudgetOwnerPort owners) {
-        return new BudgetService(repository, categories, owners, Clock.systemDefaultZone());
+            BudgetOwnerPort owners, CacheService<Budget> cacheService) {
+        return new BudgetService(repository, categories, owners, Clock.systemDefaultZone(), cacheService);
     }
 
     @Bean

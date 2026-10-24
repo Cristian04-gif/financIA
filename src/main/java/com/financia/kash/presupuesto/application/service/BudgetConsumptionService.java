@@ -10,20 +10,39 @@ import com.financia.kash.presupuesto.application.port.input.GetBudgetConsumption
 import com.financia.kash.presupuesto.application.port.input.GetBudgetUseCase;
 import com.financia.kash.presupuesto.application.port.output.BudgetExpensePort;
 import com.financia.kash.presupuesto.domain.model.Budget;
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import reactor.core.publisher.Mono;
 
 public class BudgetConsumptionService implements GetBudgetConsumptionUseCase {
     private static final BigDecimal ZERO = new BigDecimal("0.00");
     private final GetBudgetUseCase budgets;
     private final BudgetExpensePort expenses;
+    private final CacheService<BudgetConsumption> cacheService;
 
     public BudgetConsumptionService(GetBudgetUseCase budgets, BudgetExpensePort expenses) {
+        this(budgets, expenses, null);
+    }
+
+    public BudgetConsumptionService(GetBudgetUseCase budgets, BudgetExpensePort expenses,
+            CacheService<BudgetConsumption> cacheService) {
         this.budgets = budgets;
         this.expenses = expenses;
+        this.cacheService = cacheService;
     }
 
     @Override
     public Mono<BudgetConsumption> getConsumption(UUID userId, UUID budgetId) {
+        if (cacheService == null) {
+            return calculateConsumption(userId, budgetId);
+        }
+        String cacheKey = CacheKeys.budgetConsumption(userId, budgetId);
+        return cacheService.retrieveMonoCache(cacheKey, BudgetConsumption.class)
+                .switchIfEmpty(calculateConsumption(userId, budgetId)
+                        .flatMap(consumption -> cacheService.saveMonoCache(cacheKey, consumption)));
+    }
+
+    private Mono<BudgetConsumption> calculateConsumption(UUID userId, UUID budgetId) {
         return budgets.getById(userId, budgetId).flatMap(budget ->
                 expenses.findExpensesByCategory(userId, budget.periodStart(), budget.periodEnd())
                         .collectMap(BudgetExpense::categoryId, BudgetExpense::amount)
