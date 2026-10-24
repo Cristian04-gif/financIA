@@ -1,7 +1,6 @@
 package com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.UUID;
 
 import com.financia.kash.movimiento.movimiento.application.port.input.command.CategoryCommand;
@@ -15,6 +14,6 @@ public record CreateMovementRequest(
                 @NotNull CategoryCommand category,
                 @NotNull TypeMovement type,
                 @NotNull @Positive BigDecimal amount,
-                @NotNull LocalDate date, String description) {
+                String description) {
 
 }

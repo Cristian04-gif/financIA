@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.financia.kash.dashboard.user.application.port.output.RetrieveAllBudgetPort;
 import com.financia.kash.presupuesto.application.model.BudgetCommand;
 import com.financia.kash.presupuesto.application.port.input.ChangeBudgetStatusUseCase;
 import com.financia.kash.presupuesto.application.port.input.CreateBudgetUseCase;
@@ -21,7 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
-        UpdateBudgetUseCase, ChangeBudgetStatusUseCase {
+        UpdateBudgetUseCase, ChangeBudgetStatusUseCase, RetrieveAllBudgetPort {
 
     private final BudgetRepositoryPort repository;
     private final BudgetCategoryPort categoryPort;
@@ -82,8 +83,8 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
     }
 
     private Mono<Void> validateCategories(Budget budget) {
-        return Flux.fromIterable(budget.categories()).concatMap(allocation ->
-                categoryPort.findById(allocation.categoryId())
+        return Flux.fromIterable(budget.categories())
+                .concatMap(allocation -> categoryPort.findById(allocation.categoryId())
                         .switchIfEmpty(Mono.error(new BudgetValidationException("La categoria no existe")))
                         .flatMap(category -> {
                             if (!category.active() || !category.expense()
@@ -92,6 +93,12 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
                                         "La categoria debe estar activa, ser de gastos y pertenecer al usuario o ser global"));
                             }
                             return Mono.just(category);
-                        })).then();
+                        }))
+                .then();
+    }
+
+    @Override
+    public Flux<Budget> findAllUserId(UUID userId, LocalDateTime from, LocalDateTime until) {
+        return requireActiveOwner(userId).thenMany(Flux.defer(() -> repository.findAllByUserId(userId, from, until)));
     }
 }

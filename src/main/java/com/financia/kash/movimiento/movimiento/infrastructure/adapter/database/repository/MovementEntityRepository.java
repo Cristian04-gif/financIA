@@ -1,5 +1,6 @@
 package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.r2dbc.repository.Query;
@@ -8,9 +9,15 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MovementEntity;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface MovementEntityRepository extends ReactiveCrudRepository<MovementEntity, UUID> {
+
+    Flux<MovementEntity> findAllByUserIdAndCreationDateBetween(UUID userId, LocalDateTime from, LocalDateTime until);
+
+    Flux<MovementEntity> findAllByUserIdAndCategoryIdAndCreationDateBetween(UUID userId, UUID categoryId,
+            LocalDateTime from, LocalDateTime until);
 
     Mono<Long> countByUserId(UUID userId);
 

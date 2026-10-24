@@ -1,7 +1,6 @@
 package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -43,8 +42,8 @@ public class MovementEntity implements HasUuid {
     @Column(value = "monto")
     private BigDecimal amount;
 
-    @Column(value = "fecha_emision")
-    private LocalDate date;
+    // @Column(value = "fecha_emision")
+    // private LocalDate date;
 
     @Column(value = "descripcion")
     private String description;

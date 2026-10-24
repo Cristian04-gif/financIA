@@ -1,10 +1,12 @@
 package com.financia.kash.movimiento.movimiento.application.service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTransactionsPort;
 import com.financia.kash.movimiento.categoria.application.port.input.CreateCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
@@ -27,13 +29,15 @@ import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class MovementService
-                implements CreateMovimentUseCase, DeleteMovimentUseCase, GetMovementUseCase {
+                implements CreateMovimentUseCase, DeleteMovimentUseCase, GetMovementUseCase,
+                RetrieveAllTransactionsPort {
 
         private final MovementRepositoryPort movementRepositoryPort;
         private final AccountForMovementPort accountForMovementPort;
@@ -43,6 +47,8 @@ public class MovementService
         private final SaveFileVoucherUseCase saveFileVoucherUseCase;
 
         private final CacheService<MovementDTO> cacheService;
+
+        private final CacheService<Movement> cacheService2;
 
         @Override
         public Mono<PaginationResponse<MovementDTO>> getAllMovements(AllMovementCommand command) {
@@ -91,7 +97,7 @@ public class MovementService
                                                         command.accountId(),
                                                         category.getId(), null,
                                                         command.type(), command.amount(),
-                                                        command.date(),
+
                                                         command.description());
                                         return movementRepositoryPort.save(motion)
                                                         .flatMap(mot -> saveAccountForMovementPort
@@ -136,6 +142,26 @@ public class MovementService
                                                                                         movement.getId()))
                                                                         .then();
                                                 }));
+        }
+
+        // DASHBOARS
+        @Override
+        public Flux<Movement> retrieveAllTransactions(UUID userId, LocalDateTime from,
+                        LocalDateTime until) {
+                String cacheKey = CacheKeys.allMovements(userId);
+                return cacheService2.getCacheList(cacheKey, Movement.class)
+                                .switchIfEmpty(movementRepositoryPort.findAll(userId, from, until).collectList()
+                                                .flatMapMany(movs -> cacheService2.saveListCache(cacheKey, movs)));
+        }
+
+        @Override
+        public Flux<Movement> retrieveAllTransactionByCategory(UUID userId, UUID categoryId, LocalDateTime from,
+                        LocalDateTime until) {
+                String cacheKey = CacheKeys.allMovementsCategory(userId, categoryId);
+                return cacheService2.getCacheList(cacheKey, Movement.class)
+                                .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, from, until)
+                                                .collectList()
+                                                .flatMapMany(movs -> cacheService2.saveListCache(cacheKey, movs)));
         }
 
 }

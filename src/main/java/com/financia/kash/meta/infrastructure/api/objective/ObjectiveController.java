@@ -48,7 +48,7 @@ public class ObjectiveController {
     private final ContributionObjectiveUseCase contributionObjectiveUseCase;
 
     @Operation(summary = "Metas del usuario", description = "Devuelve las metas que el usuario quiere lograr")
-    @GetMapping("/my-objectives")
+    @GetMapping()
     public Mono<ResponseEntity<PaginationResponse<FinancialObjectives>>> getAllMyObjectives(
             @AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,

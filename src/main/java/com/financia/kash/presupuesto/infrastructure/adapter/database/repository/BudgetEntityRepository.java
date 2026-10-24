@@ -1,5 +1,6 @@
 package com.financia.kash.presupuesto.infrastructure.adapter.database.repository;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -9,7 +10,10 @@ import reactor.core.publisher.Mono;
 
 public interface BudgetEntityRepository extends ReactiveCrudRepository<BudgetEntity, UUID> {
     Flux<BudgetEntity> findAllByUserIdOrderByCreationDateDescIdAsc(UUID userId);
+
     Mono<BudgetEntity> findByIdAndUserId(UUID id, UUID userId);
+
+    Flux<BudgetEntity> findAllByUserIdAndCreationDateBetween(UUID userId, LocalDateTime from, LocalDateTime until);
 
     @Query("SELECT * FROM presupuestos WHERE id = :id AND usuario_id = :userId FOR UPDATE")
     Mono<BudgetEntity> findOwnedForUpdate(UUID id, UUID userId);

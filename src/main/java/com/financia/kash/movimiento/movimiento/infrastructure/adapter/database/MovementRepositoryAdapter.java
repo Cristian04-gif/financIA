@@ -1,5 +1,6 @@
 package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,6 +70,19 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
         return movementEntityRepository.findByIdProject(movementId)
                 .switchIfEmpty(Mono.error(new MovementNotFoundException(movementId)))
                 .map(movementMapper::mapToDomainDTO);
+    }
+
+    @Override
+    public Flux<Movement> findAll(UUID userId, LocalDateTime from, LocalDateTime until) {
+        return movementEntityRepository.findAllByUserIdAndCreationDateBetween(userId, from, until)
+                .map(movementMapper::mapToDomain);
+    }
+
+    @Override
+    public Flux<Movement> findAllByCategory(UUID userId, UUID categoryId, LocalDateTime from, LocalDateTime until) {
+        return movementEntityRepository
+                .findAllByUserIdAndCategoryIdAndCreationDateBetween(userId, categoryId, from, until)
+                .map(movementMapper::mapToDomain);
     }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
+import com.financia.kash.dashboard.user.application.port.output.RetrieveAllGoalsPort;
 import com.financia.kash.meta.application.port.input.ContributionObjectiveUseCase;
 import com.financia.kash.meta.application.port.input.CreateObjectiveUseCase;
 import com.financia.kash.meta.application.port.input.RetriveObjectivesUseCase;
@@ -29,13 +30,14 @@ import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 public class FinancialObjectiveService
                 implements RetriveObjectivesUseCase, CreateObjectiveUseCase, UpdateStatusObjectiveUseCase,
-                ContributionObjectiveUseCase {
+                ContributionObjectiveUseCase, RetrieveAllGoalsPort {
 
         private final FinancialObjectiveRepositoryPort financialObjectiveRepositoryPort;
         private final ContributeObjectiveRepositoryPort contributeObjectiveRepositoryPort;
@@ -104,7 +106,7 @@ public class FinancialObjectiveService
 
                         Movement movement = new Movement(account.getUserId(), account.getId(), command.categoryId(),
                                         null,
-                                        TypeMovement.AHORRO, command.amount(), LocalDate.now(), command.description());
+                                        TypeMovement.AHORRO, command.amount(), command.description());
                         return movementSaveForObjective.save(movement)
                                         .flatMap(movementSaved -> retriveAccountForObjectives.save(account)
                                                         .flatMap(accountSaved -> {
@@ -128,6 +130,16 @@ public class FinancialObjectiveService
                                         .then();
                 });
 
+        }
+
+        // DASHBOARD
+        @Override
+        public Flux<FinancialObjectives> retrieveAllGoals(UUID userId, LocalDate from, LocalDate until) {
+                String cachekey = CacheKeys.allObjectives(userId);
+                return cacheService.getCacheList(cachekey, FinancialObjectives.class)
+                                .switchIfEmpty(financialObjectiveRepositoryPort.findAllByUser(userId, from, until)
+                                                .collectList()
+                                                .flatMapMany(flux -> cacheService.saveListCache(cachekey, flux)));
         }
 
 }

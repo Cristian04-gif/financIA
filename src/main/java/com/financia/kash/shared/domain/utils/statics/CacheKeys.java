@@ -85,6 +85,7 @@ public class CacheKeys {
 
     // ------------------------------------------------------------------------------------
     // FINANCIAL OBJECTIVES
+    private final static String ALL_OBJECTIVES = "objectives:user:%s";
     private final static String ALL_OBJECTIVES_USER = "objectives:user:%s:page:%d:size:%d:sort:%s:direction:%s";
     private final static String OBJECTIVE = "objective:%s";
 
@@ -99,10 +100,14 @@ public class CacheKeys {
         return String.format(OBJECTIVE, objectiveId);
     }
 
+    public static String allObjectives(UUID userId) {
+        return String.format(ALL_OBJECTIVES, userId);
+    }
+
     // DELETE CACHE
     public static Mono<Long> deleteAllObjectivesUser(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
         Flux<String> keys = redisTemplate.scan(
-                ScanOptions.scanOptions().match("objectives:user:%s:*".formatted(userId)).build());
+                ScanOptions.scanOptions().match("objectives:user:%s*".formatted(userId)).build());
         return redisTemplate.delete(keys);
     }
 
@@ -182,10 +187,21 @@ public class CacheKeys {
 
     // ------------------------------------------------------------------------------------------------
     // MOVEMENTS
+    private static final String ALL_MOVEMENTS = "movements:user:%s";
+    private static final String ALL_MOVEMENTS_CATEGORY = "movements:user:%s:category:%s";
     private static final String ALL_USER_MOVEMENTS = "movements:user:%s:page:%d:size:%d:sort:%s:direction:%s";
     private static final String MOVEMENT = "movement:%s";
 
     // CACHE KEYS
+
+    public static String allMovements(UUID userID) {
+        return String.format(ALL_MOVEMENTS, userID);
+    }
+
+    public static String allMovementsCategory(UUID userId, UUID categoryId) {
+        return String.format(ALL_MOVEMENTS_CATEGORY, userId, categoryId);
+    }
+
     public static String allUserMovements(UUID userId, PaginationRequest request) {
         return String.format(ALL_USER_MOVEMENTS, userId, request.getPageNum(), request.getPageSize(),
                 request.getSortBy(), request.getDirection());
@@ -198,7 +214,7 @@ public class CacheKeys {
     // DELETE CACHE
     public static Mono<Long> deleteAllCacheMovementesUser(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
         Flux<String> keys = redisTemplate.scan(
-                ScanOptions.scanOptions().match("movements:user:%s:*".formatted(userId)).build());
+                ScanOptions.scanOptions().match("movements:user:%s*".formatted(userId)).build());
         return redisTemplate.delete(keys);
     }
 

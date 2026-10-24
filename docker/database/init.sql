@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS movimientos (
     id UUID NOT NULL,
     monto NUMERIC(19,2) NOT NULL,
     fecha_registro TIMESTAMP(6) WITHOUT TIME ZONE NOT NULL,
-    fecha_emision DATE NOT NULL,
+    --fecha_emision DATE NOT NULL,
     descripcion VARCHAR(255),
     tipo tipo_movimiento NOT NULL,
     url_comprobante TEXT NULL,

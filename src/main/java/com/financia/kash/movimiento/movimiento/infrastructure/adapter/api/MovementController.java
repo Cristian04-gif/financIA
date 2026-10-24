@@ -72,8 +72,7 @@ public class MovementController {
             @RequestBody @Valid CreateMovementRequest request) {
         return createMovimentUseCase
                 .createMotion(new CreateMovementCommand(user.getId(), request.accountId(), request.category(),
-                        request.type(), request.amount(),
-                        request.date(), request.description()))
+                        request.type(), request.amount(), request.description()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(value));
     }
 

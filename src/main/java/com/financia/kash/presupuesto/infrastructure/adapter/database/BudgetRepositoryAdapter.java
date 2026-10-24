@@ -52,8 +52,8 @@ public class BudgetRepositoryAdapter implements BudgetRepositoryPort {
                         });
             }
             return header.flatMap(saved -> categories.deleteAllByBudgetId(saved.getId())
-                    .thenMany(Flux.fromIterable(budget.categories()).concatMap(category ->
-                            categories.save(mapper.toEntity(category, saved.getId()))))
+                    .thenMany(Flux.fromIterable(budget.categories())
+                            .concatMap(category -> categories.save(mapper.toEntity(category, saved.getId()))))
                     .map(mapper::toDomain).collectList()
                     .map(allocations -> mapper.toDomain(saved, allocations)));
         }).as(budgetTransactionalOperator::transactional);
@@ -83,5 +83,11 @@ public class BudgetRepositoryAdapter implements BudgetRepositoryPort {
     private Mono<Budget> hydrate(BudgetEntity entity) {
         return categories.findAllByBudgetIdOrderByCategoryIdAsc(entity.getId())
                 .map(mapper::toDomain).collectList().map(allocations -> mapper.toDomain(entity, allocations));
+    }
+
+    @Override
+    public Flux<Budget> findAllByUserId(UUID userId, LocalDateTime from, LocalDateTime until) {
+        return budgets.findAllByUserIdAndCreationDateBetween(userId, from, until).concatMap(this::hydrate)
+                .as(budgetReadTransactionalOperator::transactional);
     }
 }

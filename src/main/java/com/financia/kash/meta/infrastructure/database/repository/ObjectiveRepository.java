@@ -1,5 +1,6 @@
 package com.financia.kash.meta.infrastructure.database.repository;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,8 @@ import reactor.core.publisher.Mono;
 
 public interface ObjectiveRepository extends ReactiveCrudRepository<FinancialObjectiveEntity, UUID> {
     Flux<FinancialObjectiveEntity> findAllByUserId(UUID userId, Pageable pageable);
+
+    Flux<FinancialObjectiveEntity> findAllByUserIdAndStartDateBetween(UUID userId, LocalDate from, LocalDate until);
 
     Mono<Long> countByUserId(UUID userId);
 

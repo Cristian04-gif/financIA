@@ -1,5 +1,6 @@
 package com.financia.kash.meta.infrastructure.database;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,5 +65,11 @@ public class ObjectiveRepositoryAdapter implements FinancialObjectiveRepositoryP
     @Override
     public Mono<Void> deleteById(UUID id) {
         return objectiveRepository.deleteById(id);
+    }
+
+    @Override
+    public Flux<FinancialObjectives> findAllByUser(UUID userId, LocalDate from, LocalDate until) {
+        return objectiveRepository.findAllByUserIdAndStartDateBetween(userId, from, until)
+                .map(financialObjectiveMapper::mapToDomain);
     }
 }
