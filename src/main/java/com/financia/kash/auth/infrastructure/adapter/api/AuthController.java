@@ -13,6 +13,7 @@ import com.financia.kash.auth.application.port.input.command.LoginUserCommand;
 import com.financia.kash.auth.application.port.input.command.Verify2FACommand;
 import com.financia.kash.auth.domain.model.Auth;
 import com.financia.kash.auth.domain.model.AuthResponse;
+import com.financia.kash.auth.infrastructure.adapter.api.dto.Confirm2faRequest;
 import com.financia.kash.auth.infrastructure.adapter.api.dto.LoginRequestDTO;
 import com.financia.kash.auth.infrastructure.adapter.api.dto.Verify2faRequest;
 
@@ -66,8 +67,8 @@ public class AuthController {
     @Operation(summary = "Confirmar autenticacion 2fa")
     @PostMapping("/2fa/confirm")
     public Mono<ResponseEntity<String>> comfim2fa(@AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, String> request) {
-        return confirm2faRequestUseCase.confirm2fa(new Confirm2FACommand(userDetails.getUsername(), request))
+            @RequestBody @Valid Confirm2faRequest request) {
+        return confirm2faRequestUseCase.confirm2fa(new Confirm2FACommand(userDetails.getUsername(), Map.of("code", request.code())))
                 .map(value -> ResponseEntity.ok(value));
     }
 

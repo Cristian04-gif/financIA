@@ -88,7 +88,7 @@ public class ObjectiveController {
     @Operation(summary = "Registra los aportes que hace el usuario a una meta")
     @PostMapping("/{id}/contribution")
     public Mono<ResponseEntity<Void>> contributionObjective(@PathVariable UUID id,
-            @RequestBody ContributionObjectiveRequest request) {
+            @RequestBody @Valid ContributionObjectiveRequest request) {
         ContributionObjectiveCommand command = new ContributionObjectiveCommand(id, request.accountId(),
                 request.categoryId(), request.amount(), request.description());
         return contributionObjectiveUseCase.contributionObjective(command).map(ResponseEntity::ok);

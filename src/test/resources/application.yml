@@ -15,6 +15,10 @@ spring:
 url:
   frontend: http://localhost:5173
 
+security:
+  secret-key: ${SECRET_KEY_SECURITY:dGhpc2lzYXZlcnlzZWNyZXRrZXlmb3J0ZXN0aW5ncHVycG9zZXMxMjM0NTY=}
+
 logging:
   level:
     root: INFO
+

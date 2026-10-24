@@ -16,6 +16,7 @@ import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -80,7 +81,7 @@ public class TransferController {
     @Operation(summary = "Actualizar Transferencia", description = "Actualizar el monto o descripcion de la transferencia")
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
-            @RequestBody TransferUpdateRequest request) {
+            @RequestBody @Valid TransferUpdateRequest request) {
         return updateTransferUseCase
                 .updateTransfer(new UpdateTransferCommand(id, request.newAmount(), request.newDescription()))
                 .thenReturn(ResponseEntity.noContent().build());
