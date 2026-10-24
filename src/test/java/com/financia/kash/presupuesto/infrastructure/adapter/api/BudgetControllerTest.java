@@ -30,7 +30,6 @@ import com.financia.kash.presupuesto.infrastructure.adapter.api.dto.*;
 import com.financia.kash.presupuesto.infrastructure.adapter.api.mapping.BudgetApiMapperImpl;
 import com.financia.kash.usuario.domain.enums.RoleUser;
 import com.financia.kash.usuario.domain.enums.UserStatus;
-import com.financia.kash.usuario.domain.model.*;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import reactor.core.publisher.Flux;
