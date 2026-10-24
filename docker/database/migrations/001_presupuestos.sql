@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS presupuesto_categorias (
 
 CREATE INDEX IF NOT EXISTS idx_presupuestos_usuario_periodo
     ON presupuestos(usuario_id, periodo_inicial, periodo_fin);
+CREATE INDEX IF NOT EXISTS idx_presupuestos_usuario_fecha_creacion
+    ON presupuestos(usuario_id, fecha_creacion DESC);
 CREATE INDEX IF NOT EXISTS idx_presupuesto_categorias_categoria
     ON presupuesto_categorias(categoria_id);
 

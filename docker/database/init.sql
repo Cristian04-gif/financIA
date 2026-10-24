@@ -56,8 +56,20 @@ CREATE TABLE IF NOT EXISTS categorias (
 
     CONSTRAINT fk_categorias_padre
         FOREIGN KEY (categoria_padre_id)
-        REFERENCES categorias(id)
+        REFERENCES categorias(id),
+
+    CONSTRAINT chk_categorias_no_auto_referencia
+        CHECK (categoria_padre_id IS NULL OR categoria_padre_id <> id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_categorias_usuario_id
+    ON categorias (usuario_id);
+
+CREATE INDEX IF NOT EXISTS idx_categorias_padre_id
+    ON categorias (categoria_padre_id);
+
+CREATE INDEX IF NOT EXISTS idx_categorias_usuario_nombre
+    ON categorias (usuario_id, nombre);
 
 
 -- ============================================================
@@ -80,6 +92,12 @@ CREATE TABLE IF NOT EXISTS cuentas (
         FOREIGN KEY (usuario_id)
         REFERENCES usuarios(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_cuentas_usuario_id
+    ON cuentas (usuario_id);
+
+CREATE INDEX IF NOT EXISTS idx_cuentas_usuario_tipo
+    ON cuentas (usuario_id, tipo);
 
 
 -- ============================================================
@@ -117,9 +135,17 @@ CREATE TABLE IF NOT EXISTS movimientos_frecuentes (
         CHECK (dia_pago BETWEEN 1 AND 31)
 );
 
-CREATE INDEX idx_movimientos_frecuentes_usuario_id ON movimientos_frecuentes(usuario_id);
-CREATE INDEX idx_movimientos_frecuentes_cuenta_id ON movimientos_frecuentes(cuenta_id);
-CREATE INDEX idx_movimientos_frecuentes_categoria_id ON movimientos_frecuentes(categoria_id);
+CREATE INDEX IF NOT EXISTS idx_movimientos_frecuentes_usuario_id
+    ON movimientos_frecuentes (usuario_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_frecuentes_cuenta_id
+    ON movimientos_frecuentes (cuenta_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_frecuentes_categoria_id
+    ON movimientos_frecuentes (categoria_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_frecuentes_siguiente_pago
+    ON movimientos_frecuentes (siguiente_pago, activo);
 
 
 -- ============================================================
@@ -155,10 +181,26 @@ CREATE TABLE IF NOT EXISTS movimientos (
 
     CONSTRAINT fk_movimientos_suscripcion
         FOREIGN KEY (frecuentes_id)
-        REFERENCES movimientos_frecuentes(id)
+        REFERENCES movimientos_frecuentes(id),
+
+    CONSTRAINT chk_movimientos_monto
+        CHECK (monto > 0)
 );
 
-CREATE INDEX idx_movimientos_frecuentes_id ON movimientos(frecuentes_id);
+CREATE INDEX IF NOT EXISTS idx_movimientos_frecuentes_id
+    ON movimientos (frecuentes_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_cuenta_id
+    ON movimientos (cuenta_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_categoria_id
+    ON movimientos (categoria_id);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_usuario_fecha
+    ON movimientos (usuario_id, fecha_registro DESC);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_usuario_cat_fecha
+    ON movimientos (usuario_id, categoria_id, fecha_registro DESC);
 
 
 -- ============================================================
@@ -185,8 +227,23 @@ CREATE TABLE IF NOT EXISTS transferencias (
 
     CONSTRAINT fk_transferencias_cuenta_destino
         FOREIGN KEY (cuenta_destino_id)
-        REFERENCES cuentas(id)
+        REFERENCES cuentas(id),
+
+    CONSTRAINT chk_transferencias_monto
+        CHECK (monto > 0),
+
+    CONSTRAINT chk_transferencias_cuentas_distintas
+        CHECK (cuenta_origen_id <> cuenta_destino_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_transferencias_usuario_fecha
+    ON transferencias (usuario_id, fecha_creacion DESC);
+
+CREATE INDEX IF NOT EXISTS idx_transferencias_cuenta_origen
+    ON transferencias (cuenta_origen_id);
+
+CREATE INDEX IF NOT EXISTS idx_transferencias_cuenta_destino
+    ON transferencias (cuenta_destino_id);
 
 
 -- ============================================================
@@ -228,6 +285,9 @@ CREATE INDEX IF NOT EXISTS idx_metas_financieras_usuario_id
 CREATE INDEX IF NOT EXISTS idx_metas_financieras_estado_fecha
     ON metas_financieras (estado, fecha_objetivo);
 
+CREATE INDEX IF NOT EXISTS idx_metas_financieras_usuario_fecha_inicio
+    ON metas_financieras (usuario_id, fecha_inicio);
+
 
 -- ============================================================
 -- 8. TABLA: aportes_meta (Depende de metas_financieras y movimientos)
@@ -251,7 +311,10 @@ CREATE TABLE IF NOT EXISTS aportes_meta (
         ON DELETE RESTRICT,
 
     CONSTRAINT chk_monto_aporte_positivo
-        CHECK (monto > 0)
+        CHECK (monto > 0),
+
+    CONSTRAINT uq_aportes_meta_movimiento
+        UNIQUE (movimiento_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_aportes_meta_meta_id
@@ -260,9 +323,13 @@ CREATE INDEX IF NOT EXISTS idx_aportes_meta_meta_id
 CREATE INDEX IF NOT EXISTS idx_aportes_meta_movimiento_id
     ON aportes_meta (movimiento_id);
 
+CREATE INDEX IF NOT EXISTS idx_aportes_meta_meta_fecha
+    ON aportes_meta (meta_id, fecha DESC);
 
 
--- Presupuestos y sus limites por categoria. Aplicar una vez a una base existente.
+-- ============================================================
+-- 9. TABLA: presupuestos (Depende de usuarios)
+-- ============================================================
 CREATE TABLE IF NOT EXISTS presupuestos (
     id UUID PRIMARY KEY,
     usuario_id UUID NOT NULL REFERENCES usuarios(id),
@@ -273,18 +340,30 @@ CREATE TABLE IF NOT EXISTS presupuestos (
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     fecha_creacion TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     fecha_actualizado TIMESTAMP WITHOUT TIME ZONE,
-    CONSTRAINT chk_presupuestos_periodo CHECK (periodo_inicial <= periodo_fin)
+
+    CONSTRAINT chk_presupuestos_periodo
+        CHECK (periodo_inicial <= periodo_fin)
 );
 
+CREATE INDEX IF NOT EXISTS idx_presupuestos_usuario_periodo
+    ON presupuestos (usuario_id, periodo_inicial, periodo_fin);
+
+CREATE INDEX IF NOT EXISTS idx_presupuestos_usuario_fecha_creacion
+    ON presupuestos (usuario_id, fecha_creacion DESC);
+
+
+-- ============================================================
+-- 10. TABLA: presupuesto_categorias (Depende de presupuestos y categorias)
+-- ============================================================
 CREATE TABLE IF NOT EXISTS presupuesto_categorias (
     id UUID PRIMARY KEY,
     presupuesto_id UUID NOT NULL REFERENCES presupuestos(id) ON DELETE CASCADE,
     categoria_id UUID NOT NULL REFERENCES categorias(id),
     monto_limite NUMERIC(19,2) NOT NULL CHECK (monto_limite > 0),
-    CONSTRAINT uq_presupuesto_categoria UNIQUE (presupuesto_id, categoria_id)
+
+    CONSTRAINT uq_presupuesto_categoria
+        UNIQUE (presupuesto_id, categoria_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_presupuestos_usuario_periodo
-    ON presupuestos(usuario_id, periodo_inicial, periodo_fin);
 CREATE INDEX IF NOT EXISTS idx_presupuesto_categorias_categoria
-    ON presupuesto_categorias(categoria_id);
+    ON presupuesto_categorias (categoria_id);
