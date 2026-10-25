@@ -24,6 +24,7 @@ import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.Moveme
 import com.financia.kash.meta.infrastructure.api.contribution.ContributionObjectiveAuthorizationManager;
 import com.financia.kash.meta.infrastructure.api.objective.ObjectiveAuthorizationManager;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.SubscriptionAuthorizationManager;
+import com.financia.kash.notificacion.application.service.WebSocketTicketService;
 import com.financia.kash.presupuesto.application.model.*;
 import com.financia.kash.presupuesto.application.service.*;
 import com.financia.kash.presupuesto.domain.exception.*;
@@ -51,7 +52,9 @@ class BudgetControllerTest {
         void setup() {
                 context = new AnnotationConfigApplicationContext();
                 org.springframework.boot.test.util.TestPropertyValues.of(
-                                "security.secret-key=" + java.util.Base64.getEncoder().encodeToString("super-secret-key-for-testing-12345678901234567890123456789012".getBytes()))
+                                "security.secret-key=" + java.util.Base64.getEncoder().encodeToString(
+                                                "super-secret-key-for-testing-12345678901234567890123456789012"
+                                                                .getBytes()))
                                 .applyTo(context);
                 context.register(TestConfiguration.class);
                 context.refresh();
@@ -184,8 +187,8 @@ class BudgetControllerTest {
                 }
 
                 @Bean
-                JwtFilter jwtFilter(JwtService jwt, ReactiveUserDetailsService users) {
-                        return new JwtFilter(jwt, users);
+                JwtFilter jwtFilter(JwtService jwt, ReactiveUserDetailsService users, WebSocketTicketService service) {
+                        return new JwtFilter(jwt, users, service);
                 }
 
                 @Bean

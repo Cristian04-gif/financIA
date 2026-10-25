@@ -45,6 +45,8 @@ app:
       - gemini-3.5-flash-lite
       - gemini-3.1-flash-lite
       - gemini-2.5-flash-lite
+  websocket-ticket:
+    cleanup-interval-ms: 10000
 
 cloudinary:
   cloud_name: ${CLOUDINATY_NAME}
@@ -52,7 +54,9 @@ cloudinary:
   api_secret: ${CLOUDINARY_API_SECRET}
 
 url:
-  frontend: ${HOST_FRONTEND}
+  frontend:
+    - ${HOST_FRONTEND}
+    - ${HOST_FRONTEND_2}
 
 springdoc:
   swagger-ui:
