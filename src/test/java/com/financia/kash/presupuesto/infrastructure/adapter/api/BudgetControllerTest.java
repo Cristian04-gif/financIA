@@ -24,7 +24,6 @@ import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.Moveme
 import com.financia.kash.meta.infrastructure.api.contribution.ContributionObjectiveAuthorizationManager;
 import com.financia.kash.meta.infrastructure.api.objective.ObjectiveAuthorizationManager;
 import com.financia.kash.movimiento.suscripcion.infrastructure.adapter.api.SubscriptionAuthorizationManager;
-import com.financia.kash.notificacion.application.service.WebSocketTicketService;
 import com.financia.kash.presupuesto.application.model.*;
 import com.financia.kash.presupuesto.application.service.*;
 import com.financia.kash.presupuesto.domain.exception.*;
@@ -187,8 +186,8 @@ class BudgetControllerTest {
                 }
 
                 @Bean
-                JwtFilter jwtFilter(JwtService jwt, ReactiveUserDetailsService users, WebSocketTicketService service) {
-                        return new JwtFilter(jwt, users, service);
+                JwtFilter jwtFilter(JwtService jwt, ReactiveUserDetailsService users) {
+                        return new JwtFilter(jwt, users);
                 }
 
                 @Bean
