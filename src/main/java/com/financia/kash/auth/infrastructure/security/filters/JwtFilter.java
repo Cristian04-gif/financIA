@@ -35,11 +35,14 @@ public class JwtFilter implements WebFilter {
                         return chain.filter(exchange);
                 }
 
-                if (authorization == null || !authorization.startsWith("Bearer ")) {
+                String token;
+                if (authorization != null && authorization.startsWith("Bearer ")) {
+                        token = authorization.substring(7);
+                } else if (path.startsWith("/ws/") && exchange.getRequest().getQueryParams().containsKey("token")) {
+                        token = exchange.getRequest().getQueryParams().getFirst("token");
+                } else {
                         return chain.filter(exchange);
                 }
-
-                String token = authorization.substring(7);
 
                 try {
                         boolean isTokenExpired = jwtService.isTokenExpired(token);

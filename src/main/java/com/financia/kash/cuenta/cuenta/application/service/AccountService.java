@@ -1,5 +1,6 @@
 package com.financia.kash.cuenta.cuenta.application.service;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -15,8 +16,10 @@ import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryP
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -30,6 +33,7 @@ public class AccountService
         private final AccountRespotoryPort accountRespotoryPort;
         private final TransferRepositoryPort transferRepositoryPort;
         private final CacheService<Account> cacheService;
+        private final NotificationService notificationService;
 
         @Override
         @Transactional
@@ -59,20 +63,26 @@ public class AccountService
 
                         return transferRepositoryPort.save(transfer)
                                         .flatMap(trans -> accountRespotoryPort.save(source)
-                                                        .then(accountRespotoryPort.save(target).then(
-                                                                        CacheKeys.clearAllCacheTransfers(
-                                                                                        cacheService.redisTemplate(),
-                                                                                        trans.getUserId(),
-                                                                                        trans.getSourceAccount(),
-                                                                                        trans.getDestinationAccount(),
-                                                                                        trans.getId()))));
+                                                        .then(accountRespotoryPort.save(target).thenReturn(trans)));
 
-                        // return
-                        // transferRepositoryPort.save(transfer).then(accountRespotoryPort.save(source))
-                        // .then(accountRespotoryPort.save(target))
-                        // .flatMap(res ->
-                        // CacheKeys.clearAllCacheTransfers(cacheService.redisTemplate(), null, null,
-                        // null, null));
+                }).doOnSuccess(trans -> {
+                        CacheKeys.clearAllCacheTransfers(
+                                        cacheService.redisTemplate(),
+                                        trans.getUserId(),
+                                        trans.getSourceAccount(),
+                                        trans.getDestinationAccount(),
+                                        trans.getId());
+                        System.out.println("se borro cache");
+
+                        Map<String, Object> metadata = Map.of(
+                                        "transferId", trans.getId(),
+                                        "sourceAccount", trans.getSourceAccount(),
+                                        "destinationAccount", trans.getDestinationAccount(),
+                                        "amount", trans.getAmount());
+
+                        notificationService.sendToUser(command.username(),
+                                        NotificationMessage.sendTransferNotification(metadata));
+                        System.out.println("se envio notificacion");
                 }).then();
 
         }
@@ -112,7 +122,8 @@ public class AccountService
 
                 return accountRespotoryPort.save(account)
                                 .flatMap(accountSaved -> CacheKeys.clearAllCacheAccounts(cacheService.redisTemplate(),
-                                                accountSaved.getUserId(), accountSaved.getId()).thenReturn(accountSaved));
+                                                accountSaved.getUserId(), accountSaved.getId())
+                                                .thenReturn(accountSaved));
         }
 
         @Override

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente WebSocket - Notificaciones</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.btn-connect {
+            background-color: #2ea043;
+            color: white;
+        }
+
+        button.btn-disconnect {
+            background-color: #da3633;
+            color: white;
+        }
+
+        #console-output {
+            background-color: #000;
+            padding: 10px;
+            border-radius: 4px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* Contenedor de notificaciones flotantes */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        /* Estilo de cada notificación */
+        .toast {
+            background-color: #2d2d2d;
+            min-width: 280px;
+            max-width: 350px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Colores dinámicos según el 'type' del JSON */
+        .toast.success {
+            border-left: 5px solid #2ea043;
+        }
+
+        .toast.error {
+            border-left: 5px solid #da3633;
+        }
+
+        .toast.warning {
+            border-left: 5px solid #f2c94c;
+        }
+
+        .toast.info {
+            border-left: 5px solid #3b82f6;
+        }
+
+        .toast-header {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .toast-body {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        .toast-time {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        @keyframes slideIn {
+            0% {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>📡 Receptor de Notificaciones</h2>
+
+    <div class="panel">
+        <div class="form-group">
+            <label for="ws-url">URL:</label>
+            <input type="text" id="ws-url" value="ws://localhost:8080/ws/notifications">
+        </div>
+        <div class="form-group">
+            <label for="jwt-token">Token JWT:</label>
+            <input type="text" id="jwt-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI...">
+        </div>
+        <div class="form-group">
+            <button class="btn-connect" onclick="iniciarConexion()">Conectar</button>
+            <button class="btn-disconnect" onclick="detenerConexion()">Desconectar</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div id="console-output">Esperando conexión...</div>
+    </div>
+
+    <!-- Aquí aparecerán los Toasts -->
+    <div id="toast-container"></div>
+
+    <script>
+        function appendLog(mensaje) {
+            const consoleDiv = document.getElementById('console-output');
+            const p = document.createElement('div');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${mensaje}`;
+            consoleDiv.appendChild(p);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        // Función para renderizar la notificación visual en pantalla
+        function mostrarToast(data) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            // Asigna la clase CSS basándose en el campo 'type' (por defecto 'info')
+            const tipo = data.type ? data.type.toLowerCase() : 'info';
+            toast.className = `toast ${tipo}`;
+
+            // Formatea la hora si viene en el JSON, si no usa la hora actual
+            const hora = data.timestamp
+                ? new Date(data.timestamp).toLocaleTimeString()
+                : new Date().toLocaleTimeString();
+
+            toast.innerHTML = `
+                <div class="toast-header">${data.header || 'Notificación'}</div>
+                <div class="toast-body">${data.body || ''}</div>
+                <div class="toast-time">${hora}</div>
+            `;
+
+            container.appendChild(toast);
+
+            // Eliminar la notificación automáticamente después de 6 segundos
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.4s ease-in forwards';
+                setTimeout(() => toast.remove(), 400); // Esperar a que termine la animación
+            }, 6000);
+        }
+
+        class ReconnectingWebSocket {
+            constructor(url, token) {
+                this.baseUrl = url;
+                this.token = token;
+                this.socket = null;
+                this.reconnectAttempts = 0;
+                this.intentionalDisconnect = false;
+                this.connect();
+            }
+
+            connect() {
+                this.intentionalDisconnect = false;
+                appendLog(`Conectando a ${this.baseUrl}...`);
+                this.socket = new WebSocket(`${this.baseUrl}?token=${this.token}`);
+
+                this.socket.onopen = () => {
+                    appendLog('✅ Conexión establecida.');
+                    this.reconnectAttempts = 0;
+                };
+
+                this.socket.onmessage = (event) => {
+                    try {
+                        // Intenta procesar el mensaje como JSON
+                        const notificacion = JSON.parse(event.data);
+                        mostrarToast(notificacion);
+                    } catch (e) {
+                        // Si el backend envía texto plano por error, lo envuelve en un objeto
+                        mostrarToast({ type: 'INFO', header: 'Mensaje', body: event.data });
+                    }
+                };
+
+                this.socket.onclose = (event) => {
+                    if (this.intentionalDisconnect) return;
+                    appendLog('🔴 Desconectado. Reconectando...');
+                    this.scheduleReconnect();
+                };
+
+                this.socket.onerror = () => this.socket.close();
+            }
+
+            scheduleReconnect() {
+                const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts++), 30000);
+                setTimeout(() => this.connect(), delay);
+            }
+
+            disconnect() {
+                this.intentionalDisconnect = true;
+                if (this.socket) this.socket.close();
+                appendLog('👋 Desconectado manualmente.');
+            }
+        }
+
+        let wsClient = null;
+
+        function iniciarConexion() {
+            if (wsClient) wsClient.disconnect();
+            wsClient = new ReconnectingWebSocket(
+                document.getElementById('ws-url').value,
+                document.getElementById('jwt-token').value
+            );
+        }
+
+        function detenerConexion() {
+            if (wsClient) {
+                wsClient.disconnect();
+                wsClient = null;
+            }
+        }
+    </script>
+</body>
+
+</html>
