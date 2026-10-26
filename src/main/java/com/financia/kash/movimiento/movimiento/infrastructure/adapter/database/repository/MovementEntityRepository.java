@@ -14,8 +14,6 @@ import reactor.core.publisher.Mono;
 
 public interface MovementEntityRepository extends ReactiveCrudRepository<MovementEntity, UUID> {
 
-    Flux<MovementEntity> findAllByUserIdAndCreationDateBetween(UUID userId, LocalDateTime from, LocalDateTime until);
-
     Flux<MovementEntity> findAllByUserIdAndCategoryIdAndCreationDateBetween(UUID userId, UUID categoryId,
             LocalDateTime from, LocalDateTime until);
 

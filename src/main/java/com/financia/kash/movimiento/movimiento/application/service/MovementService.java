@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTransactionsPort;
+import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.movimiento.categoria.application.port.input.CreateCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
@@ -19,12 +20,12 @@ import com.financia.kash.movimiento.movimiento.application.port.input.GetMovemen
 import com.financia.kash.movimiento.movimiento.application.port.input.command.AllMovementCommand;
 import com.financia.kash.movimiento.movimiento.application.port.input.command.CreateMovementCommand;
 import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
-import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.CalculateComsumptionBudgetPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
+import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
@@ -90,7 +91,8 @@ public class MovementService
                                                         command.category().type(),
                                                         command.category().parentCategoryId()))
                                         .flatMap(category -> saveMovement(command, category))
-                                        .flatMap(mot -> evaluateBudgetNotification(mot, command.username()).thenReturn(mot));
+                                        .flatMap(mot -> evaluateBudgetNotification(mot, command.username())
+                                                        .thenReturn(mot));
                 }
                 return categoryRepositoryPort.findById(command.category().categoryId())
                                 .flatMap(category -> saveMovement(command, category))
@@ -129,7 +131,8 @@ public class MovementService
                                 .flatMap(budget -> calculateComsumptionBudgetPort
                                                 .calculateConsumption(budget.userId(), budget.id())
                                                 .doOnNext(comsumption -> {
-                                                        if (comsumption.amountLimitTotal() == null || comsumption.amountLimitTotal().doubleValue() <= 0) {
+                                                        if (comsumption.amountLimitTotal() == null || comsumption
+                                                                        .amountLimitTotal().doubleValue() <= 0) {
                                                                 return;
                                                         }
 
@@ -155,7 +158,8 @@ public class MovementService
                                                 }))
                                 .then()
                                 .onErrorResume(e -> {
-                                        log.error("Error al evaluar notificación de presupuesto para {}: {}", username, e.getMessage());
+                                        log.error("Error al evaluar notificación de presupuesto para {}: {}", username,
+                                                        e.getMessage());
                                         return Mono.empty();
                                 });
         }
@@ -196,14 +200,6 @@ public class MovementService
         }
 
         // DASHBOARS
-        @Override
-        public Flux<Movement> retrieveAllTransactions(UUID userId, LocalDateTime from,
-                        LocalDateTime until) {
-                String cacheKey = CacheKeys.allMovements(userId);
-                return cacheService2.getCacheList(cacheKey, Movement.class)
-                                .switchIfEmpty(movementRepositoryPort.findAll(userId, from, until).collectList()
-                                                .flatMapMany(movs -> cacheService2.saveListCache(cacheKey, movs)));
-        }
 
         @Override
         public Flux<Movement> retrieveAllTransactionByCategory(UUID userId, UUID categoryId, LocalDateTime from,
@@ -222,6 +218,16 @@ public class MovementService
                 return cacheService.retriveCachePagination(cacheKey, MovementDTO.class)
                                 .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, request))
                                 .flatMap(movs -> cacheService.saveCachePagination(cacheKey, movs));
+        }
+
+        @Override
+        public Flux<MovementsMonth> retrievePeriodMovement(UUID userId, Integer limit) {
+                return movementRepositoryPort.findPeriod(userId, limit);
+        }
+
+        @Override
+        public Mono<MovementsMonth> retriveMovementsMotnh(UUID userId) {
+                return movementRepositoryPort.findPeriod(userId, 1).next();
         }
 
 }

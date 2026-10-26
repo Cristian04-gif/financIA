@@ -18,6 +18,7 @@ import com.financia.kash.dashboard.user.application.port.output.RetrieveAllBudge
 import com.financia.kash.dashboard.user.application.port.output.RetrieveAllGoalsPort;
 import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTransactionsPort;
 import com.financia.kash.dashboard.user.domain.model.DashboardSummary;
+import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.dashboard.user.domain.model.DashboardSummary.BudgetDashboard;
 import com.financia.kash.dashboard.user.domain.model.DashboardSummary.ComparisonPreviousPeriod;
 import com.financia.kash.dashboard.user.domain.model.DashboardSummary.DetailedFinancialSummary;
@@ -25,7 +26,6 @@ import com.financia.kash.dashboard.user.domain.model.DashboardSummary.Goals;
 import com.financia.kash.dashboard.user.domain.model.DashboardSummary.Period;
 import com.financia.kash.meta.domain.enums.ObjectiveState;
 import com.financia.kash.meta.domain.model.FinancialObjectives;
-import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.presupuesto.domain.model.Budget;
 import com.financia.kash.shared.application.service.CacheService;
@@ -56,13 +56,10 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
         }
 
         private Mono<DashboardSummary> computeDashboardSummary(DashboardSummaryCommand command) {
-                Mono<DetailedFinancialSummary> financialSummaryMono = detailedFinancial(command.userId(),
-                                command.from().atTime(LocalTime.now()),
-                                command.until().atTime(LocalTime.now()));
+                Mono<DetailedFinancialSummary> financialSummaryMono = detailedFinancial(command.userId());
 
                 Mono<ComparisonPreviousPeriod> comparisonPreviousPeriodMono = comparisonPreviousPeriod(
-                                command.userId(), command.from().atTime(LocalTime.now()),
-                                command.until().atTime(LocalTime.now()));
+                                command.userId());
 
                 Mono<BudgetDashboard> budgetMono = budget(command.userId(), command.from().atTime(LocalTime.now()),
                                 command.until().atTime(LocalTime.now()));
@@ -84,91 +81,44 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                 });
         }
 
-        private Mono<DetailedFinancialSummary> detailedFinancial(UUID userId, LocalDateTime from, LocalDateTime until) {
+        private Mono<DetailedFinancialSummary> detailedFinancial(UUID userId) {
+                Flux<Account> accountFlux = getAccountUseCase.getAllMyAccount(userId);
+                Mono<MovementsMonth> momvementsMonthMono = retrieveAllTransactionsPort.retriveMovementsMotnh(userId);
+                return Mono.zip(accountFlux.collectList(), momvementsMonthMono).map(tuple -> {
+                        BigDecimal totalCash = tuple.getT1().stream().map(Account::getCurrentBalance)
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        MovementsMonth momvementsMonth = tuple.getT2();
 
-                Flux<Movement> movementFlux = retrieveAllTransactionsPort
-                                .retrieveAllTransactions(userId, from, until);
+                        BigDecimal balance = momvementsMonth.totalIncome().subtract(momvementsMonth.totalExpenses());
+                        return new DetailedFinancialSummary(totalCash, momvementsMonth.totalIncome(),
+                                        momvementsMonth.totalExpenses(), balance,
+                                        "PEN");
+                });
 
-                Mono<BigDecimal> totalAmountMono = getAccountUseCase.getAllMyAccount(userId)
-                                .map(Account::getCurrentBalance)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                Mono<BigDecimal> movementsEgressMono = movementFlux
-                                .filter(mov -> mov.getType().equals(TypeMovement.EGRESO))
-                                .map(Movement::getAmount)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                Mono<BigDecimal> movementsIncomeMono = movementFlux
-                                .filter(mov -> mov.getType().equals(TypeMovement.INGRESO))
-                                .map(Movement::getAmount)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                return Mono.zip(totalAmountMono, movementsEgressMono, movementsIncomeMono, movementFlux.collectList())
-                                .map(tuple -> {
-
-                                        BigDecimal total = tuple.getT1();
-                                        BigDecimal movementIncome = tuple.getT3();
-                                        BigDecimal movementsEgress = tuple.getT2();
-
-                                        BigDecimal periodBalance = total.subtract(movementsEgress);
-
-                                        return new DetailedFinancialSummary(total, movementIncome, movementsEgress,
-                                                        periodBalance, "PEN");
-                                });
         }
 
-        private Mono<ComparisonPreviousPeriod> comparisonPreviousPeriod(UUID userId, LocalDateTime from,
-                        LocalDateTime until) {
-                LocalDateTime today = LocalDateTime.now();
+        private Mono<ComparisonPreviousPeriod> comparisonPreviousPeriod(UUID userId) {
 
-                LocalDateTime startDate = today.minusMonths(1).withDayOfMonth(1);
+                return retrieveAllTransactionsPort
+                                .retrievePeriodMovement(userId, 2).collectList().map(period -> {
+                                        List<MovementsMonth> list = period;
 
-                LocalDateTime endDate = today.withDayOfMonth(1).minusDays(1);
-
-                Flux<Movement> movementPeridoActualFlux = retrieveAllTransactionsPort
-                                .retrieveAllTransactions(userId, from, until);
-
-                Flux<Movement> movementPeridoAnteriorFlux = retrieveAllTransactionsPort
-                                .retrieveAllTransactions(userId, startDate,
-                                                endDate);
-
-                return Mono.zip(movementPeridoActualFlux.collectList(), movementPeridoAnteriorFlux.collectList())
-                                .map(tuple -> {
-                                        if (tuple.getT2().size() == 0) {
+                                        if (list.size() == 0 || list.size() != 2) {
                                                 return new ComparisonPreviousPeriod();
                                         }
-                                        BigDecimal ingresosActuales = tuple.getT1().stream()
-                                                        .filter(mov -> mov.getType().equals(TypeMovement.INGRESO))
-                                                        .map(Movement::getAmount)
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                        MovementsMonth actual = list.getFirst();
+                                        MovementsMonth anterior = list.getLast();
 
-                                        BigDecimal gastosActuales = tuple.getT1().stream()
-                                                        .filter(mov -> mov.getType().equals(TypeMovement.EGRESO))
-                                                        .map(Movement::getAmount)
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                        Double variacionIngresos = ((actual.totalIncome().doubleValue()
+                                                        - anterior.totalIncome().doubleValue())
+                                                        / anterior.totalIncome().doubleValue()) * 100;
 
-                                        // anterior
-                                        BigDecimal ingresosAnterior = tuple.getT2().stream()
-                                                        .filter(mov -> mov.getType().equals(TypeMovement.INGRESO))
-                                                        .map(Movement::getAmount)
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                        Double variaciongastos = ((actual.totalExpenses().doubleValue()
+                                                        - anterior.totalExpenses().doubleValue())
+                                                        / anterior.totalExpenses().doubleValue()) * 100;
 
-                                        BigDecimal gastosAnterior = tuple.getT2().stream()
-                                                        .filter(mov -> mov.getType().equals(TypeMovement.EGRESO))
-                                                        .map(Movement::getAmount)
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                        return new ComparisonPreviousPeriod(variacionIngresos, variaciongastos);
 
-                                        // calculo
-
-                                        Double variacionIngresos = ((ingresosActuales.doubleValue()
-                                                        - ingresosAnterior.doubleValue())
-                                                        / ingresosAnterior.doubleValue()) * 100;
-
-                                        Double variacionGastos = ((gastosActuales.doubleValue()
-                                                        - gastosAnterior.doubleValue()) / gastosAnterior.doubleValue())
-                                                        * 100;
-
-                                        return new ComparisonPreviousPeriod(variacionIngresos, variacionGastos);
                                 });
 
         }

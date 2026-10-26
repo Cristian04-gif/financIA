@@ -9,7 +9,7 @@ import com.financia.kash.movimiento.movimiento.application.port.input.GetMovemen
 import com.financia.kash.movimiento.movimiento.application.port.input.command.AllMovementCommand;
 import com.financia.kash.movimiento.movimiento.application.port.input.command.CreateMovementCommand;
 import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
-import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
+import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.api.dto.CreateMovementRequest;
 import com.financia.kash.shared.domain.PaginationRequest;

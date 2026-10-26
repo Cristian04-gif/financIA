@@ -5,7 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
-import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
+import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.entity.MovementEntity;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;

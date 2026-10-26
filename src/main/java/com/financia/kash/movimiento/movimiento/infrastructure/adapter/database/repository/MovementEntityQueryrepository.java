@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;
 import com.financia.kash.shared.domain.PaginationRequest;
 
@@ -118,6 +119,35 @@ public class MovementEntityQueryrepository {
                                         return new MovementProject(movement_id, account_id, account_name, category_id,
                                                         category_name,
                                                         category_type, monto, descripcion, date_issue, url_comprobate);
+                                }).all();
+        }
+
+        public Flux<MovementsMonth> findByPeriod(UUID userId, Integer limit) {
+                String sql = """
+                                SELECT
+                                	DATE_TRUNC('month', fecha_registro) AS periodo,
+                                	SUM(
+                                	CASE WHEN tipo = 'INGRESO' THEN monto
+                                	ELSE 0
+                                	END
+                                	) AS suma_ingreso,
+                                	SUM(
+                                	CASE WHEN tipo = 'EGRESO' THEN monto
+                                	ELSE 0
+                                	END
+                                	) AS suma_egreso
+                                FROM movimientos WHERE usuario_id = :userId
+                                GROUP BY DATE_TRUNC('month', fecha_registro)
+                                ORDER BY periodo desc LIMIT :limit
+                                                                """;
+                return databaseClient.sql(sql)
+                                .bind("userId", userId)
+                                .bind("limit", limit)
+                                .map((row, metadata) -> {
+                                        LocalDate period = row.get("periodo", LocalDate.class);
+                                        BigDecimal totalIncome = row.get("suma_ingreso", BigDecimal.class);
+                                        BigDecimal totalExpencess = row.get("suma_egreso", BigDecimal.class);
+                                        return new MovementsMonth(period, totalIncome, totalExpencess);
                                 }).all();
         }
 }

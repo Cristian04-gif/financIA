@@ -6,9 +6,10 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
-import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
+import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.exception.MovementNotFoundException;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.mapping.MovementMapper;
@@ -73,12 +74,6 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
     }
 
     @Override
-    public Flux<Movement> findAll(UUID userId, LocalDateTime from, LocalDateTime until) {
-        return movementEntityRepository.findAllByUserIdAndCreationDateBetween(userId, from, until)
-                .map(movementMapper::mapToDomain);
-    }
-
-    @Override
     public Flux<Movement> findAllByCategory(UUID userId, UUID categoryId, LocalDateTime from, LocalDateTime until) {
         return movementEntityRepository
                 .findAllByUserIdAndCategoryIdAndCreationDateBetween(userId, categoryId, from, until)
@@ -101,6 +96,11 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
             return new PaginationResponse<>(motions, request.getPageNum(),
                     request.getPageSize(), totalPages, totalElements, isLast);
         });
+    }
+
+    @Override
+    public Flux<MovementsMonth> findPeriod(UUID userId, Integer limit) {
+        return movementEntityQueryrepository.findByPeriod(userId, limit);
     }
 
 }
