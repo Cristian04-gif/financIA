@@ -1,5 +1,6 @@
 package com.financia.kash.presupuesto.infrastructure.adapter.database.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.data.r2dbc.repository.Query;
@@ -18,4 +19,15 @@ public interface BudgetEntityRepository extends ReactiveCrudRepository<BudgetEnt
     @Query("SELECT * FROM presupuestos WHERE id = :id AND usuario_id = :userId FOR UPDATE")
     Mono<BudgetEntity> findOwnedForUpdate(UUID id, UUID userId);
 
+    Flux<BudgetEntity> findByPeriodEndAndActiveTrue(LocalDate date);
+
+    @Query("""
+            SELECT p.*
+                FROM presupuestos p
+                INNER JOIN presupuesto_categorias pc ON p.id = pc.presupuesto_id
+                WHERE p.usuario_id = :userId
+                    AND pc.categoria_id = :categoryId
+                    AND p.periodo_fin >= CURRENT_DATE AND p.activo = true
+                        """)
+    Mono<BudgetEntity> findBudgetByUserAndCategory(UUID userId, UUID categoryId);
 }

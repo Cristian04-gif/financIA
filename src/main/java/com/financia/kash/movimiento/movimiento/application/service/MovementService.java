@@ -1,6 +1,7 @@
 package com.financia.kash.movimiento.movimiento.application.service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -20,13 +21,17 @@ import com.financia.kash.movimiento.movimiento.application.port.input.command.Cr
 import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
 import com.financia.kash.movimiento.movimiento.application.port.input.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.CalculateComsumptionBudgetPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
+import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -46,6 +51,9 @@ public class MovementService
         private final CategoryRepositoryPort categoryRepositoryPort;
         private final CreateCategoryUseCase createCategoryUseCase;
         private final SaveFileVoucherUseCase saveFileVoucherUseCase;
+        private final RetriveBudgetForMovementPort budgetForMovementPort;
+        private final CalculateComsumptionBudgetPort calculateComsumptionBudgetPort;
+        private final NotificationService notificationService;
 
         private final CacheService<MovementDTO> cacheService;
 
@@ -81,10 +89,12 @@ public class MovementService
                                                         command.category().name(),
                                                         command.category().type(),
                                                         command.category().parentCategoryId()))
-                                        .flatMap(category -> saveMovement(command, category));
+                                        .flatMap(category -> saveMovement(command, category))
+                                        .flatMap(mot -> evaluateBudgetNotification(mot, command.username()).thenReturn(mot));
                 }
                 return categoryRepositoryPort.findById(command.category().categoryId())
-                                .flatMap(category -> saveMovement(command, category));
+                                .flatMap(category -> saveMovement(command, category))
+                                .flatMap(mot -> evaluateBudgetNotification(mot, command.username()).thenReturn(mot));
         }
 
         private Mono<Movement> saveMovement(CreateMovementCommand command, Category category) {
@@ -103,11 +113,50 @@ public class MovementService
                                         return movementRepositoryPort.save(motion)
                                                         .flatMap(mot -> saveAccountForMovementPort
                                                                         .save(account)
-                                                                        .then(CacheKeys.clearAllCacheMovements(
-                                                                                        cacheService.redisTemplate(),
-                                                                                        command.userId(), mot.getId(),
-                                                                                        mot.getAccountId()))
+                                                                        .doOnSuccess(e -> CacheKeys
+                                                                                        .clearAllCacheMovements(
+                                                                                                        cacheService.redisTemplate(),
+                                                                                                        command.userId(),
+                                                                                                        mot.getId(),
+                                                                                                        mot.getAccountId()))
+
                                                                         .thenReturn(mot));
+                                });
+        }
+
+        private Mono<Void> evaluateBudgetNotification(Movement mot, String username) {
+                return budgetForMovementPort.retriveBudgetBtUserIdAndCategoryId(mot.getUserId(), mot.getCategoryId())
+                                .flatMap(budget -> calculateComsumptionBudgetPort
+                                                .calculateConsumption(budget.userId(), budget.id())
+                                                .doOnNext(comsumption -> {
+                                                        if (comsumption.amountLimitTotal() == null || comsumption.amountLimitTotal().doubleValue() <= 0) {
+                                                                return;
+                                                        }
+
+                                                        Double percentageSpent = (comsumption.spent().doubleValue()
+                                                                        / comsumption.amountLimitTotal().doubleValue())
+                                                                        * 100;
+
+                                                        Map<String, Object> data = Map.of(
+                                                                        "budgetId", budget.id(),
+                                                                        "name", budget.name(),
+                                                                        "amountLimitTotal",
+                                                                        budget.amountLimitTotal());
+
+                                                        if (percentageSpent > 80.0) {
+                                                                notificationService.sendToUser(
+                                                                                username,
+                                                                                NotificationMessage
+                                                                                                .sendNotificationBudgetApproachesLimit(
+                                                                                                                budget.name(),
+                                                                                                                percentageSpent,
+                                                                                                                data));
+                                                        }
+                                                }))
+                                .then()
+                                .onErrorResume(e -> {
+                                        log.error("Error al evaluar notificación de presupuesto para {}: {}", username, e.getMessage());
+                                        return Mono.empty();
                                 });
         }
 
@@ -120,12 +169,12 @@ public class MovementService
                                                         account.receive(movement.getAmount());
                                                         return saveAccountForMovementPort.save(account)
                                                                         .then(movementRepositoryPort.delete(movementId)
-                                                                                        .then(CacheKeys.clearAllCacheMovements(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        movement.getUserId(),
-                                                                                                        movementId,
-                                                                                                        movement.getAccountId())))
-                                                                        .then();
+                                                                                        .doOnSuccess(e -> CacheKeys
+                                                                                                        .clearAllCacheMovements(
+                                                                                                                        cacheService.redisTemplate(),
+                                                                                                                        movement.getUserId(),
+                                                                                                                        movementId,
+                                                                                                                        movement.getAccountId())));
                                                 }));
 
         }
@@ -136,11 +185,12 @@ public class MovementService
                                 .flatMap(movement -> command.filePart().flatMap(saveFileVoucherUseCase::saveFileVoucher)
                                                 .flatMap(secureUrl -> {
                                                         movement.upReceipt(secureUrl);
-                                                        return movementRepositoryPort.save(movement).then(CacheKeys
-                                                                        .clearAllCacheMovements(
-                                                                                        cacheService.redisTemplate(),
-                                                                                        movement.getUserId(),
-                                                                                        movement.getId()))
+                                                        return movementRepositoryPort
+                                                                        .save(movement).doOnSuccess(e -> CacheKeys
+                                                                                        .clearAllCacheMovements(
+                                                                                                        cacheService.redisTemplate(),
+                                                                                                        movement.getUserId(),
+                                                                                                        movement.getId()))
                                                                         .then();
                                                 }));
         }

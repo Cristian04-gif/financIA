@@ -1,6 +1,7 @@
 package com.financia.kash.presupuesto.application.service;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -147,4 +148,13 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
     public Flux<Budget> findAllUserId(UUID userId, LocalDateTime from, LocalDateTime until) {
         return requireActiveOwner(userId).thenMany(Flux.defer(() -> repository.findAllByUserId(userId, from, until)));
     }
+
+    @Override
+    public Mono<Void> updateExpiringToday() {
+        return repository.findAllBudgetExpiringToday(LocalDate.now()).flatMap(budget -> {
+            budget.changeStatus(false, LocalDateTime.now(clock));
+            return repository.save(budget);
+        }).then();
+    }
+
 }

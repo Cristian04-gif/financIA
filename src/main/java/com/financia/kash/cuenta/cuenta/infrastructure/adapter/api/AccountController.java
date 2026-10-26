@@ -61,8 +61,10 @@ public class AccountController {
     @PostMapping("")
     public Mono<ResponseEntity<AccountProject>> createAccount(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid AccountRequest request) {
-        return createAccountUseCase.createAccount(new CreateAccountCommand(user.getId(), request.name(), request.type(),
-                request.initialBalance()))
+        return createAccountUseCase
+                .createAccount(
+                        new CreateAccountCommand(user.getId(), user.getUsername(), request.name(), request.type(),
+                                request.initialBalance()))
                 .map(value -> ResponseEntity.status(HttpStatus.CREATED).body(accountMapper.mapToProject(value)));
 
     }

@@ -71,11 +71,12 @@ public class FinancialObjectiveService
                 return Mono.fromCallable(() -> {
                         return new FinancialObjectives(command.userId(), command.name(), command.description(),
                                         command.targetAmount(), command.targetDate());
-                }).flatMap(financialObjectiveRepositoryPort::save).flatMap(objective -> {
-                        Mono<Long> borrarTodo = CacheKeys.deleteAllObjectivesUser(cacheService.redisTemplate(),
-                                        objective.getUserId());
-                        return Mono.when(borrarTodo).thenReturn(objective);
-                });
+                }).flatMap(financialObjectiveRepositoryPort::save)
+                                .doOnSuccess(objective -> CacheKeys.deleteAllObjectivesUser(
+                                                cacheService.redisTemplate(),
+                                                objective.getUserId())
+                                // return Mono.when(borrarTodo).thenReturn(objective);
+                                );
         }
 
         @Override
@@ -83,7 +84,7 @@ public class FinancialObjectiveService
                 return financialObjectiveRepositoryPort.findById(command.id()).flatMap(objective -> {
                         objective.changeStatus(command.objectiveState());
                         return financialObjectiveRepositoryPort.save(objective);
-                }).flatMap(objective -> CacheKeys.clearAllCacheFinancialObjectives(cacheService.redisTemplate(),
+                }).doOnSuccess(objective -> CacheKeys.clearAllCacheFinancialObjectives(cacheService.redisTemplate(),
                                 objective.getUserId(), objective.getId())).then();
         }
 
@@ -121,11 +122,12 @@ public class FinancialObjectiveService
                                                                                 .save(contributeObjetive)
                                                                                 .then(financialObjectiveRepositoryPort
                                                                                                 .save(objective))
-                                                                                .then(CacheKeys.clearAllCacheFinancialObjectivesContribution(
-                                                                                                cacheService.redisTemplate(),
-                                                                                                accountSaved.getUserId(),
-                                                                                                accountSaved.getId(),
-                                                                                                objective.getId()));
+                                                                                .doOnSuccess(e -> CacheKeys
+                                                                                                .clearAllCacheFinancialObjectivesContribution(
+                                                                                                                cacheService.redisTemplate(),
+                                                                                                                accountSaved.getUserId(),
+                                                                                                                accountSaved.getId(),
+                                                                                                                objective.getId()));
                                                         }))
                                         .then();
                 });

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.financia.kash.movimiento.suscripcion.application.port.output.RetriveUserForSubcriptionPort;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
@@ -20,7 +21,8 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements ChangePasswordUseCase, MyInformationUseCase, DeleteUserUseCase {
+public class UserService
+        implements ChangePasswordUseCase, MyInformationUseCase, DeleteUserUseCase, RetriveUserForSubcriptionPort {
 
     private final UserRepositoryPort repositoryPort;
     private final PasswordEncoderForUserPort encoderForUserPort;
@@ -34,7 +36,8 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
             }
             user.changeStatus(UserStatus.SUSPENDIDO.name());
             return repositoryPort.save(user);
-        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail())).then();
+        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail()))
+                .then();
     }
 
     @Override
@@ -60,7 +63,8 @@ public class UserService implements ChangePasswordUseCase, MyInformationUseCase,
         return repositoryPort.getMe(command.id()).flatMap(user -> {
             user.changePassword(encoderForUserPort.ecoderPassword(command.newPassword()));
             return repositoryPort.save(user);
-        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail())).then();
+        }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail()))
+                .then();
     }
 
 }

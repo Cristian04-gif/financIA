@@ -1,5 +1,6 @@
 package com.financia.kash.presupuesto.infrastructure.adapter.database;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
+import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.presupuesto.application.port.output.BudgetRepositoryPort;
 import com.financia.kash.presupuesto.domain.exception.BudgetNotFoundException;
 import com.financia.kash.presupuesto.domain.model.Budget;
@@ -18,7 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public class BudgetRepositoryAdapter implements BudgetRepositoryPort {
+public class BudgetRepositoryAdapter implements BudgetRepositoryPort, RetriveBudgetForMovementPort {
     private final BudgetEntityRepository budgets;
     private final BudgetCategoryEntityRepository categories;
     private final BudgetPersistenceMapper mapper;
@@ -91,4 +93,17 @@ public class BudgetRepositoryAdapter implements BudgetRepositoryPort {
         return budgets.findAllByUserIdAndCreationDateBetween(userId, from, until).concatMap(this::hydrate)
                 .as(budgetReadTransactionalOperator::transactional);
     }
+
+    @Override
+    public Flux<Budget> findAllBudgetExpiringToday(LocalDate date) {
+        return budgets.findByPeriodEndAndActiveTrue(date).concatMap(this::hydrate)
+                .as(budgetReadTransactionalOperator::transactional);
+    }
+
+    @Override
+    public Mono<Budget> retriveBudgetBtUserIdAndCategoryId(UUID userId, UUID categoryId) {
+        return budgets.findBudgetByUserAndCategory(userId, categoryId).flatMap(this::hydrate)
+                .as(budgetReadTransactionalOperator::transactional);
+    }
+
 }

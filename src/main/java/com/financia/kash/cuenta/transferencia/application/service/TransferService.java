@@ -92,7 +92,7 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
 
                                 return accountRespotoryPort.save(origin).then(accountRespotoryPort.save(detination))
                                                 .then(transferRepositoryPort.save(transfer))
-                                                .flatMap(transfe -> CacheKeys.clearAllCacheTransfers(
+                                                .doOnSuccess(transfe -> CacheKeys.clearAllCacheTransfers(
                                                                 cacheService.redisTemplate(), transfe.getUserId(),
                                                                 transfe.getSourceAccount(),
                                                                 transfe.getDestinationAccount(), transfe.getId()));
@@ -120,16 +120,13 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
                                 destination.transfer(previousAmount);
                                 origin.receive(previousAmount);
 
-                                accountRespotoryPort.save(origin);
-                                accountRespotoryPort.save(destination);
-
-                                return transferRepositoryPort.delete(transferId)
-                                                .then(CacheKeys.clearAllCacheTransfers(
+                                return transferRepositoryPort.delete(transferId).then(accountRespotoryPort.save(origin))
+                                                .then(accountRespotoryPort.save(destination))
+                                                .doOnSuccess(e -> CacheKeys.clearAllCacheTransfers(
                                                                 cacheService.redisTemplate(), transfer.getUserId(),
                                                                 transfer.getSourceAccount(),
-                                                                transfer.getDestinationAccount(), transfer.getId())
-                                                                .then());
-                        });
+                                                                transfer.getDestinationAccount(), transfer.getId()));
+                        }).then();
                 });
 
         }

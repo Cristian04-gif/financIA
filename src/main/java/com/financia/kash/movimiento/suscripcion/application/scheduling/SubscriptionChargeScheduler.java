@@ -15,7 +15,7 @@ public class SubscriptionChargeScheduler {
     private final SubscriptionDiscountuseCase subscriptionDiscountuseCase;
     private final IncreaseFundsUseCase increaseFundsUseCase;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 12 * * *")
     public void processSubscriptionPayment() {
         subscriptionDiscountuseCase.subscriptionDiscount().subscribe();
 

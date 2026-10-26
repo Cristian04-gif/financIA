@@ -22,11 +22,13 @@ import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class AccountService
                 implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase {
 
@@ -72,7 +74,7 @@ public class AccountService
                                         trans.getSourceAccount(),
                                         trans.getDestinationAccount(),
                                         trans.getId());
-                        System.out.println("se borro cache");
+                        log.info("Caché de transferencias invalidado para usuario: {}", trans.getUserId());
 
                         Map<String, Object> metadata = Map.of(
                                         "transferId", trans.getId(),
@@ -81,8 +83,8 @@ public class AccountService
                                         "amount", trans.getAmount());
 
                         notificationService.sendToUser(command.username(),
-                                        NotificationMessage.sendTransferNotification(metadata));
-                        System.out.println("se envio notificacion");
+                                        NotificationMessage.sendNotificationSuccessfulTransfer(metadata));
+                        log.info("Notificación de transferencia exitosa enviada a: {}", command.username());
                 }).then();
 
         }
@@ -110,7 +112,8 @@ public class AccountService
         public Mono<Void> deleteMyAccount(UUID accountId) {
                 return accountRespotoryPort.findMyAccountById(accountId)
                                 .flatMap(account -> accountRespotoryPort.delete(accountId)
-                                                .then(CacheKeys.clearAllCacheAccounts(cacheService.redisTemplate(),
+                                                .doOnSuccess(e -> CacheKeys.clearAllCacheAccounts(
+                                                                cacheService.redisTemplate(),
                                                                 account.getUserId(), accountId)))
                                 .then();
         }
@@ -121,16 +124,28 @@ public class AccountService
                                 command.initialBalance());
 
                 return accountRespotoryPort.save(account)
-                                .flatMap(accountSaved -> CacheKeys.clearAllCacheAccounts(cacheService.redisTemplate(),
-                                                accountSaved.getUserId(), accountSaved.getId())
-                                                .thenReturn(accountSaved));
+                                .doOnSuccess(accountSaved -> {
+                                        CacheKeys.clearAllCacheAccounts(
+                                                        cacheService.redisTemplate(),
+                                                        accountSaved.getUserId(), accountSaved.getId());
+
+                                        Map<String, Object> data = Map.of(
+                                                        "id", accountSaved.getId(),
+                                                        "userId", accountSaved.getUserId(),
+                                                        "name", accountSaved.getName(),
+                                                        "type", accountSaved.getType(),
+                                                        "creationDate", accountSaved.getCreationDate());
+
+                                        notificationService.sendToUser(command.username(),
+                                                        NotificationMessage.sendAccountCreationNotification(data));
+                                });
         }
 
         @Override
         public Mono<Void> changeStatusAcount(UUID accountId) {
                 return getMyAccountById(accountId).flatMap(account -> {
                         account.changeStatus();
-                        return accountRespotoryPort.save(account).flatMap(accountSaved -> CacheKeys
+                        return accountRespotoryPort.save(account).doOnSuccess(accountSaved -> CacheKeys
                                         .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(),
                                                         accountId))
                                         .then();

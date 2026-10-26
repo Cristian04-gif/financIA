@@ -60,8 +60,7 @@ public class CategoryService
     @Override
     public Mono<Category> createMainCategory(CreateMainCategoryCommand command) {
         return Mono.just(new Category(command.name(), command.type())).flatMap(categoryRepositoryPort::save)
-                .flatMap(category -> CacheKeys.deleteAllGlobalCategories(cacheService.redisTemplate())
-                        .thenReturn(category));
+                .doOnSuccess(category -> CacheKeys.deleteAllGlobalCategories(cacheService.redisTemplate()));
     }
 
     @Override
@@ -75,17 +74,15 @@ public class CategoryService
 
             Category category = new Category(user.getId(), command.name(), command.type(), categoryParent.getId());
             return categoryRepositoryPort.save(category);
-        }).flatMap(category -> CacheKeys.deleteAllUserCategories(cacheService.redisTemplate(), command.userId())
-                .thenReturn(category));
+        }).doOnSuccess(category -> CacheKeys.deleteAllUserCategories(cacheService.redisTemplate(), command.userId()));
 
     }
 
     @Override
     public Mono<Void> deleteMyCategory(UUID categoryId) {
         return categoryRepositoryPort.findById(categoryId)
-                .flatMap(category -> categoryRepositoryPort.delete(categoryId).then(CacheKeys
-                        .clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(), categoryId)))
-                .then();
+                .flatMap(category -> categoryRepositoryPort.delete(categoryId).doOnSuccess(e -> CacheKeys
+                        .clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(), categoryId)));
     }
 
     @Override
@@ -104,8 +101,8 @@ public class CategoryService
             category.changeStatus(command.active());
 
             return categoryRepositoryPort.save(category);
-        }).flatMap(category -> CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(),
-                category.getId()).thenReturn(category));
+        }).doOnSuccess(category -> CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(),
+                category.getId()));
 
     }
 

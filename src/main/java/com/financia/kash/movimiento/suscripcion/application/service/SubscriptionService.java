@@ -1,6 +1,7 @@
 package com.financia.kash.movimiento.suscripcion.application.service;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -19,18 +20,24 @@ import com.financia.kash.movimiento.suscripcion.application.port.input.IncreaseF
 import com.financia.kash.movimiento.suscripcion.application.port.input.SubscriptionDiscountuseCase;
 import com.financia.kash.movimiento.suscripcion.application.port.input.command.CreateSubscriptionCommand;
 import com.financia.kash.movimiento.suscripcion.application.port.output.FindAccountForSubscription;
+import com.financia.kash.movimiento.suscripcion.application.port.output.RetriveUserForSubcriptionPort;
 import com.financia.kash.movimiento.suscripcion.application.port.output.SaveAccountoForSubscription;
 import com.financia.kash.movimiento.suscripcion.application.port.output.SubscriptionRepositoryPort;
 import com.financia.kash.movimiento.suscripcion.domain.model.Subscription;
+import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.Notification;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class SubscriptionService
                 implements GetSubscriptionUseCase, CreateSubscriptionUseCase, ChangeStatusSubscriptionUseCase,
                 SubscriptionDiscountuseCase, IncreaseFundsUseCase {
@@ -41,6 +48,8 @@ public class SubscriptionService
         private final SaveAccountoForSubscription saveAccountoForSubscription;
         private final MovementRepositoryPort movementRepositoryPort;
         private final CacheService<Subscription> cacheService;
+        private final NotificationService notificationService;
+        private final RetriveUserForSubcriptionPort retriveUserForSubcriptionPort;
 
         @Override
         public Flux<Subscription> getSubscriptionForUser(UUID userId) {
@@ -74,10 +83,9 @@ public class SubscriptionService
                                                         command.name(),
                                                         command.amount(), command.frequency(), command.type(),
                                                         command.payDay()))
-                                        .flatMap(sub -> CacheKeys
-                                                        .deleteAllCacheUserSubscription(cacheService.redisTemplate(),
-                                                                        sub.getUserId())
-                                                        .thenReturn(sub));
+                                        .doOnSuccess(sub -> CacheKeys.deleteAllCacheUserSubscription(
+                                                        cacheService.redisTemplate(),
+                                                        sub.getUserId()));
                 });
         }
 
@@ -86,7 +94,7 @@ public class SubscriptionService
                 return subscriptionRepositoryPort.findById(subsId).flatMap(subs -> {
                         subs.changeStatus();
                         return subscriptionRepositoryPort.save(subs)
-                                        .then(CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
+                                        .doOnSuccess(e -> CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
                                                         subs.getUserId(), subsId));
                 }).then();
         }
@@ -117,12 +125,12 @@ public class SubscriptionService
                                                         return movementRepositoryPort
                                                                         .save(movement)
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .then(CacheKeys
-                                                                                        .clearAllCacheSubscription(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        sub.getUserId(),
-                                                                                                        sub.getId(),
-                                                                                                        sub.getPayingAccountId()));
+                                                                        .doOnSuccess(e -> CacheKeys.clearAllCacheSubscription(
+                                                                                        cacheService.redisTemplate(),
+                                                                                        sub.getUserId(),
+                                                                                        sub.getId(),
+                                                                                        sub.getPayingAccountId()))
+                                                                        .then(sendNotification(sub, account.getName(), false));
                                                 }))
                                 .then();
         }
@@ -150,14 +158,41 @@ public class SubscriptionService
                                                                                         + account.getName());
                                                         return movementRepositoryPort.save(movement)
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .then(CacheKeys
+                                                                        .doOnSuccess(e -> CacheKeys
                                                                                         .clearAllCacheSubscription(
                                                                                                         cacheService.redisTemplate(),
                                                                                                         ingreso.getUserId(),
                                                                                                         ingreso.getId(),
-                                                                                                        ingreso.getPayingAccountId()));
+                                                                                                        ingreso.getPayingAccountId()))
+                                                                        .then(sendNotification(ingreso, account.getName(), true));
                                                 }))
                                 .then();
         }
 
+        private Mono<Void> sendNotification(Subscription sub, String accountName, boolean isIncome) {
+                Map<String, Object> data = Map.of(
+                                "subId", sub.getId(),
+                                "subName", sub.getName(),
+                                "accountId", sub.getPayingAccountId(),
+                                "nameAccount", accountName,
+                                "amount", sub.getAmount(),
+                                "date",
+                                LocalDate.now());
+
+                return retriveUserForSubcriptionPort.findMe(sub.getUserId())
+                                .doOnNext(user -> {
+                                        Notification notification = isIncome
+                                                        ? NotificationMessage.sendNotificationPaymentReceived(
+                                                                        sub.getName(), accountName, data)
+                                                        : NotificationMessage.sendSubscriptionPaymentNotification(
+                                                                        sub.getName(), accountName, data);
+                                        notificationService.sendToUser(user.getEmail(), notification);
+                                })
+                                .then()
+                                .onErrorResume(e -> {
+                                        log.error("Error al enviar notificación de suscripción para usuario {}: {}",
+                                                        sub.getUserId(), e.getMessage());
+                                        return Mono.empty();
+                                });
+        }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.financia.kash.movimiento.movimiento.application.port.output.CalculateComsumptionBudgetPort;
 import com.financia.kash.presupuesto.application.model.*;
 import com.financia.kash.presupuesto.application.port.input.GetBudgetConsumptionUseCase;
 import com.financia.kash.presupuesto.application.port.input.GetBudgetUseCase;
@@ -14,7 +15,7 @@ import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import reactor.core.publisher.Mono;
 
-public class BudgetConsumptionService implements GetBudgetConsumptionUseCase {
+public class BudgetConsumptionService implements GetBudgetConsumptionUseCase, CalculateComsumptionBudgetPort {
     private static final BigDecimal ZERO = new BigDecimal("0.00");
     private final GetBudgetUseCase budgets;
     private final BudgetExpensePort expenses;
@@ -42,9 +43,9 @@ public class BudgetConsumptionService implements GetBudgetConsumptionUseCase {
                         .flatMap(consumption -> cacheService.saveMonoCache(cacheKey, consumption)));
     }
 
-    private Mono<BudgetConsumption> calculateConsumption(UUID userId, UUID budgetId) {
-        return budgets.getById(userId, budgetId).flatMap(budget ->
-                expenses.findExpensesByCategory(userId, budget.periodStart(), budget.periodEnd())
+    public Mono<BudgetConsumption> calculateConsumption(UUID userId, UUID budgetId) {
+        return budgets.getById(userId, budgetId)
+                .flatMap(budget -> expenses.findExpensesByCategory(userId, budget.periodStart(), budget.periodEnd())
                         .collectMap(BudgetExpense::categoryId, BudgetExpense::amount)
                         .map(amounts -> calculate(budget, amounts)));
     }
