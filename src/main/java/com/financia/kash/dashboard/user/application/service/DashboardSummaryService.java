@@ -109,15 +109,41 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                         MovementsMonth actual = list.getFirst();
                                         MovementsMonth anterior = list.getLast();
 
-                                        Double variacionIngresos = ((actual.totalIncome().doubleValue()
-                                                        - anterior.totalIncome().doubleValue())
-                                                        / anterior.totalIncome().doubleValue()) * 100;
+                                        Double actualIngreso = actual.totalIncome() != null
+                                                        || !actual.totalIncome().equals(BigDecimal.ZERO)
+                                                                        ? actual.totalIncome().doubleValue()
+                                                                        : 0.00;
+                                        Double anteriorIngreso = anterior.totalIncome() != null
+                                                        || !anterior.totalExpenses().equals(BigDecimal.ZERO)
+                                                                        ? anterior.totalExpenses().doubleValue()
+                                                                        : 0.00;
 
-                                        Double variaciongastos = ((actual.totalExpenses().doubleValue()
-                                                        - anterior.totalExpenses().doubleValue())
-                                                        / anterior.totalExpenses().doubleValue()) * 100;
+                                        Double variacionIngresos = actualIngreso != 0.00 && anteriorIngreso != 0.00
+                                                        ? ((actualIngreso - anteriorIngreso) / anteriorIngreso)
+                                                                        * 100
+                                                        : 0.00;
 
-                                        return new ComparisonPreviousPeriod(variacionIngresos, variaciongastos);
+                                        System.out.println("ingreso actual: " + actualIngreso);
+                                        System.out.println("anterior ingreso: " + anteriorIngreso);
+                                        System.out.println(variacionIngresos);
+
+                                        Double actualGasto = actual.totalExpenses() != null
+                                                        && !actual.totalExpenses().equals(BigDecimal.ZERO)
+                                                                        ? actual.totalExpenses().doubleValue()
+                                                                        : 0.00;
+
+                                        Double anteriorGasto = anterior.totalExpenses() != null
+                                                        && !anterior.totalExpenses().equals(BigDecimal.ZERO)
+                                                                        ? anterior.totalExpenses().doubleValue()
+                                                                        : 0.00;
+
+                                        Double variaciongastos = anteriorGasto != 0.00 & actualGasto != 0.00
+                                                        ? (((actualGasto - anteriorGasto) / anteriorGasto)
+                                                                        * 100)
+                                                        : 0.00;
+
+                                        return new ComparisonPreviousPeriod(variacionIngresos,
+                                                        (double) Math.round(variaciongastos * 100) / 100);
 
                                 });
 

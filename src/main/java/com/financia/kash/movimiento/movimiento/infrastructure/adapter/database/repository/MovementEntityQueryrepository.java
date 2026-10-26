@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
 import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.repository.project.MovementProject;
 import com.financia.kash.shared.domain.PaginationRequest;
@@ -148,6 +149,38 @@ public class MovementEntityQueryrepository {
                                         BigDecimal totalIncome = row.get("suma_ingreso", BigDecimal.class);
                                         BigDecimal totalExpencess = row.get("suma_egreso", BigDecimal.class);
                                         return new MovementsMonth(period, totalIncome, totalExpencess);
+                                }).all();
+        }
+
+        public Flux<CategoriesExcenses> findExpensesByCategory(UUID userId, LocalDate from, LocalDate until) {
+                String sql = """
+                                SELECT
+                                	m.categoria_id AS categoria_id,
+                                	c.nombre AS nombre_categoria,
+                                	DATE_TRUNC('month', m.fecha_registro) AS periodo,
+                                	SUM(
+                                	CASE WHEN m.tipo = 'EGRESO' THEN monto
+                                	ELSE 0
+                                	END
+                                	) AS monto_categoria
+                                FROM movimientos m
+                                JOIN categorias c ON m.categoria_id= c.id
+                                WHERE m.usuario_id = :userId
+                                AND m.tipo = 'EGRESO'
+                                AND m.fecha_registro BETWEEN :from AND :until
+                                GROUP BY categoria_id, nombre_categoria, periodo
+                                """;
+
+                return databaseClient.sql(sql)
+                                .bind("userId", userId)
+                                .bind("from", from)
+                                .bind("until", until)
+                                .map((row, metadata) -> {
+                                        UUID categoryId = row.get("categoria_id", UUID.class);
+                                        String nameCategory = row.get("nombre_categoria", String.class);
+                                        BigDecimal amount = row.get("monto_categoria", BigDecimal.class);
+
+                                        return new CategoriesExcenses(categoryId, nameCategory, amount, null);
                                 }).all();
         }
 }

@@ -1,5 +1,6 @@
 package com.financia.kash.movimiento.movimiento.application.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTransactionsPort;
+import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
 import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.movimiento.categoria.application.port.input.CreateCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
@@ -228,6 +230,11 @@ public class MovementService
         @Override
         public Mono<MovementsMonth> retriveMovementsMotnh(UUID userId) {
                 return movementRepositoryPort.findPeriod(userId, 1).next();
+        }
+
+        @Override
+        public Flux<CategoriesExcenses> findExpensesByCategory(UUID userId, LocalDate from, LocalDate until) {
+                return movementRepositoryPort.findExpensesByCategory(userId, from, until);
         }
 
 }

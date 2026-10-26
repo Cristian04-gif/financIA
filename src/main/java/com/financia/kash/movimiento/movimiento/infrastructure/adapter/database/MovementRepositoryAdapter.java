@@ -1,11 +1,13 @@
 package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
 import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
@@ -101,6 +103,11 @@ public class MovementRepositoryAdapter implements MovementRepositoryPort, Moveme
     @Override
     public Flux<MovementsMonth> findPeriod(UUID userId, Integer limit) {
         return movementEntityQueryrepository.findByPeriod(userId, limit);
+    }
+
+    @Override
+    public Flux<CategoriesExcenses> findExpensesByCategory(UUID userId, LocalDate from, LocalDate until) {
+        return movementEntityQueryrepository.findExpensesByCategory(userId, from, until);
     }
 
 }

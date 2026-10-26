@@ -1,8 +1,10 @@
 package com.financia.kash.movimiento.movimiento.application.port.output;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
 import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
 import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
@@ -18,6 +20,8 @@ public interface MovementRepositoryPort {
     Flux<MovementsMonth> findPeriod(UUID userId, Integer limit);
 
     Flux<Movement> findAllByCategory(UUID userId, UUID categoryId, LocalDateTime from, LocalDateTime until);
+
+    Flux<CategoriesExcenses> findExpensesByCategory(UUID userId, LocalDate from, LocalDate until);
 
     Mono<PaginationResponse<MovementDTO>> findAllByCategory(UUID userId, UUID categoryId, PaginationRequest request);
 
