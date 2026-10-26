@@ -11,6 +11,9 @@ import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTrans
 import com.financia.kash.dashboard.user.domain.model.ExpensesCategory;
 import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
 
+import com.financia.kash.shared.application.service.CacheService;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -19,9 +22,18 @@ import reactor.core.publisher.Mono;
 public class ExpensesCategoryService implements ExpensesCategoryUseCase {
 
     private final RetrieveAllTransactionsPort retrieveAllTransactionsPort;
+    private final CacheService<ExpensesCategory> cacheService;
 
     @Override
     public Mono<ExpensesCategory> expensesCategory(ExpensesCategoryCommand command) {
+        String cacheKey = CacheKeys.expensesCategory(command.userId(), command.from(), command.until());
+
+        return cacheService.retrieveMonoCache(cacheKey, ExpensesCategory.class)
+                .switchIfEmpty(Mono.defer(() -> computeExpensesCategory(command))
+                        .flatMap(expenses -> cacheService.saveMonoCache(cacheKey, expenses, 15)));
+    }
+
+    private Mono<ExpensesCategory> computeExpensesCategory(ExpensesCategoryCommand command) {
         return retrieveAllTransactionsPort.findExpensesByCategory(command.userId(), command.from(), command.until())
                 .collectList().map(expenses -> {
                     BigDecimal totalExpences = expenses.stream().map(CategoriesExcenses::getAmount).reduce(
@@ -30,7 +42,7 @@ public class ExpensesCategoryService implements ExpensesCategoryUseCase {
 
                     List<CategoriesExcenses> categoriesExcenses = expenses.stream().map(category -> {
                         Double procentage = (category.getAmount().doubleValue() / totalExpences.doubleValue()) * 100;
-                        category.setPorcentage((double) Math.round(procentage * 100) / 100);
+                        category.setProcentage((double) Math.round(procentage * 100) / 100);
                         return category;
                     }).toList();
 

@@ -153,7 +153,13 @@ public class BudgetService implements CreateBudgetUseCase, GetBudgetUseCase,
     public Mono<Void> updateExpiringToday() {
         return repository.findAllBudgetExpiringToday(LocalDate.now()).flatMap(budget -> {
             budget.changeStatus(false, LocalDateTime.now(clock));
-            return repository.save(budget);
+            return repository.save(budget).flatMap(saved -> {
+                if (cacheService != null) {
+                    return CacheKeys.clearAllCacheBudgets(cacheService.redisTemplate(), saved.userId(), saved.id())
+                            .thenReturn(saved);
+                }
+                return Mono.just(saved);
+            });
         }).then();
     }
 

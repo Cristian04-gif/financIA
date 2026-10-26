@@ -303,10 +303,20 @@ public class CacheKeys {
     // ------------------------------------------------------------------------------------
     // DASHBOARD
     private final static String DASHBOARD_SUMMARY = "dashboard:user:%s:from:%s:until:%s";
+    private final static String DASHBOARD_EXPENSES_CATEGORY = "dashboard:user:%s:expenses:from:%s:until:%s";
+    private final static String DASHBOARD_FINANCIAL_EVOLUTION = "dashboard:user:%s:evolution";
 
     // CACHE KEYS
     public static String dashboardSummary(UUID userId, LocalDate from, LocalDate until) {
         return String.format(DASHBOARD_SUMMARY, userId, from, until);
+    }
+
+    public static String expensesCategory(UUID userId, LocalDate from, LocalDate until) {
+        return String.format(DASHBOARD_EXPENSES_CATEGORY, userId, from, until);
+    }
+
+    public static String financialEvolution(UUID userId) {
+        return String.format(DASHBOARD_FINANCIAL_EVOLUTION, userId);
     }
 
     // DELETE CACHE

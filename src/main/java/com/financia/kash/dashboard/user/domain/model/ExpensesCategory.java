@@ -5,20 +5,19 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 public record ExpensesCategory(BigDecimal totalExpenses, String currency, List<CategoriesExcenses> categories) {
 
+    @Data
     @AllArgsConstructor
-    @Getter
+    @NoArgsConstructor
     public static class CategoriesExcenses {
         private UUID categoryId;
         private String name;
         private BigDecimal amount;
         private Double procentage;
 
-        public void setPorcentage(Double porcentage) {
-            this.procentage = porcentage;
-        }
     }
 }
