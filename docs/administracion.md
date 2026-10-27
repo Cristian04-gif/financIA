@@ -9,8 +9,8 @@ Primera entrega en `feature/administracion`, dividida en commits revisables:
 4. Auditoria: registro persistente y consulta paginada de acciones administrativas.
 
 El administrador no puede cambiar roles por API, modificar finanzas ajenas ni
-consultar contrasenas o secretos de 2FA. Dashboard y supervision operativa quedan
-para una entrega posterior.
+consultar contrasenas o secretos de 2FA. El dashboard agregado se incluye en esta
+rama. Supervision de servicios y avisos generales quedan para otra entrega.
 
 ## Primera cuenta administrativa
 
@@ -119,3 +119,39 @@ completar la solicitud en `REPORTING_TIME_ZONE` (America/Lima por defecto).
 Un fallo de telemetria se registra en el log sin cambiar el resultado del OCR;
 por ello estos contadores son operativos y pueden subestimar el uso durante fallos.
 No hay datos historicos anteriores a esta instrumentacion.
+
+## Dashboard administrativo
+
+GET `/api/v1/admin/dashboard?from=2026-10-01&to=2026-10-27` requiere un ADMIN activo.
+Fechas ISO YYYY-MM-DD inclusivas, maximo 366 dias, sin fechas futuras. Un rango
+invalido devuelve 400. Sin `to` se usa hoy en REPORTING_TIME_ZONE; sin `from`, el
+primer dia del mes del fin resuelto. La misma ruta esta documentada en Swagger.
+
+La respuesta contiene `period`, `timeZone`, `generatedAt`, `overview` y
+`registrations` (una fila por dia, incluyendo ceros). Overview incluye:
+
+| Grupo | Significado |
+|---|---|
+| users | Total de cuentas USER y cantidad por estado actual, ADMIN por separado y registros del periodo |
+| categories | Categorias globales raiz: total, activas e inactivas |
+| budgets | Presupuestos de cuentas USER: total, activos, inactivos y creados durante el periodo |
+| goals | Metas de cuentas USER: total, completadas y con fecha_inicio dentro del periodo |
+| ocr | Solicitudes exitosas, fallidas y total durante el periodo; incluye solicitudes de ADMIN |
+
+Los totales y estados son una fotografia actual, no una reconstruccion historica
+al cierre de `to`. "Activo" describe el estado de la cuenta, no actividad de login.
+Registros y serie diaria usan `usuarios.fecha_creacion` de cuentas USER existentes,
+incluyendo suspendidas/eliminadas logicamente. Una eliminacion fisica retira ese
+registro de la serie. Metas usa la fecha de inicio de negocio porque el esquema
+no contiene una fecha de creacion independiente.
+
+`ocr.firstRecordedDate` es la primera fecha que tiene datos en los contadores,
+puede quedar fuera del periodo y es null cuando no hay registros; no representa
+la fecha del despliegue. El resultado no contiene identidades, importes ni
+comprobantes. Las consultas de resumen y serie se ejecutan secuencialmente dentro
+de una transaccion de solo lectura REPEATABLE READ, sin cache.
+
+Antes de desplegar, aplicar la migracion 003 indicada arriba. No es necesario
+configurar Gemini para consultar el dashboard; las metricas OCR empiezan a
+acumularse cuando se utiliza el analizador. Esta entrega agrega la API backend;
+el repositorio no contiene una interfaz frontend administrativa.

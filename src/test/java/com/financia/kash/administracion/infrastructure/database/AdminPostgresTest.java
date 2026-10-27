@@ -64,6 +64,7 @@ class AdminPostgresTest {
             statement.execute(migration);
             statement.execute(migration);
             String dashboardMigration = Files.readString(Path.of("docker/database/migrations/003_dashboard_administrativo.sql"));
+            statement.execute("DROP TABLE " + SCHEMA + ".metricas_ocr_diarias");
             statement.execute(dashboardMigration);
             statement.execute(dashboardMigration);
         }
