@@ -17,7 +17,7 @@ public interface ObjectiveRepository extends ReactiveCrudRepository<FinancialObj
 
     Flux<FinancialObjectiveEntity> findAllByUserIdAndStartDateBetween(UUID userId, LocalDate from, LocalDate until);
 
-    Flux<FinancialObjectiveEntity> findAllTargetDate(LocalDate date);
+    Flux<FinancialObjectiveEntity> findAllByTargetDate(LocalDate date);
 
     Mono<Long> countByUserId(UUID userId);
 

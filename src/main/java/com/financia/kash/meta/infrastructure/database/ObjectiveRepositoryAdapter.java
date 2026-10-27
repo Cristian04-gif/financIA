@@ -75,6 +75,6 @@ public class ObjectiveRepositoryAdapter implements FinancialObjectiveRepositoryP
 
     @Override
     public Flux<FinancialObjectives> findExpired(LocalDate date) {
-        return objectiveRepository.findAllTargetDate(date).map(financialObjectiveMapper::mapToDomain);
+        return objectiveRepository.findAllByTargetDate(date).map(financialObjectiveMapper::mapToDomain);
     }
 }
