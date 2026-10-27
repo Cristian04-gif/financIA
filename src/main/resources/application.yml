@@ -5,6 +5,8 @@ spring:
     active: ${PROFILE:dev}
 
 app:
+  reporting:
+    time-zone: ${REPORTING_TIME_ZONE:America/Lima}
   admin:
     bootstrap:
       enabled: ${ADMIN_BOOTSTRAP_ENABLED:false}

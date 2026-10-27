@@ -384,3 +384,10 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_fecha
     ON auditoria_administrativa (fecha DESC, id ASC);
 CREATE INDEX IF NOT EXISTS idx_auditoria_actor_fecha
     ON auditoria_administrativa (actor_id, fecha DESC);
+
+-- Contadores agregados de uso de OCR
+CREATE TABLE IF NOT EXISTS metricas_ocr_diarias (
+    fecha DATE PRIMARY KEY,
+    exitos BIGINT NOT NULL DEFAULT 0 CHECK (exitos >= 0),
+    fallos BIGINT NOT NULL DEFAULT 0 CHECK (fallos >= 0)
+);

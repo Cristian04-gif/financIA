@@ -101,3 +101,21 @@ Las pruebas normales no requieren servicios externos. La integracion de administ
 se activa con `ADMIN_TEST_DATABASE_URL` apuntando a una base PostgreSQL de pruebas;
 crea un esquema aleatorio y elimina solo ese esquema al terminar.
 No ejecutar contra una base de produccion.
+
+## Metricas de OCR
+
+Aplicar `docker/database/migrations/003_dashboard_administrativo.sql` en bases
+existentes antes de desplegar las metricas. Las bases nuevas incluyen la tabla
+`metricas_ocr_diarias` en init.sql. El script es transaccional e idempotente.
+
+Cada solicitud OCR completada registra un exito o fallo, despues de resolver la
+cascada de modelos y mapear el resultado. Un reintento de modelo no cuenta como
+otra solicitud. No se cuentan conexiones canceladas ni errores de validacion del
+archivo anteriores al caso de uso. No se almacenan imagenes, respuestas de IA,
+identificadores de usuario ni importes en esta tabla.
+
+Los contadores se incrementan mediante UPSERT atomico. La fecha se obtiene al
+completar la solicitud en `REPORTING_TIME_ZONE` (America/Lima por defecto).
+Un fallo de telemetria se registra en el log sin cambiar el resultado del OCR;
+por ello estos contadores son operativos y pueden subestimar el uso durante fallos.
+No hay datos historicos anteriores a esta instrumentacion.

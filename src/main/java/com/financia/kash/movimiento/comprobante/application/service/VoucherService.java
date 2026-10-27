@@ -18,6 +18,7 @@ import com.financia.kash.movimiento.comprobante.application.port.input.OcrUseCas
 import com.financia.kash.movimiento.comprobante.application.port.input.command.OrcProcessCommand;
 import com.financia.kash.movimiento.comprobante.application.port.output.AccoutsForVoucherPort;
 import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
+import com.financia.kash.movimiento.comprobante.application.port.output.OcrMetricsPort;
 import com.financia.kash.movimiento.comprobante.domain.model.AccountVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.CategoryVoucher;
 import com.financia.kash.movimiento.comprobante.domain.model.Voucher;
@@ -40,9 +41,23 @@ public class VoucherService implements OcrUseCase {
         private final AiCascadeProperties aiCascadeProperties;
         private final CategoryForVoucherPort categoryForVoucherPort;
         private final AccoutsForVoucherPort accoutsForVoucherPort;
+        private final OcrMetricsPort metrics;
 
         @Override
         public Mono<Voucher> OcrProcess(OrcProcessCommand command) {
+                return Mono.defer(() -> process(command))
+                                .flatMap(voucher -> recordOutcome(true).thenReturn(voucher))
+                                .onErrorResume(error -> recordOutcome(false).then(Mono.error(error)));
+        }
+
+        private Mono<Void> recordOutcome(boolean successful) {
+                return Mono.defer(() -> metrics.record(successful)).onErrorResume(error -> {
+                        log.warn("No se pudo registrar la metrica OCR: {}", error.getClass().getSimpleName());
+                        return Mono.empty();
+                });
+        }
+
+        private Mono<Voucher> process(OrcProcessCommand command) {
                 List<String> models = aiCascadeProperties.getModelsCascade();
                 Resource imageResource = new ByteArrayResource(command.imageByte());
 
