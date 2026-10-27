@@ -65,6 +65,9 @@ public class JwtFilter implements WebFilter {
                         String username = jwtService.getUsername(token);
                         return userDetailsService.findByUsername(username)
                                         .flatMap(userDetails -> {
+                                                if (!userDetails.isEnabled()) {
+                                                        return unauthorized(exchange, "Usuario inactivo");
+                                                }
 
                                                 boolean isValidToken = jwtService.isValidToken(
                                                                 token,

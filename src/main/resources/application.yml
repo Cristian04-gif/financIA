@@ -3,3 +3,10 @@ spring:
     name: kash
   profiles:
     active: ${PROFILE:dev}
+
+app:
+  admin:
+    bootstrap:
+      enabled: ${ADMIN_BOOTSTRAP_ENABLED:false}
+      email: ${ADMIN_BOOTSTRAP_EMAIL:}
+      password: ${ADMIN_BOOTSTRAP_PASSWORD:}

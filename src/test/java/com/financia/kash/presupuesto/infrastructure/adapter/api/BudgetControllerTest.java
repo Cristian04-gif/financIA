@@ -79,6 +79,39 @@ class BudgetControllerTest {
                 context.close();
         }
 
+        @Test
+        void administrativeRoutesRejectUsersAndAllowAdmins() {
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isForbidden();
+                client.post().uri("/api/v1/categories/global").exchange().expectStatus().isForbidden();
+                UserEntity admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isOk();
+                client.post().uri("/api/v1/categories/global").exchange().expectStatus().isOk();
+                admin.setStatus(UserStatus.SUSPENDIDO);
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isUnauthorized();
+        }
+
+        @Test
+        void administrativeRoutesRequireAuthentication() {
+                WebTestClient anonymous = WebTestClient.bindToApplicationContext(context).build();
+                anonymous.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isUnauthorized();
+                anonymous.post().uri("/api/v1/categories/global").exchange().expectStatus().isUnauthorized();
+        }
+
+        @org.springframework.web.bind.annotation.RestController
+        static class SecurityProbe {
+                @org.springframework.web.bind.annotation.GetMapping("/api/v1/admin/security-probe")
+                Mono<String> admin() { return Mono.just("ok"); }
+
+                @org.springframework.web.bind.annotation.PostMapping("/api/v1/categories/global")
+                Mono<String> global() { return Mono.just("ok"); }
+        }
+
         private Budget budget() {
                 return new Budget(budgetId, userId, "Octubre", LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 31), new BigDecimal("100"), true,
@@ -168,7 +201,7 @@ class BudgetControllerTest {
         @EnableWebFlux
         @Import({ SecurityConfig.class, JwtService.class,
                         CustomAuthenticationEntryPoint.class, CustomAccessDeniedHandler.class,
-                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class })
+                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class })
         static class TestConfiguration {
                 @Bean
                 BudgetService budgets() {

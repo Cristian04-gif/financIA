@@ -2,6 +2,7 @@ package com.financia.kash.auth.infrastructure.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -43,6 +44,9 @@ public class SecurityConfig {
                 return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
                                 .authorizeExchange(
                                                 exchange -> exchange.pathMatchers(Endpoints.ENDPOINTS_FREE).permitAll()
+                                                                .pathMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+                                                                .pathMatchers(HttpMethod.POST, "/api/v1/categories/global")
+                                                                .hasAuthority("ADMIN")
 
                                                                 // .pathMatchers(Endpoints.ACCESS_USER_ACTIVE)
                                                                 // .access(statusAuthorizationManager)

@@ -50,17 +50,10 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
                     return Mono.just(new AuthorizationDecision(false));
                 }
 
-                if (isAdmin(auth)) {
-                    return Mono.just(new AuthorizationDecision(true));
-                }
-
                 return categoryEntityRepository.existsByIdAndOwnerEmail(categoryId, emailuser)
                         .map(AuthorizationDecision::new);
             });
         });
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
-    }
 }
