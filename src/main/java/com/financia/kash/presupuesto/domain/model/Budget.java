@@ -10,10 +10,15 @@ import java.util.UUID;
 import com.financia.kash.presupuesto.domain.exception.BudgetValidationException;
 
 public record Budget(
-        UUID id, UUID userId, String name,
-        LocalDate periodStart, LocalDate periodEnd,
-        BigDecimal amountLimitTotal, boolean active,
-        LocalDateTime creationDate, LocalDateTime updateDate,
+        UUID id,
+        UUID userId,
+        String name,
+        LocalDate periodStart,
+        LocalDate periodEnd,
+        BigDecimal amountLimitTotal,
+        boolean active,
+        LocalDateTime creationDate,
+        LocalDateTime updateDate,
         List<BudgetCategory> categories) {
 
     public Budget {

@@ -24,7 +24,6 @@ public class Movement {
     private final UUID subscriptionId;
     private TypeMovement type;
     private BigDecimal amount;
-    // private LocalDate date;
     private String description;
     private final LocalDateTime creationDate;
     private String receiptUrl;
@@ -40,7 +39,6 @@ public class Movement {
         this.subscriptionId = subscriptionId;
         validateTransactionType(type);
         this.amount = amount;
-        // this.date = date;
         this.description = description;
         this.creationDate = LocalDateTime.now();
         this.updateDate = null;
