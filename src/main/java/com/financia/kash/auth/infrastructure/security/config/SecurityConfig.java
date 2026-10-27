@@ -47,6 +47,8 @@ public class SecurityConfig {
                                                                 .pathMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
                                                                 .pathMatchers(HttpMethod.POST, "/api/v1/categories/global")
                                                                 .hasAuthority("ADMIN")
+                                                                .pathMatchers(HttpMethod.DELETE, "/api/v1/categories/{id}")
+                                                                .access(categoryAuthorizationManager)
 
                                                                 // .pathMatchers(Endpoints.ACCESS_USER_ACTIVE)
                                                                 // .access(statusAuthorizationManager)

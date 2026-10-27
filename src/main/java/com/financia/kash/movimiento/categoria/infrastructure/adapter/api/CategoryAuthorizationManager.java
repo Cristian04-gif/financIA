@@ -50,7 +50,9 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
                     return Mono.just(new AuthorizationDecision(false));
                 }
 
-                return categoryEntityRepository.existsByIdAndOwnerEmail(categoryId, emailuser)
+                return (object.getExchange().getRequest().getMethod() == org.springframework.http.HttpMethod.GET
+                        ? categoryEntityRepository.existsByIdAndOwnerEmail(categoryId, emailuser)
+                        : categoryEntityRepository.existsOwnedByIdAndEmail(categoryId, emailuser))
                         .map(AuthorizationDecision::new);
             });
         });

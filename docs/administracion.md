@@ -23,3 +23,24 @@ Las credenciales antiguas ya persistidas no se cambian automaticamente.
 
 El registro publico acepta el campo historico `role` por compatibilidad, pero lo
 ignora: toda cuenta nueva recibe USER. El campo puede omitirse.
+
+## Categorias globales
+
+Todas las rutas `/api/v1/admin/**` requieren un JWT de un ADMIN activo.
+
+| Metodo | Ruta | Cuerpo / resultado |
+|---|---|---|
+| GET | /api/v1/admin/categories | Lista global, incluyendo inactivas |
+| POST | /api/v1/admin/categories | `{"name":"Alimentos","type":"GASTOS"}` |
+| PUT | /api/v1/admin/categories/{id} | `{"name":"Alimentacion"}` |
+| PATCH | /api/v1/admin/categories/{id}/status | `{"active":false}` |
+
+Tipos de creacion: INGRESOS, GASTOS, AHORRO. No se permite cambiar el tipo de una
+categoria existente para conservar la clasificacion historica. Tampoco se ofrece
+eliminacion fisica. Un identificador personal o inexistente devuelve 404.
+Las actualizaciones SQL modifican solo nombre o estado, evitando sobrescribir
+otros campos ante operaciones concurrentes. Las operaciones esperan la
+invalidacion de cache antes de responder.
+
+POST `/api/v1/categories/global` se conserva como alias administrativo de creacion.
+Las rutas personales no permiten modificar ni eliminar categorias globales.

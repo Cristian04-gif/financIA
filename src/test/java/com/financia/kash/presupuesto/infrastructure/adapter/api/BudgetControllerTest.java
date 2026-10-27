@@ -103,6 +103,30 @@ class BudgetControllerTest {
                 anonymous.post().uri("/api/v1/categories/global").exchange().expectStatus().isUnauthorized();
         }
 
+        @Test
+        void globalCategoryApiValidatesRequestsAndRejectsPersonalIds() {
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var categories = context.getBean(com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase.class);
+                client.post().uri("/api/v1/admin/categories").header("Content-Type", "application/json")
+                                .bodyValue("{\"name\":\"\",\"type\":\"GASTOS\"}")
+                                .exchange().expectStatus().isBadRequest();
+                client.patch().uri("/api/v1/admin/categories/" + categoryId + "/status")
+                                .header("Content-Type", "application/json").bodyValue("{}")
+                                .exchange().expectStatus().isBadRequest();
+                verifyNoInteractions(categories);
+                when(categories.rename(userId, categoryId, "Alimentos"))
+                                .thenReturn(Mono.error(new com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException(categoryId)));
+                client.put().uri("/api/v1/admin/categories/" + categoryId)
+                                .header("Content-Type", "application/json").bodyValue("{\"name\":\"Alimentos\"}")
+                                .exchange().expectStatus().isNotFound();
+        }
+
         @org.springframework.web.bind.annotation.RestController
         static class SecurityProbe {
                 @org.springframework.web.bind.annotation.GetMapping("/api/v1/admin/security-probe")
@@ -201,8 +225,14 @@ class BudgetControllerTest {
         @EnableWebFlux
         @Import({ SecurityConfig.class, JwtService.class,
                         CustomAuthenticationEntryPoint.class, CustomAccessDeniedHandler.class,
-                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class })
+                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminCategoryController.class,
+                        com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryExceptionhandle.class })
         static class TestConfiguration {
+                @Bean
+                com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase adminCategories() {
+                        return mock(com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase.class);
+                }
                 @Bean
                 BudgetService budgets() {
                         return mock(BudgetService.class);

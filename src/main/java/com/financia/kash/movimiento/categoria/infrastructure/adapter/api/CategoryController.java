@@ -8,7 +8,6 @@ import com.financia.kash.movimiento.categoria.application.port.input.DeleteMyCat
 import com.financia.kash.movimiento.categoria.application.port.input.GetCategoriesUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.UpdateCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
-import com.financia.kash.movimiento.categoria.application.port.input.command.CreateMainCategoryCommand;
 import com.financia.kash.movimiento.categoria.application.port.input.command.UpdateCategoryCommand;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryForUserRequest;
@@ -49,6 +48,7 @@ public class CategoryController {
         private final UpdateCategoryUseCase updateCategoryUseCase;
         private final DeleteMyCategoryUseCase deleteMyCategoryUseCase;
         private final CategoryMapper categoryMapper;
+        private final com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase globalCategories;
 
         @Operation(summary = "Categorias globales", description = "Devuelve las categorias globales")
         @GetMapping("/global")
@@ -85,9 +85,10 @@ public class CategoryController {
 
         @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
         @PostMapping("/global")
-        public Mono<ResponseEntity<Category>> createGlobalCategory(@RequestBody @Valid CategoryGlobalRequest request) {
-                return createCategoryUseCase
-                                .createMainCategory(new CreateMainCategoryCommand(request.name(), request.type()))
+        public Mono<ResponseEntity<Category>> createGlobalCategory(@AuthenticationPrincipal UserEntity user,
+                        @RequestBody @Valid CategoryGlobalRequest request) {
+                return globalCategories.create(user.getId(), request.name(),
+                                com.financia.kash.movimiento.categoria.domain.enums.CategoryType.valueOf(request.type()))
                                 .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
