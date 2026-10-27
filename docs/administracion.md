@@ -44,3 +44,24 @@ invalidacion de cache antes de responder.
 
 POST `/api/v1/categories/global` se conserva como alias administrativo de creacion.
 Las rutas personales no permiten modificar ni eliminar categorias globales.
+
+## Usuarios
+
+| Metodo | Ruta | Uso |
+|---|---|---|
+| GET | /api/v1/admin/users | `search`, `status`, `page` (0), `size` (20, maximo 100) |
+| GET | /api/v1/admin/users/{id} | Proyeccion de perfil y estado sin credenciales |
+| PATCH | /api/v1/admin/users/{id}/status | `{"status":"SUSPENDIDO","reason":"Solicitud de soporte"}` |
+
+La busqueda contiene coincidencias literales en nombre, apellido o correo, sin
+distinguir mayusculas; admite hasta 255 caracteres. Orden: fecha de creacion
+descendente e ID ascendente. La respuesta incluye content, page, size,
+totalElements y totalPages.
+
+Solo se permite alternar ACTIVO/SUSPENDIDO en cuentas USER. No se puede modificar
+el propio estado, gestionar otro ADMIN ni reactivar INACTIVO/ELIMINADO: 409.
+Un usuario inexistente devuelve 404; motivo vacio, mayor de 500 caracteres o
+estado destino no permitido devuelve 400. El cambio SQL no sobrescribe password,
+2FA ni rol. Se invalidan las entradas de cache del usuario y su estado.
+Los JWT existentes de usuarios suspendidos se rechazan en la siguiente peticion;
+una conexion WebSocket previamente abierta no se revoca automaticamente.

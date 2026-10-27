@@ -136,6 +136,34 @@ class BudgetControllerTest {
                 Mono<String> global() { return Mono.just("ok"); }
         }
 
+        @Test
+        void userAdministrationOmitsCredentialsAndRequiresAReason() {
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var users = context.getBean(com.financia.kash.administracion.application.port.input.ManageUsersUseCase.class);
+                var profile = new com.financia.kash.administracion.domain.model.AdminUser(categoryId, "Nombre", "Apellido",
+                                "user@example.com", RoleUser.USER, UserStatus.ACTIVO, LocalDate.now(), null);
+                when(users.get(categoryId)).thenReturn(Mono.just(profile));
+                client.get().uri("/api/v1/admin/users/" + categoryId).exchange().expectStatus().isOk()
+                                .expectBody().jsonPath("$.email").isEqualTo("user@example.com")
+                                .jsonPath("$.password").doesNotExist().jsonPath("$.secret2fa").doesNotExist();
+                client.patch().uri("/api/v1/admin/users/" + categoryId + "/status")
+                                .header("Content-Type", "application/json").bodyValue("{\"status\":\"SUSPENDIDO\"}")
+                                .exchange().expectStatus().isBadRequest();
+                verify(users, never()).changeStatus(any(), any(), any(), any());
+                when(users.changeStatus(userId, categoryId, UserStatus.SUSPENDIDO, "Motivo"))
+                                .thenReturn(Mono.error(new com.financia.kash.administracion.domain.exception.AdminConflictException("Conflicto")));
+                client.patch().uri("/api/v1/admin/users/" + categoryId + "/status")
+                                .header("Content-Type", "application/json")
+                                .bodyValue("{\"status\":\"SUSPENDIDO\",\"reason\":\"Motivo\"}")
+                                .exchange().expectStatus().isEqualTo(409);
+        }
+
         private Budget budget() {
                 return new Budget(budgetId, userId, "Octubre", LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 31), new BigDecimal("100"), true,
@@ -227,8 +255,14 @@ class BudgetControllerTest {
                         CustomAuthenticationEntryPoint.class, CustomAccessDeniedHandler.class,
                         BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class,
                         com.financia.kash.administracion.infrastructure.api.AdminCategoryController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminUserController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminExceptionHandler.class,
                         com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryExceptionhandle.class })
         static class TestConfiguration {
+                @Bean
+                com.financia.kash.administracion.application.port.input.ManageUsersUseCase adminUsers() {
+                        return mock(com.financia.kash.administracion.application.port.input.ManageUsersUseCase.class);
+                }
                 @Bean
                 com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase adminCategories() {
                         return mock(com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase.class);
