@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import com.financia.kash.administracion.application.port.output.AdminUserPort;
+import com.financia.kash.administracion.application.port.output.AdminAuditPort;
 import com.financia.kash.administracion.domain.exception.*;
 import com.financia.kash.administracion.domain.model.AdminUser;
 import com.financia.kash.usuario.domain.enums.*;
@@ -13,9 +14,15 @@ import reactor.core.publisher.*;
 
 class UserAdminServiceTest {
     private final AdminUserPort port = mock(AdminUserPort.class);
-    private final UserAdminService service = new UserAdminService(port);
+    private final AdminAuditPort audit = mock(AdminAuditPort.class);
+    private final UserAdminService service = new UserAdminService(port, audit);
     private final UUID actor = UUID.randomUUID();
     private final UUID target = UUID.randomUUID();
+
+    @org.junit.jupiter.api.BeforeEach
+    void setup() {
+        when(audit.append(any(), any(), any(), any())).thenReturn(Mono.empty());
+    }
 
     private AdminUser user(RoleUser role, UserStatus status) {
         return new AdminUser(target, "Nombre", "Apellido", "user@example.com", role, status, LocalDate.now(), null);
@@ -30,6 +37,8 @@ class UserAdminServiceTest {
         when(port.invalidateCache(suspended)).thenReturn(Mono.fromRunnable(() -> invalidated[0] = true));
         assertEquals(suspended, service.changeStatus(actor, target, UserStatus.SUSPENDIDO, "Solicitud de soporte").block());
         assertTrue(invalidated[0]);
+        verify(audit).append(actor, com.financia.kash.administracion.domain.model.AuditAction.USER_STATUS_CHANGED,
+                target, "SUSPENDIDO: Solicitud de soporte");
     }
 
     @Test

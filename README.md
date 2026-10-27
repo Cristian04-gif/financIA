@@ -75,6 +75,9 @@
 
 ## 🏛 Arquitectura del Sistema
 
+El rol administrador y sus rutas, permisos, bootstrap y migracion SQL se describen
+en [docs/administracion.md](docs/administracion.md).
+
 El proyecto implementa los principios de **Arquitectura Hexagonal (Puertos y Adaptadores)** y **Diseño Guiado por el Dominio (DDD)**, garantizando un bajo acoplamiento entre la lógica de negocio y las dependencias de infraestructura:
 
 ```text

@@ -137,6 +137,23 @@ class BudgetControllerTest {
         }
 
         @Test
+        void auditApiUsesAuthenticatedAdminAndPreservesFilters() {
+                client.get().uri("/api/v1/admin/audit").exchange().expectStatus().isForbidden();
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var audit = context.getBean(com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase.class);
+                when(audit.get(userId, com.financia.kash.administracion.domain.model.AuditAction.USER_STATUS_CHANGED, 0, 20))
+                                .thenReturn(Mono.just(com.financia.kash.administracion.domain.model.AdminPage.of(List.of(), 0, 20, 0)));
+                client.get().uri("/api/v1/admin/audit?actorId=" + userId + "&action=USER_STATUS_CHANGED")
+                                .exchange().expectStatus().isOk().expectBody().jsonPath("$.totalElements").isEqualTo(0);
+        }
+
+        @Test
         void userAdministrationOmitsCredentialsAndRequiresAReason() {
                 var admin = new UserEntity();
                 admin.setId(userId);
@@ -256,9 +273,14 @@ class BudgetControllerTest {
                         BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class,
                         com.financia.kash.administracion.infrastructure.api.AdminCategoryController.class,
                         com.financia.kash.administracion.infrastructure.api.AdminUserController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminAuditController.class,
                         com.financia.kash.administracion.infrastructure.api.AdminExceptionHandler.class,
                         com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryExceptionhandle.class })
         static class TestConfiguration {
+                @Bean
+                com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase adminAudit() {
+                        return mock(com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase.class);
+                }
                 @Bean
                 com.financia.kash.administracion.application.port.input.ManageUsersUseCase adminUsers() {
                         return mock(com.financia.kash.administracion.application.port.input.ManageUsersUseCase.class);

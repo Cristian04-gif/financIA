@@ -65,3 +65,39 @@ estado destino no permitido devuelve 400. El cambio SQL no sobrescribe password,
 2FA ni rol. Se invalidan las entradas de cache del usuario y su estado.
 Los JWT existentes de usuarios suspendidos se rechazan en la siguiente peticion;
 una conexion WebSocket previamente abierta no se revoca automaticamente.
+
+## Auditoria y base de datos
+
+Aplicar en bases existentes antes de desplegar esta rama:
+
+```powershell
+psql -h localhost -U postgres -d financia -v ON_ERROR_STOP=1 -f docker/database/migrations/002_administracion.sql
+```
+
+Las bases nuevas reciben la tabla desde `docker/database/init.sql`. La migracion
+es transaccional e idempotente. No se aplica automaticamente a volumenes existentes.
+
+GET `/api/v1/admin/audit` admite `actorId`, `action`, `page` y `size` (maximo 100).
+Devuelve actor, accion, recurso afectado, detalle y fecha UTC, sin secretos.
+Acciones: CATEGORY_CREATED, CATEGORY_RENAMED, CATEGORY_STATUS_CHANGED,
+USER_STATUS_CHANGED. En cambios de estado del usuario, detalle conserva el estado
+destino y el motivo. No incluir credenciales ni datos financieros en los motivos.
+
+El cambio y su registro de auditoria usan una misma transaccion R2DBC: si falla
+la escritura de auditoria o la invalidacion de cache, se revierte el cambio SQL.
+La cache no forma parte de la transaccion de PostgreSQL; entradas invalidadas
+pueden volver a cargarse. Las lecturas paginadas usan REPEATABLE READ y consultas
+secuenciales para que contenido y conteo correspondan a la misma vista.
+La API no ofrece editar ni eliminar auditoria. No se trata de una auditoria de
+lecturas, intentos fallidos ni operaciones historicas previas a esta entrega.
+
+## Validacion
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+Las pruebas normales no requieren servicios externos. La integracion de administracion
+se activa con `ADMIN_TEST_DATABASE_URL` apuntando a una base PostgreSQL de pruebas;
+crea un esquema aleatorio y elimina solo ese esquema al terminar.
+No ejecutar contra una base de produccion.
