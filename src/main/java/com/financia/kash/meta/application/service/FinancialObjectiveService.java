@@ -1,6 +1,7 @@
 package com.financia.kash.meta.application.service;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -20,21 +21,27 @@ import com.financia.kash.meta.application.port.output.ContributeObjectiveReposit
 import com.financia.kash.meta.application.port.output.FinancialObjectiveRepositoryPort;
 import com.financia.kash.meta.application.port.output.MovementSaveForObjective;
 import com.financia.kash.meta.application.port.output.RetriveAccountForObjectivesPort;
+import com.financia.kash.meta.application.port.output.RetriveUserForSObjectivesPort;
+import com.financia.kash.meta.domain.enums.ObjectiveState;
 import com.financia.kash.meta.domain.model.ContributeObjetive;
 import com.financia.kash.meta.domain.model.FinancialObjectives;
 import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
+import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class FinancialObjectiveService
                 implements RetriveObjectivesUseCase, CreateObjectiveUseCase, UpdateStatusObjectiveUseCase,
                 ContributionObjectiveUseCase, RetrieveAllGoalsPort {
@@ -44,8 +51,9 @@ public class FinancialObjectiveService
         private final RetriveAccountForObjectivesPort retriveAccountForObjectives;
         private final CategoryForObjectivesPort categoryForObjectivesPort;
         private final MovementSaveForObjective movementSaveForObjective;
-
+        private final NotificationService notificationService;
         private final CacheService<FinancialObjectives> cacheService;
+        private final RetriveUserForSObjectivesPort retriveUserForSObjectivesPort;
 
         @Override
         public Mono<PaginationResponse<FinancialObjectives>> getAllObjecives(UUID userId, PaginationRequest request) {
@@ -142,6 +150,37 @@ public class FinancialObjectiveService
                                 .switchIfEmpty(financialObjectiveRepositoryPort.findAllByUser(userId, from, until)
                                                 .collectList()
                                                 .flatMapMany(flux -> cacheService.saveListCache(cachekey, flux)));
+        }
+
+        @Override
+        public Mono<Void> updatEstatusExpiredGoals() {
+                return financialObjectiveRepositoryPort.findExpired(LocalDate.now())
+                                .filter(obj -> obj.getStatus().equals(ObjectiveState.EN_PROCESO)).flatMap(obj -> {
+                                        obj.changeStatus(ObjectiveState.FINALIZADA);
+                                        return financialObjectiveRepositoryPort.save(obj).doOnSuccess(
+                                                        objective -> CacheKeys.clearAllCacheFinancialObjectives(
+                                                                        cacheService.redisTemplate(),
+                                                                        objective.getUserId(), objective.getId()))
+                                                        .then(sendNotificacion(obj));
+                                }).then();
+        }
+
+        private Mono<Void> sendNotificacion(FinancialObjectives objectives) {
+                Map<String, Object> data = Map.of(
+                                "objectiveId", objectives.getId(),
+                                "objectiveName", objectives.getName(),
+                                "currentAmount", objectives.getCurrentAmount(),
+                                "targetAmount", objectives.getTargetAmount(),
+                                "date", LocalDate.now());
+                return retriveUserForSObjectivesPort.findMe(objectives.getUserId())
+                                .doOnNext(user -> notificationService.sendToUser(user.getEmail(),
+                                                NotificationMessage.sendObjectivesExpired(objectives.getName(), data)))
+                                .then()
+                                .onErrorResume(e -> {
+                                        log.error("Error al enviar notificación de meta financiera para usuario {}: {}",
+                                                        objectives.getUserId(), e.getMessage());
+                                        return Mono.empty();
+                                });
         }
 
 }

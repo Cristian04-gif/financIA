@@ -24,7 +24,8 @@ public class NotificationMessage {
         public static Notification sendAccountStatusChangedNotification(String accountName, boolean isActive,
                         Map<String, Object> data) {
                 return Notification.of(NotificationStatus.INFO.name(), "Estado de Cuenta Actualizado",
-                                String.format("La cuenta '%s' fue %s.", accountName, isActive ? "activada" : "desactivada"),
+                                String.format("La cuenta '%s' fue %s.", accountName,
+                                                isActive ? "activada" : "desactivada"),
                                 data);
         }
 
@@ -54,11 +55,13 @@ public class NotificationMessage {
         public static Notification sendMovementCreatedNotification(String type, BigDecimal amount, String description,
                         Map<String, Object> data) {
                 return Notification.of(NotificationStatus.SUCCESS.name(), "Movimiento Registrado",
-                                String.format("Se registró un %s por el monto de S/ %.2f (%s).", type.toLowerCase(), amount, description),
+                                String.format("Se registró un %s por el monto de S/ %.2f (%s).", type.toLowerCase(),
+                                                amount, description),
                                 data);
         }
 
-        public static Notification sendMovementDeletedNotification(String description, BigDecimal amount, String accountName,
+        public static Notification sendMovementDeletedNotification(String description, BigDecimal amount,
+                        String accountName,
                         Map<String, Object> data) {
                 return Notification.of(NotificationStatus.INFO.name(), "Movimiento Eliminado",
                                 String.format("El movimiento '%s' por S/ %.2f fue eliminado y el saldo fue restaurado a la cuenta '%s'.",
@@ -66,7 +69,8 @@ public class NotificationMessage {
                                 data);
         }
 
-        public static Notification sendSubscriptionCreatedNotification(String subscriptionName, BigDecimal amount, String frequency,
+        public static Notification sendSubscriptionCreatedNotification(String subscriptionName, BigDecimal amount,
+                        String frequency,
                         Map<String, Object> data) {
                 return Notification.of(NotificationStatus.SUCCESS.name(), "Suscripción Registrada",
                                 String.format("Se programó la suscripción a '%s' por S/ %.2f con frecuencia %s.",
@@ -101,7 +105,8 @@ public class NotificationMessage {
         public static Notification sendObjectiveCreatedNotification(String objectiveName, BigDecimal targetAmount,
                         Map<String, Object> data) {
                 return Notification.of(NotificationStatus.SUCCESS.name(), "Nueva Meta Financiera",
-                                String.format("Meta '%s' creada con éxito con un objetivo de S/ %.2f.", objectiveName, targetAmount),
+                                String.format("Meta '%s' creada con éxito con un objetivo de S/ %.2f.", objectiveName,
+                                                targetAmount),
                                 data);
         }
 
@@ -125,5 +130,10 @@ public class NotificationMessage {
                                 String.format("Se anuló la transferencia de S/ %.2f y los fondos fueron revertidos a la cuenta de origen.",
                                                 amount),
                                 data);
+        }
+
+        public static Notification sendObjectivesExpired(String name, Map<String, Object> data) {
+                return Notification.of(NotificationStatus.INFO.name(), "Meta Financiera",
+                                String.format("No se logro cumplir con la meta '%s' establecida", name), data);
         }
 }

@@ -20,4 +20,6 @@ public interface FinancialObjectiveRepositoryPort {
     Mono<FinancialObjectives> save(FinancialObjectives financialObjectives);
 
     Mono<Void> deleteById(UUID id);
+
+    Flux<FinancialObjectives> findExpired(LocalDate date);
 }

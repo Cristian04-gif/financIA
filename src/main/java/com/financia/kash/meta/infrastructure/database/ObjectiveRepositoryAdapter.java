@@ -72,4 +72,9 @@ public class ObjectiveRepositoryAdapter implements FinancialObjectiveRepositoryP
         return objectiveRepository.findAllByUserIdAndStartDateBetween(userId, from, until)
                 .map(financialObjectiveMapper::mapToDomain);
     }
+
+    @Override
+    public Flux<FinancialObjectives> findExpired(LocalDate date) {
+        return objectiveRepository.findAllTargetDate(date).map(financialObjectiveMapper::mapToDomain);
+    }
 }

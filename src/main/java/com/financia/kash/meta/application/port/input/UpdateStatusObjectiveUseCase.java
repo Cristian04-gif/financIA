@@ -6,4 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface UpdateStatusObjectiveUseCase {
     Mono<Void> updateStatus(UpdateStatusCommand command);
+
+    Mono<Void> updatEstatusExpiredGoals();
 }
