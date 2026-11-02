@@ -2,8 +2,8 @@ package com.financia.kash.cuenta.transferencia.application.port.output;
 
 import java.util.UUID;
 
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 

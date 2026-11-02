@@ -13,8 +13,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.financia.kash.shared.infrastructure.utils.HasUuid;
-import com.financia.kash.usuario.domain.model.EstadoUsuario;
-import com.financia.kash.usuario.domain.model.RoleUser;
+import com.financia.kash.usuario.domain.enums.RoleUser;
+import com.financia.kash.usuario.domain.enums.UserStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,7 +48,7 @@ public class UserEntity implements UserDetails, HasUuid {
     private LocalDate updateDate;
 
     @Column(value = "estado")
-    private EstadoUsuario status;
+    private UserStatus status;
 
     @Column(value = "rol")
     private RoleUser role;
@@ -56,7 +56,7 @@ public class UserEntity implements UserDetails, HasUuid {
     private String secret2fa;
     private boolean enable2fa;
 
-    public UserEntity(String name, String lastName, String email, String password, EstadoUsuario status,
+    public UserEntity(String name, String lastName, String email, String password, UserStatus status,
             RoleUser role) {
         this.name = name;
         this.lastName = lastName;

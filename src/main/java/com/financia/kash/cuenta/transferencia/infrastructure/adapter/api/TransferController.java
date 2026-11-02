@@ -6,16 +6,21 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.cuenta.transferencia.application.port.input.DeleteTransferUseCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.GetTransferUserCase;
 import com.financia.kash.cuenta.transferencia.application.port.input.UpdateTransferUseCase;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferAccountCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.GetTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.command.UpdateTransferCommand;
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.dto.TransferUpdateRequest;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -33,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/api/v1/transfers/my-transfers")
 @RequiredArgsConstructor
 @Tag(name = "Transferencias", description = "Operaciones de la API de Transferencias")
+@Log4j2
 public class TransferController {
 
     private final GetTransferUserCase getTransferUserCase;
@@ -45,12 +51,12 @@ public class TransferController {
             @AuthenticationPrincipal UserEntity user,
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
-            @RequestParam(required = false, defaultValue = "creationDate") String sortBy,
+            @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
 
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
-        return getTransferUserCase.getAllMyTransfers(user.getId(),
-                paginationRequest).map(ResponseEntity::ok);
+        return getTransferUserCase.getAllMyTransfers(new GetTransferCommand(user.getId(), paginationRequest))
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Transfereencias por cuenta de usuario", description = "Devuelve las transferencias de una cuenta especifica del usuario")
@@ -60,8 +66,10 @@ public class TransferController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "fecha_creacion") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String direction) {
+        log.info("orden: {}", sortBy);
         PaginationRequest paginationRequest = new PaginationRequest(pageNum, pageSize, sortBy, direction);
-        return getTransferUserCase.getAllTransfersByAccount(id, paginationRequest).map(ResponseEntity::ok);
+        return getTransferUserCase.getAllTransfersByAccount(new GetTransferAccountCommand(id, paginationRequest))
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Transfereencia del usuario", description = "Devuelve una transferencia por su id")
@@ -73,8 +81,9 @@ public class TransferController {
     @Operation(summary = "Actualizar Transferencia", description = "Actualizar el monto o descripcion de la transferencia")
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Transfer>> updateTransfer(@PathVariable UUID id,
-            @RequestBody TransferUpdateRequest request) {
-        return updateTransferUseCase.updateTransfer(id, request.newAmount(), request.newDescription())
+            @RequestBody @Valid TransferUpdateRequest request) {
+        return updateTransferUseCase
+                .updateTransfer(new UpdateTransferCommand(id, request.newAmount(), request.newDescription()))
                 .thenReturn(ResponseEntity.noContent().build());
     }
 

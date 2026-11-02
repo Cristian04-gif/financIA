@@ -10,7 +10,6 @@ import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
@@ -43,7 +42,7 @@ public class GlobalWebExceptionHandler implements WebExceptionHandler {
 
             return response.writeWith(Mono.just(buffer));
 
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             return Mono.error(e);
         }
     }

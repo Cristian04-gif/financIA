@@ -4,11 +4,14 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.financia.kash.meta.application.port.output.CategoryForObjectivesPort;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryEntityRepository;
+import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryentityQueryRepository;
+import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -16,10 +19,12 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
+public class CategoryRepositoryAdapter
+        implements CategoryRepositoryPort, CategoryForVoucherPort, CategoryForObjectivesPort {
 
     private final CategoryEntityRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final CategoryentityQueryRepository categoryentityQueryRepository;
 
     @Override
     public Flux<Category> findGlobalCategories() {
@@ -34,8 +39,8 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
     @Override
     public Mono<Category> findById(UUID id) {
-        return categoryRepository.findById(id).map(categoryMapper::mapToDomain)
-                .switchIfEmpty(Mono.error(new CategoryNotFoundException(id)));
+        return categoryRepository.findById(id).switchIfEmpty(Mono.error(new CategoryNotFoundException(id)))
+                .map(categoryMapper::mapToDomain);
     }
 
     @Override
@@ -52,6 +57,11 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     @Override
     public Mono<Void> delete(UUID id) {
         return categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public Flux<Category> findCategoryForVoucher(UUID userId, String name) {
+        return categoryentityQueryRepository.findCategoryForVoucher(userId, name).map(categoryMapper::mapToDomain);
     }
 
 }

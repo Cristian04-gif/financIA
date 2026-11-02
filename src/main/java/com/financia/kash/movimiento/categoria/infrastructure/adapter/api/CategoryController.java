@@ -7,6 +7,9 @@ import com.financia.kash.movimiento.categoria.application.port.input.CreateCateg
 import com.financia.kash.movimiento.categoria.application.port.input.DeleteMyCategoryUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.GetCategoriesUseCase;
 import com.financia.kash.movimiento.categoria.application.port.input.UpdateCategoryUseCase;
+import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
+import com.financia.kash.movimiento.categoria.application.port.input.command.CreateMainCategoryCommand;
+import com.financia.kash.movimiento.categoria.application.port.input.command.UpdateCategoryCommand;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryForUserRequest;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.CategoryGlobalRequest;
@@ -14,6 +17,7 @@ import com.financia.kash.movimiento.categoria.infrastructure.adapter.api.dto.Cat
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -71,28 +75,31 @@ public class CategoryController {
         @Operation(summary = "Sub-categoria", description = "Crea una categoria que necesite usuario")
         @PostMapping("/of-user")
         public Mono<ResponseEntity<Category>> createUserCategory(@AuthenticationPrincipal UserEntity user,
-                        @RequestBody CategoryForUserRequest request) {
-                return createCategoryUseCase.createCategoryForUser(user.getId(), request.name(),
-                                request.type(),
-                                request.parentCategoryId())
+                        @RequestBody @Valid CategoryForUserRequest request) {
+                return createCategoryUseCase
+                                .createCategoryForUser(new CreateCategoryUserCommand(user.getId(), request.name(),
+                                                request.type(),
+                                                request.parentCategoryId()))
                                 .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
         @Operation(summary = "Categoria global", description = "Crea una categoria globalizada")
         @PostMapping("/global")
-        public Mono<ResponseEntity<Category>> createGlobalCategory(@RequestBody CategoryGlobalRequest request) {
-                return createCategoryUseCase.createMainCategory(request.name(), request.type())
+        public Mono<ResponseEntity<Category>> createGlobalCategory(@RequestBody @Valid CategoryGlobalRequest request) {
+                return createCategoryUseCase
+                                .createMainCategory(new CreateMainCategoryCommand(request.name(), request.type()))
                                 .map(category -> ResponseEntity.status(HttpStatus.CREATED).body(category));
         }
 
         @Operation(summary = "Actualizar categoria", description = "Actualiza una categoria del usuario")
         @PutMapping("/of-user/{id}")
         public Mono<ResponseEntity<Category>> updateUsercategory(@PathVariable UUID id,
-                        @RequestBody CategoryForUserRequest request) {
+                        @RequestBody @Valid CategoryForUserRequest request) {
 
-                return updateCategoryUseCase.updateCategoryForUser(id, request.name(), request.type(),
-                                request.parentCategoryId(),
-                                request.active())
+                return updateCategoryUseCase
+                                .updateCategoryForUser(new UpdateCategoryCommand(id, request.name(), request.type(),
+                                                request.parentCategoryId(),
+                                                request.active()))
                                 .map(category -> ResponseEntity.status(HttpStatus.ACCEPTED).body(category));
 
         }

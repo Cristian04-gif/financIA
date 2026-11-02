@@ -4,13 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 
 public record AccountProject(
-        UUID id,
-        String name,
-        AccountType type,
-        BigDecimal currentBalance,
-        LocalDate creationDate,
-        boolean active) {
+                UUID id,
+                String name,
+                AccountType type,
+                BigDecimal currentBalance,
+                LocalDate creationDate,
+                boolean active) {
 }

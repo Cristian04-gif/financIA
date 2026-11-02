@@ -1,103 +1,240 @@
 package com.financia.kash.movimiento.movimiento.application.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.financia.kash.dashboard.user.application.port.output.RetrieveAllTransactionsPort;
+import com.financia.kash.dashboard.user.domain.model.ExpensesCategory.CategoriesExcenses;
+import com.financia.kash.dashboard.user.domain.model.MovementsMonth;
+import com.financia.kash.movimiento.categoria.application.port.input.CreateCategoryUseCase;
+import com.financia.kash.movimiento.categoria.application.port.input.command.CreateCategoryUserCommand;
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
-import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException;
+import com.financia.kash.movimiento.categoria.domain.model.Category;
+import com.financia.kash.movimiento.comprobante.application.port.input.SaveFileVoucherUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.CreateMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.DeleteMovimentUseCase;
 import com.financia.kash.movimiento.movimiento.application.port.input.GetMovementUseCase;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.AllMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.CreateMovementCommand;
+import com.financia.kash.movimiento.movimiento.application.port.input.command.SaveCoucherCommand;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.CalculateComsumptionBudgetPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.MovementRepositoryPort;
+import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
-import com.financia.kash.movimiento.movimiento.domain.model.Motion;
-import com.financia.kash.movimiento.movimiento.domain.model.TypeMovement;
+import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
+import com.financia.kash.movimiento.movimiento.domain.model.Movement;
+import com.financia.kash.notificacion.application.service.NotificationService;
+import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.PaginationRequest;
 import com.financia.kash.shared.domain.PaginationResponse;
+import com.financia.kash.shared.domain.utils.statics.CacheKeys;
+import com.financia.kash.shared.domain.utils.statics.NotificationMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class MovementService
-        implements CreateMovimentUseCase, DeleteMovimentUseCase, GetMovementUseCase {
+                implements CreateMovimentUseCase, DeleteMovimentUseCase, GetMovementUseCase,
+                RetrieveAllTransactionsPort {
 
-    private final MovementRepositoryPort movementRepositoryPort;
-    private final AccountForMovementPort accountForMovementPort;
-    private final SaveAccountForMovementPort saveAccountForMovementPort;
-    private final CategoryRepositoryPort categoryRepositoryPort;
+        private final MovementRepositoryPort movementRepositoryPort;
+        private final AccountForMovementPort accountForMovementPort;
+        private final SaveAccountForMovementPort saveAccountForMovementPort;
+        private final CategoryRepositoryPort categoryRepositoryPort;
+        private final CreateCategoryUseCase createCategoryUseCase;
+        private final SaveFileVoucherUseCase saveFileVoucherUseCase;
+        private final RetriveBudgetForMovementPort budgetForMovementPort;
+        private final CalculateComsumptionBudgetPort calculateComsumptionBudgetPort;
+        private final NotificationService notificationService;
 
-    @Override
-    public Mono<PaginationResponse<Motion>> getAllMovements(UUID userId, PaginationRequest request) {
-        return movementRepositoryPort.findAllMyMotions(userId, request);
-    }
+        private final CacheService<MovementDTO> cacheService;
 
-    @Override
-    public Mono<Motion> getMovementById(UUID movementId) {
-        return movementRepositoryPort.findById(movementId);
-    }
+        private final CacheService<Movement> cacheService2;
 
-    @Override
-    @Transactional
-    public Mono<Motion> createMotion(UUID userId, UUID accountId, UUID categoryId, TypeMovement type, BigDecimal amount,
-            LocalDate date, String description, boolean common) {
+        @Override
+        public Mono<PaginationResponse<MovementDTO>> getAllMovements(AllMovementCommand command) {
+                String cacheKey = CacheKeys.allUserMovements(command.userId(), command.request());
+                return cacheService.retriveCachePagination(cacheKey, MovementDTO.class)
+                                .switchIfEmpty(movementRepositoryPort.findAllMyMotions(command.userId(),
+                                                command.request()))
+                                .flatMap(mov -> cacheService.saveCachePagination(cacheKey, mov));
+                // return movementRepositoryPort.findAllMyMotions(command.userId(),
+                // command.request());
+        }
 
-        return categoryRepositoryPort.existsById(categoryId).flatMap(exist -> {
-            if (!exist) {
-                return Mono.error(new CategoryNotFoundException(categoryId));
-            }
-            return accountForMovementPort.findMyAccountById(accountId).flatMap(account -> {
-                account.validateAccountIsActive();
-                account.validateSufficientFunds(amount);
-                account.transfer(amount);
+        @Override
+        public Mono<MovementDTO> getMovementById(UUID movementId) {
+                String cacheKey = CacheKeys.movements(movementId);
+                return cacheService.retrieveMonoCache(cacheKey, MovementDTO.class)
+                                .switchIfEmpty(movementRepositoryPort.findByIdDTO(movementId))
+                                .flatMap(movement -> cacheService.saveMonoCache(cacheKey, movement));
+                // return movementRepositoryPort.findByIdDTO(movementId);
+        }
 
-                Motion motion = new Motion(userId, accountId, categoryId, type, amount, date,
-                        description);
-                return movementRepositoryPort.save(motion);
-            });
-        });
+        @Override
+        @Transactional
+        public Mono<Movement> createMotion(CreateMovementCommand command) {
 
-    }
+                if (command.category().categoryId() == null) {
+                        return createCategoryUseCase
+                                        .createCategoryForUser(new CreateCategoryUserCommand(command.userId(),
+                                                        command.category().name(),
+                                                        command.category().type(),
+                                                        command.category().parentCategoryId()))
+                                        .flatMap(category -> saveMovement(command, category))
+                                        .flatMap(mot -> evaluateBudgetNotification(mot, command.username())
+                                                        .thenReturn(mot));
+                }
+                return categoryRepositoryPort.findById(command.category().categoryId())
+                                .flatMap(category -> saveMovement(command, category))
+                                .flatMap(mot -> evaluateBudgetNotification(mot, command.username()).thenReturn(mot));
+        }
 
-    // @Override
-    // public Mono<Void> deactivateCommonMovement(UUID userId, UUID movementId) {
-    // return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-    // motion.deactiveCommontMovement();
-    // return movementRepositoryPort.save(motion);
+        private Mono<Movement> saveMovement(CreateMovementCommand command, Category category) {
+                return accountForMovementPort.findMyAccountById(command.accountId())
+                                .flatMap(account -> {
+                                        account.validateAccountIsActive();
+                                        account.validateSufficientFunds(command.amount());
+                                        account.transfer(command.amount());
 
-    // }).then();
+                                        Movement motion = new Movement(command.userId(),
+                                                        command.accountId(),
+                                                        category.getId(), null,
+                                                        command.type(), command.amount(),
 
-    // }
+                                                        command.description());
+                                        return movementRepositoryPort.save(motion)
+                                                        .flatMap(mot -> saveAccountForMovementPort
+                                                                        .save(account)
+                                                                        .doOnSuccess(e -> CacheKeys
+                                                                                        .clearAllCacheMovements(
+                                                                                                        cacheService.redisTemplate(),
+                                                                                                        command.userId(),
+                                                                                                        mot.getId(),
+                                                                                                        mot.getAccountId()))
 
-    // @Override
-    // public Mono<Void> activateCommonMovement(UUID userId, UUID movementId) {
+                                                                        .thenReturn(mot));
+                                });
+        }
 
-    // return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-    // motion.activeCommontMovement();
-    // return movementRepositoryPort.save(motion);
+        private Mono<Void> evaluateBudgetNotification(Movement mot, String username) {
+                return budgetForMovementPort.retriveBudgetBtUserIdAndCategoryId(mot.getUserId(), mot.getCategoryId())
+                                .flatMap(budget -> calculateComsumptionBudgetPort
+                                                .calculateConsumption(budget.userId(), budget.id())
+                                                .doOnNext(comsumption -> {
+                                                        if (comsumption.amountLimitTotal() == null || comsumption
+                                                                        .amountLimitTotal().doubleValue() <= 0) {
+                                                                return;
+                                                        }
 
-    // }).then();
+                                                        Double percentageSpent = (comsumption.spent().doubleValue()
+                                                                        / comsumption.amountLimitTotal().doubleValue())
+                                                                        * 100;
 
-    // }
+                                                        Map<String, Object> data = Map.of(
+                                                                        "budgetId", budget.id(),
+                                                                        "name", budget.name(),
+                                                                        "amountLimitTotal",
+                                                                        budget.amountLimitTotal());
 
-    @Override
-    public Mono<Void> deleteMovement(UUID movementId) {
-        return movementRepositoryPort.findById(movementId).flatMap(motion -> {
-            accountForMovementPort.findMyAccountById(motion.getAccountId())
-                    .flatMap(account -> {
-                        account.receive(motion.getAmount());
-                        return saveAccountForMovementPort.save(account);
-                    });
+                                                        if (percentageSpent > 80.0) {
+                                                                notificationService.sendToUser(
+                                                                                username,
+                                                                                NotificationMessage
+                                                                                                .sendNotificationBudgetApproachesLimit(
+                                                                                                                budget.name(),
+                                                                                                                percentageSpent,
+                                                                                                                data));
+                                                        }
+                                                }))
+                                .then()
+                                .onErrorResume(e -> {
+                                        log.error("Error al evaluar notificación de presupuesto para {}: {}", username,
+                                                        e.getMessage());
+                                        return Mono.empty();
+                                });
+        }
 
-            return movementRepositoryPort.delete(movementId);
+        @Override
+        @Transactional
+        public Mono<Void> deleteMovement(UUID movementId) {
+                return movementRepositoryPort.findById(movementId).flatMap(
+                                movement -> accountForMovementPort.findMyAccountById(movement.getAccountId())
+                                                .flatMap(account -> {
+                                                        account.receive(movement.getAmount());
+                                                        return saveAccountForMovementPort.save(account)
+                                                                        .then(movementRepositoryPort.delete(movementId)
+                                                                                        .doOnSuccess(e -> CacheKeys
+                                                                                                        .clearAllCacheMovements(
+                                                                                                                        cacheService.redisTemplate(),
+                                                                                                                        movement.getUserId(),
+                                                                                                                        movementId,
+                                                                                                                        movement.getAccountId())));
+                                                }));
 
-        });
-    }
+        }
+
+        @Override
+        public Mono<Void> saveVoucherFile(SaveCoucherCommand command) {
+                return movementRepositoryPort.findById(command.movementId())
+                                .flatMap(movement -> command.filePart().flatMap(saveFileVoucherUseCase::saveFileVoucher)
+                                                .flatMap(secureUrl -> {
+                                                        movement.upReceipt(secureUrl);
+                                                        return movementRepositoryPort
+                                                                        .save(movement).doOnSuccess(e -> CacheKeys
+                                                                                        .clearAllCacheMovements(
+                                                                                                        cacheService.redisTemplate(),
+                                                                                                        movement.getUserId(),
+                                                                                                        movement.getId()))
+                                                                        .then();
+                                                }));
+        }
+
+        // DASHBOARS
+
+        @Override
+        public Flux<Movement> retrieveAllTransactionByCategory(UUID userId, UUID categoryId, LocalDateTime from,
+                        LocalDateTime until) {
+                String cacheKey = CacheKeys.allMovementsCategory(userId, categoryId);
+                return cacheService2.getCacheList(cacheKey, Movement.class)
+                                .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, from, until)
+                                                .collectList()
+                                                .flatMapMany(movs -> cacheService2.saveListCache(cacheKey, movs)));
+        }
+
+        @Override
+        public Mono<PaginationResponse<MovementDTO>> retrieveAllTransactionByCategory(UUID userId, UUID categoryId,
+                        PaginationRequest request) {
+                String cacheKey = CacheKeys.allMovementsCategoy(userId, categoryId, request);
+                return cacheService.retriveCachePagination(cacheKey, MovementDTO.class)
+                                .switchIfEmpty(movementRepositoryPort.findAllByCategory(userId, categoryId, request))
+                                .flatMap(movs -> cacheService.saveCachePagination(cacheKey, movs));
+        }
+
+        @Override
+        public Flux<MovementsMonth> retrievePeriodMovement(UUID userId, Integer limit) {
+                return movementRepositoryPort.findPeriod(userId, limit);
+        }
+
+        @Override
+        public Mono<MovementsMonth> retriveMovementsMotnh(UUID userId) {
+                return movementRepositoryPort.findPeriod(userId, 1).next();
+        }
+
+        @Override
+        public Flux<CategoriesExcenses> findExpensesByCategory(UUID userId, LocalDate from, LocalDate until) {
+                return movementRepositoryPort.findExpensesByCategory(userId, from, until);
+        }
 
 }

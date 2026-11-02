@@ -1,0 +1,66 @@
+spring:
+  #Configuración de R2DBC para MySQL
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST_PROD}:${DB_PORT_PROD}/${DB_NAME_PROD}
+    username: ${DB_USERNAME_PROD}
+    password: ${DB_PASSWORD_PROD}
+    pool:
+      enabled: true
+      initial-size: 5
+      max-size: 10
+
+  # Configuración del servidor WebFlux
+  http:
+    codecs:
+      max-in-memory-size: 10MB
+  cloud:
+    config:
+      enabled: false
+
+  ai:
+    google:
+      genai:
+        api-key: ${API_KEY_GEMINI}
+        chat:
+          temperature: 0.5
+
+  data:
+    redis:
+      url: ${REDIS_URL}
+      repositories:
+        enabled: false
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 2
+
+security:
+  secret-key: ${SECRET_KEY_SECURITY}
+
+app:
+  ai:
+    models-cascade:
+      - gemini-3.8-flash
+      - gemini-3.7-flash
+      - gemini-3.6-flash
+      - gemini-3.5-flash
+      - gemini-3-flash
+      - gemini-2.5-flash
+
+      - gemini-3.5-flash-lite
+      - gemini-3.1-flash-lite
+      - gemini-2.5-flash-lite
+
+cloudinary:
+  cloud_name: ${CLOUDINATY_NAME}
+  api_key: ${CLOUDINARY_APY_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+
+url:
+  frontend: ${HOST_FRONTEND}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.financia.kash.usuario.application.port.input.ChangePasswordUseCase;
 import com.financia.kash.usuario.application.port.input.DeleteUserUseCase;
 import com.financia.kash.usuario.application.port.input.MyInformationUseCase;
+import com.financia.kash.usuario.application.port.input.command.ChangePasswordCommand;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.NewPasswordRequestDTO;
 import com.financia.kash.usuario.infrastructure.adapter.api.dto.UserResponseDTO;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
@@ -49,7 +50,7 @@ public class UserController {
     public Mono<ResponseEntity<Void>> updatePassword(@AuthenticationPrincipal UserEntity user,
             @RequestBody @Valid NewPasswordRequestDTO dto) {
 
-        return changePasswordUseCase.changePassword(user.getId(), dto.newPassword())
+        return changePasswordUseCase.changePassword(new ChangePasswordCommand(user.getId(), dto.newPassword()))
                 .thenReturn(ResponseEntity.ok().build());
 
     }

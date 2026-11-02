@@ -9,7 +9,6 @@ import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 
@@ -42,7 +41,7 @@ public class CustomAuthenticationEntryPoint implements ServerAuthenticationEntry
             return httpResponse.writeWith(
                     Mono.just(buffer));
 
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             return Mono.error(e);
         }
     }

@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.financia.kash.movimiento.categoria.domain.model.CategoryType;
+import com.financia.kash.movimiento.categoria.domain.enums.CategoryType;
 import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;

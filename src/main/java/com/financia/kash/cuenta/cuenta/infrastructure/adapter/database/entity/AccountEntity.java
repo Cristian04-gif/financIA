@@ -8,7 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.financia.kash.cuenta.cuenta.domain.model.AccountType;
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.shared.infrastructure.utils.HasUuid;
 
 import lombok.AllArgsConstructor;

@@ -8,6 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface CategoryRepositoryPort {
+
     Flux<Category> findGlobalCategories();
 
     Flux<Category> findAllMyCategories(UUID userId);

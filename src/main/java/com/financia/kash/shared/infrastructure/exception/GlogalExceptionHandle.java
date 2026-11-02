@@ -10,6 +10,7 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
 
 import com.financia.kash.shared.domain.exception.ErrorResponse;
 import com.financia.kash.shared.domain.exception.UserInactiveException;
@@ -29,6 +30,20 @@ public class GlogalExceptionHandle {
         });
 
         ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName(),
+                errors);
+
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
+    @ExceptionHandler(WebExchangeBindException.class)
+    public Mono<ResponseEntity<ErrorResponse>> badRequest(WebExchangeBindException exception) {
+
+        Map<String, String> errors = new HashMap<>();
+        exception.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        ErrorResponse response = new ErrorResponse("Error de validación", exception.getClass().getSimpleName(),
                 errors);
 
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));

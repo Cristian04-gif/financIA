@@ -5,8 +5,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
+import com.financia.kash.cuenta.transferencia.application.port.input.response.TransferDTO;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
-import com.financia.kash.cuenta.transferencia.domain.model.TransferDTO;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.entity.TransferEntity;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.database.repository.project.TransferProject;
 
@@ -19,9 +19,9 @@ public interface TransferMapper {
     @Mapping(source = "userId", target = "userId")
     TransferEntity mapToEntity(Transfer transfer);
 
-    @Mapping(source = "cuenta_origen_id", target = "accountOrigin.accountId")
+    @Mapping(source = "cuenta_origen_id", target = "accountOrigin.id")
     @Mapping(source = "nombre_o", target = "accountOrigin.name")
-    @Mapping(source = "cuenta_destino_id", target = "accountDestination.accountId")
+    @Mapping(source = "cuenta_destino_id", target = "accountDestination.id")
     @Mapping(source = "nombre_d", target = "accountDestination.name")
     @Mapping(source = "descripcion", target = "description")
     @Mapping(source = "fecha_creacion", target = "creationDate")

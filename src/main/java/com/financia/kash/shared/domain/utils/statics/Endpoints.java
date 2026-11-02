@@ -1,0 +1,38 @@
+package com.financia.kash.shared.domain.utils.statics;
+
+public class Endpoints {
+        public final static String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
+                        "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html" };
+
+        public final static String OWNER_ACCESS_ACCOUNT[] = {
+                        "/api/v1/accounts/my-account/{id}", "/api/v1/accounts/my-account/{id}/changeStatus",
+                        "/api/v1/transfers/my-transfers/account/{id}"
+        };
+
+        public final static String OWNER_ACCESS_TRANSFER[] = {
+                        "/api/v1/transfers/my-transfers/{id}"
+        };
+
+        public final static String OWNER_ACCESS_CATEGORIES[] = {
+                        "/api/v1/categories/category/{id}", "/api/v1/categories/of-user/{id}"
+        };
+
+        public final static String OWNER_ACCESS_MOVEMENTS[] = {
+                        "/api/v1/movements/my-movements/{id}", "/api/v1/movements/my-movements/{id}/submit-voucher"
+        };
+
+        public final static String OWNER_ACCESS_SUBSCRIPTIONS[] = {
+                        "/api/v1/subscriptions/my-subs/{id}"
+        };
+
+        public final static String OWNER_ACCESS_FINANCIAL_OBJECTIVES[] = {
+                        "/api/v1/objectives/{id}", "/api/v1/objectives/{id}/contribution",
+                        "/api/v1/objectives/contributions/objective/{id}"
+        };
+
+        public final static String OWNER_ACCESS_CONTIRBUTION_OBJECTIVES[] = {
+                        "/api/v1/objectives/contributions/{id}"
+        };
+}

@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 
 import com.financia.kash.auth.application.port.input.Confirm2FARequestUseCase;
 import com.financia.kash.auth.application.port.input.Request2faUseCase;
+import com.financia.kash.auth.application.port.input.command.Confirm2FACommand;
 import com.financia.kash.auth.application.port.output.UserEmailForAuthenticationPort;
 import com.financia.kash.auth.application.port.output.UserSaveForAuthPort;
 import com.financia.kash.auth.domain.exception.InvalidTwoFactorCodeException;
 import com.financia.kash.auth.domain.model.TwoFactorAuth;
-import com.financia.kash.shared.infrastructure.utils.event.DomainEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -22,7 +22,6 @@ public class TwoFactorAuthService implements Request2faUseCase, Confirm2FAReques
     private final UserEmailForAuthenticationPort emailForAuthenticationPort;
     private final UserSaveForAuthPort saveForAuthPort;
     private final TwoFactorAuth twoFactorAuth;
-    private final DomainEventPublisher domainEventPublisher;
 
     @Override
     public Mono<Map<String, String>> setup2fa(String email) {
@@ -41,10 +40,10 @@ public class TwoFactorAuthService implements Request2faUseCase, Confirm2FAReques
     }
 
     @Override
-    public Mono<String> confirm2fa(String emailUser, Map<String, String> request) {
-        return emailForAuthenticationPort.findByEmail(emailUser).flatMap(user -> {
+    public Mono<String> confirm2fa(Confirm2FACommand command) {
+        return emailForAuthenticationPort.findByEmail(command.emailUser()).flatMap(user -> {
 
-            String code = request.get("code");
+            String code = command.request().get("code");
             if (code == null || !code.matches("\\d{6}")) {
                 return Mono.error(new InvalidTwoFactorCodeException());
             }
