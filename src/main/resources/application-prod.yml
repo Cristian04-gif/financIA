@@ -27,6 +27,8 @@ spring:
   data:
     redis:
       url: ${REDIS_URL}
+      ssl:
+        enabled: true
       repositories:
         enabled: false
       timeout: 5000ms
