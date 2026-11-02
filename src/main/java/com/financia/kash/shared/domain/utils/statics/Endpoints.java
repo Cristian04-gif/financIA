@@ -4,7 +4,7 @@ public class Endpoints {
         public final static String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
                         "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html" };
+                        "/swagger-ui.html", "/actuator/health" };
 
         public final static String OWNER_ACCESS_ACCOUNT[] = {
                         "/api/v1/accounts/my-account/{id}", "/api/v1/accounts/my-account/{id}/changeStatus",

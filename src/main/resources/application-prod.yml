@@ -59,7 +59,7 @@ cloudinary:
   api_secret: ${CLOUDINARY_API_SECRET}
 
 url:
-  frontend: ${HOST_FRONTEND}
+  frontend: ${HOST_FRONTEND:http://localhost:5173}
 
 springdoc:
   swagger-ui:
