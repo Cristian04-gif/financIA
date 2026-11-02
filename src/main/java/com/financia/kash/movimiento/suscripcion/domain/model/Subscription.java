@@ -5,16 +5,16 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.suscripcion.domain.enums.SubscriptionFrequency;
 import com.financia.kash.movimiento.suscripcion.domain.exception.FrequencyNotFoundException;
 import com.financia.kash.shared.domain.utils.Default;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(onConstructor_ = { @Default })
 public class Subscription {
 
     private final UUID id;
@@ -93,18 +93,31 @@ public class Subscription {
         }
     }
 
-    /*
-     * suscripcion
-     * -------------------------
-     * id
-     * usuario_id
-     * nombre
-     * monto
-     * periodicidad
-     * fecha_inicio
-     * proxima_fecha
-     * fecha_fin
-     * estado
-     * 
-     */
+    @Default
+    @JsonCreator
+    public Subscription(
+            @JsonProperty("id") UUID id,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("payingAccountId") UUID payingAccountId,
+            @JsonProperty("categoryId") UUID categoryId,
+            @JsonProperty("name") String name,
+            @JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("frequency") SubscriptionFrequency frequency,
+            @JsonProperty("type") TypeMovement type,
+            @JsonProperty("payDay") Integer payDay,
+            @JsonProperty("dateNextPayment") LocalDate dateNextPayment,
+            @JsonProperty("active") Boolean active) {
+        this.id = id;
+        this.userId = userId;
+        this.payingAccountId = payingAccountId;
+        this.categoryId = categoryId;
+        this.name = name;
+        this.amount = amount;
+        this.frequency = frequency;
+        this.type = type;
+        this.payDay = payDay;
+        this.dateNextPayment = dateNextPayment;
+        this.active = active;
+    }
+
 }

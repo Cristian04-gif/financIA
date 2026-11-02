@@ -12,7 +12,6 @@ import com.financia.kash.usuario.domain.enums.UserStatus;
 import com.financia.kash.usuario.domain.exception.User2FAEnabledException;
 import com.financia.kash.usuario.domain.exception.UserStateNotFoundException;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
