@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.financia.kash.shared.domain.utils.Default;
 import com.financia.kash.usuario.domain.enums.RoleUser;
 import com.financia.kash.usuario.domain.enums.UserStatus;
@@ -15,7 +17,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(onConstructor_ = { @Default })
 @Builder
 public class User {
     private final UUID id;
@@ -77,6 +78,33 @@ public class User {
             throw new User2FAEnabledException(this.id);
         }
         this.enable2fa = true;
+    }
+
+    @Default
+    @JsonCreator
+    public User(
+            @JsonProperty("id") UUID id,
+            @JsonProperty("name") String name,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("email") String email,
+            @JsonProperty("password") String password,
+            @JsonProperty("creationDate") LocalDate creationDate,
+            @JsonProperty("updateDate") LocalDate updateDate,
+            @JsonProperty("status") UserStatus status,
+            @JsonProperty("role") RoleUser role,
+            @JsonProperty("secret2fa") String secret2fa,
+            @JsonProperty("enable2fa") boolean enable2fa) {
+        this.id = id;
+        this.name = name;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.creationDate = creationDate;
+        this.updateDate = updateDate;
+        this.status = status;
+        this.role = role;
+        this.secret2fa = secret2fa;
+        this.enable2fa = enable2fa;
     }
 
 }

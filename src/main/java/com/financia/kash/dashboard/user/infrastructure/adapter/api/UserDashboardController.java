@@ -35,10 +35,9 @@ public class UserDashboardController {
     private final FinancialEvolutionUseCase financialEvolutionUseCase;
     private final ExpensesCategoryUseCase expensesCategoryUseCase;
 
-    @GetMapping("/sumary")
+    @GetMapping("/summary")
     public Mono<ResponseEntity<DashboardSummary>> dashboard(@AuthenticationPrincipal UserEntity user,
             @RequestParam LocalDate from) {
-        log.info("dashboard");
         return dashboardSummaryUseCase
                 .dashboardSummary(new DashboardSummaryCommand(user.getId(), from, LocalDate.now()))
                 .map(ResponseEntity::ok);
