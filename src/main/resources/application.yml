@@ -3,3 +3,6 @@ spring:
     name: kash
   profiles:
     active: ${PROFILE:dev}
+
+server:
+  port: ${SERVER_PORT:8080}
