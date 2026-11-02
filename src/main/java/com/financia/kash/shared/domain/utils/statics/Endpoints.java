@@ -1,7 +1,7 @@
 package com.financia.kash.shared.domain.utils.statics;
 
 public class Endpoints {
-        public final static String ENDPOINTS_FREE[] = { "/api/v1/auth/login", "/api/v1/auth/register",
+        public final static String ENDPOINTS_FREE[] = { "/", "/api/v1/auth/login", "/api/v1/auth/register",
                         "/api/v1/auth/verify-2fa", "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html", "/actuator/health" };
