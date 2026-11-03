@@ -8,6 +8,9 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
+import io.lettuce.core.resource.ClientResources;
+import io.netty.resolver.DefaultAddressResolverGroup;
+
 @Configuration
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
@@ -19,12 +22,24 @@ public class RedisConfig {
     @Value("${spring.data.redis.password}")
     private String password;
 
+    // 1. Fuerza a Lettuce a usar el resolvedor DNS nativo del JDK (evita
+    // <unresolved> en Netty/Alpine)
+    @Bean(destroyMethod = "shutdown")
+    public ClientResources clientResources() {
+        return ClientResources.builder()
+                .addressResolverGroup(DefaultAddressResolverGroup.INSTANCE)
+                .build();
+    }
+
+    // 2. Configura la conexión reactiva con SSL explícito y limpia espacios
+    // invisibles
     @Bean
-    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host, port);
-        redisConfig.setPassword(password);
+    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(ClientResources clientResources) {
+        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host.trim(), port);
+        redisConfig.setPassword(password.trim());
 
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+                .clientResources(clientResources)
                 .useSsl()
                 .build();
 
