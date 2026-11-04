@@ -1,4 +1,4 @@
-package com.financia.kash.analisis.infrastructure.adapter.database;
+package com.financia.kash.analisis.infrastructure.adapter.database.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

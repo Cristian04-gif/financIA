@@ -98,7 +98,21 @@ public class MovementService
                 }
                 return categoryRepositoryPort.findById(command.category().categoryId())
                                 .flatMap(category -> saveMovement(command, category))
-                                .flatMap(mot -> evaluateBudgetNotification(mot, command.username()).thenReturn(mot));
+                                .flatMap(mot -> evaluateBudgetNotification(mot, command.username())
+                                                .flatMap(e -> budgetForMovementPort
+                                                                .retriveBudgetBtUserIdAndCategoryId(
+                                                                                mot.getUserId(),
+                                                                                mot.getCategoryId())
+                                                                .doOnSuccess(budget -> CacheKeys
+                                                                                .clearAllCacheMovements(
+                                                                                                cacheService.redisTemplate(),
+                                                                                                command.userId(),
+                                                                                                mot.getId(),
+                                                                                                mot.getAccountId(),
+                                                                                                budget.id()))
+
+                                                )
+                                                .thenReturn(mot));
         }
 
         private Mono<Movement> saveMovement(CreateMovementCommand command, Category category) {
@@ -117,12 +131,6 @@ public class MovementService
                                         return movementRepositoryPort.save(motion)
                                                         .flatMap(mot -> saveAccountForMovementPort
                                                                         .save(account)
-                                                                        .doOnSuccess(e -> CacheKeys
-                                                                                        .clearAllCacheMovements(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        command.userId(),
-                                                                                                        mot.getId(),
-                                                                                                        mot.getAccountId()))
 
                                                                         .thenReturn(mot));
                                 });
@@ -175,12 +183,18 @@ public class MovementService
                                                         account.receive(movement.getAmount());
                                                         return saveAccountForMovementPort.save(account)
                                                                         .then(movementRepositoryPort.delete(movementId)
-                                                                                        .doOnSuccess(e -> CacheKeys
-                                                                                                        .clearAllCacheMovements(
-                                                                                                                        cacheService.redisTemplate(),
+                                                                                        .flatMap(e -> budgetForMovementPort
+                                                                                                        .retriveBudgetBtUserIdAndCategoryId(
                                                                                                                         movement.getUserId(),
-                                                                                                                        movementId,
-                                                                                                                        movement.getAccountId())));
+                                                                                                                        movement.getCategoryId())
+                                                                                                        .doOnSuccess(budget -> CacheKeys
+                                                                                                                        .clearAllCacheMovements(
+                                                                                                                                        cacheService.redisTemplate(),
+                                                                                                                                        movement.getUserId(),
+                                                                                                                                        movementId,
+                                                                                                                                        movement.getAccountId(),
+                                                                                                                                        budget.id())))
+                                                                                        .then());
                                                 }));
 
         }
