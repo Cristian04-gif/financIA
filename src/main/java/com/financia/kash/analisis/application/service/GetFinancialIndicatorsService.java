@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.financia.kash.analisis.application.port.output.FinancialDataPort;
 import com.financia.kash.analisis.application.port.output.FinancialDataPort.FinancialTotals;
-import com.financia.kash.analisis.domain.model.ExpenseByCategory;
-import com.financia.kash.analisis.domain.model.FinancialIndicators;
+import com.financia.kash.analisis.domain.model.indicators.ExpenseByCategory;
+import com.financia.kash.analisis.domain.model.indicators.FinancialIndicators;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;

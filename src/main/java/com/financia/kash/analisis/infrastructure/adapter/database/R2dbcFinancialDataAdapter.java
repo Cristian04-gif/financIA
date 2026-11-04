@@ -8,7 +8,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.analisis.application.port.output.FinancialDataPort;
-import com.financia.kash.analisis.domain.model.ExpenseByCategory;
+import com.financia.kash.analisis.domain.model.indicators.ExpenseByCategory;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;

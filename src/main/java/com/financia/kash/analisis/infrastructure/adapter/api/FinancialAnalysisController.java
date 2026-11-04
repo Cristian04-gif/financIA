@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.financia.kash.analisis.application.service.GetFinancialIndicatorsService;
-import com.financia.kash.analisis.domain.model.FinancialIndicators;
+import com.financia.kash.analisis.domain.model.indicators.FinancialIndicators;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;

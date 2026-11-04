@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.financia.kash.analisis.domain.model.ExpenseByCategory;
+import com.financia.kash.analisis.domain.model.indicators.ExpenseByCategory;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
