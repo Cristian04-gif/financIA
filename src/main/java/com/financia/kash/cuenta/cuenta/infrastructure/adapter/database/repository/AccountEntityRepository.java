@@ -28,4 +28,12 @@ public interface AccountEntityRepository extends ReactiveCrudRepository<AccountE
 
     Flux<AccountProject> findAllByUserIdAndType(UUID userId, AccountType type);
 
+    @Query("""
+            SELECT
+            *FROM cuentas
+            WHERE id IN (:sourceId, :targetId)
+            AND usuario_id = :userId;
+                        """)
+    Flux<AccountEntity> findAccountsForIdAndUser(UUID sourceId, UUID targetId, UUID userId);
+
 }
