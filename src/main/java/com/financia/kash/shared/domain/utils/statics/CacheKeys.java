@@ -37,6 +37,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteInidividualAccount(ReactiveStringRedisTemplate redisTemplate, UUID accountId) {
+        if (accountId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String cacheIndividual = account(accountId);
         return redisTemplate.opsForValue().delete(cacheIndividual);
 
@@ -80,6 +83,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteIndividualTransfer(ReactiveStringRedisTemplate redisTemplate, UUID transferId) {
+        if (transferId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = transfer(transferId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -114,6 +120,9 @@ public class CacheKeys {
 
     private static Mono<Boolean> deleteIndividualObjective(ReactiveStringRedisTemplate redisTemplate,
             UUID objectiveId) {
+        if (objectiveId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = objective(objectiveId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -182,6 +191,9 @@ public class CacheKeys {
     }
 
     public static Mono<Boolean> deleteCategory(ReactiveStringRedisTemplate redisTemplate, UUID categoryId) {
+        if (categoryId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = category(categoryId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -227,6 +239,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteMovement(ReactiveStringRedisTemplate redisTemplate, UUID movementId) {
+        if (movementId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = movements(movementId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -253,6 +268,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteIndividualSub(ReactiveStringRedisTemplate redisTemplate, UUID subId) {
+        if (subId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = subscription(subId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -284,6 +302,9 @@ public class CacheKeys {
     }
 
     public static Mono<Boolean> deleteIndividualBudget(ReactiveStringRedisTemplate redisTemplate, UUID budgetId) {
+        if (budgetId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = budget(budgetId);
         return redisTemplate.opsForValue().delete(key);
     }

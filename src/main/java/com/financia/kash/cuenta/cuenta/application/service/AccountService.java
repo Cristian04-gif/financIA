@@ -135,11 +135,7 @@ public class AccountService
                                 command.initialBalance());
 
                 return accountRespotoryPort.save(account)
-                                .doOnSuccess(accountSaved -> {
-                                        CacheKeys.clearAllCacheAccounts(
-                                                        cacheService.redisTemplate(),
-                                                        accountSaved.getUserId(), accountSaved.getId());
-
+                                .flatMap(accountSaved -> {
                                         Map<String, Object> data = Map.of(
                                                         "id", accountSaved.getId(),
                                                         "userId", accountSaved.getUserId(),
@@ -149,6 +145,11 @@ public class AccountService
 
                                         notificationService.sendToUser(command.username(),
                                                         NotificationMessage.sendAccountCreationNotification(data));
+
+                                        return CacheKeys.clearAllCacheAccounts(
+                                                        cacheService.redisTemplate(),
+                                                        accountSaved.getUserId(), accountSaved.getId())
+                                                        .thenReturn(accountSaved);
                                 });
         }
 
@@ -156,8 +157,10 @@ public class AccountService
         public Mono<Void> changeStatusAcount(UUID accountId) {
                 return getMyAccountById(accountId).flatMap(account -> {
                         account.changeStatus();
-                        return accountRespotoryPort.save(account).doOnSuccess(accountSaved -> CacheKeys
-                                        .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(),
+                        return accountRespotoryPort.save(account)
+                                        .flatMap(accountSaved -> CacheKeys.clearAllCacheAccounts(
+                                                        cacheService.redisTemplate(),
+                                                        accountSaved.getUserId(),
                                                         accountId))
                                         .then();
                 });

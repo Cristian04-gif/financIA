@@ -94,8 +94,8 @@ public class SubscriptionService
                 return subscriptionRepositoryPort.findById(subsId).flatMap(subs -> {
                         subs.changeStatus();
                         return subscriptionRepositoryPort.save(subs)
-                                        .doOnSuccess(e -> CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
-                                                        subs.getUserId(), subsId));
+                                        .flatMap(saved -> CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
+                                                        saved.getUserId(), subsId));
                 }).then();
         }
 
@@ -127,12 +127,11 @@ public class SubscriptionService
                                                                         .save(movement)
                                                                         .then(subscriptionRepositoryPort.save(sub))
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .doOnSuccess(e -> CacheKeys
-                                                                                        .clearAllCacheSubscription(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        sub.getUserId(),
-                                                                                                        sub.getId(),
-                                                                                                        sub.getPayingAccountId()))
+                                                                        .then(CacheKeys.clearAllCacheSubscription(
+                                                                                        cacheService.redisTemplate(),
+                                                                                        sub.getUserId(),
+                                                                                        sub.getId(),
+                                                                                        sub.getPayingAccountId()))
                                                                         .then(sendNotification(sub, account.getName(),
                                                                                         false));
                                                 }))
@@ -165,12 +164,11 @@ public class SubscriptionService
                                                         return movementRepositoryPort.save(movement)
                                                                         .then(subscriptionRepositoryPort.save(ingreso))
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .doOnSuccess(e -> CacheKeys
-                                                                                        .clearAllCacheSubscription(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        ingreso.getUserId(),
-                                                                                                        ingreso.getId(),
-                                                                                                        ingreso.getPayingAccountId()))
+                                                                        .then(CacheKeys.clearAllCacheSubscription(
+                                                                                        cacheService.redisTemplate(),
+                                                                                        ingreso.getUserId(),
+                                                                                        ingreso.getId(),
+                                                                                        ingreso.getPayingAccountId()))
                                                                         .then(sendNotification(ingreso,
                                                                                         account.getName(), true));
                                                 }))

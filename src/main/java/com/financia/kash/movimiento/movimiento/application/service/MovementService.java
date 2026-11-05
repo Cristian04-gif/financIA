@@ -122,7 +122,7 @@ public class MovementService
         private Mono<Movement> saveMovement(CreateMovementCommand command, Category category) {
                 return accountForMovementPort.findMyAccountById(command.accountId())
                                 .flatMap(account -> {
-                                        if (account.getUserId().equals(command.userId())) {
+                                        if (!account.getUserId().equals(command.userId())) {
                                                 return Mono.error(new AccountNotBelongUserException());
                                         }
                                         account.validateAccountIsActive();
