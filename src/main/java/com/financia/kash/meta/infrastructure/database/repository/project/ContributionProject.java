@@ -7,16 +7,16 @@ import java.util.UUID;
 import com.financia.kash.meta.domain.enums.ObjectiveState;
 
 public record ContributionProject(
-                UUID id,
-                UUID objective_id,
-                String name_objective,
-                String description_objective,
-                BigDecimal current_amount,
-                BigDecimal target_amount,
-                Double percentage_progress,
-                ObjectiveState status,
-                BigDecimal amount,
-                LocalDate date,
-                String description) {
+        UUID id,
+        UUID objective_id,
+        String name_objective,
+        String description_objective,
+        BigDecimal current_amount,
+        BigDecimal target_amount,
+        Double percentage_progress,
+        ObjectiveState status,
+        BigDecimal monto,
+        LocalDate fecha,
+        String descripcion) {
 
 }
