@@ -110,12 +110,12 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                         MovementsMonth anterior = list.getLast();
 
                                         Double actualIngreso = actual.totalIncome() != null
-                                                        || !actual.totalIncome().equals(BigDecimal.ZERO)
+                                                        && !actual.totalIncome().equals(BigDecimal.ZERO)
                                                                         ? actual.totalIncome().doubleValue()
                                                                         : 0.00;
                                         Double anteriorIngreso = anterior.totalIncome() != null
-                                                        || !anterior.totalExpenses().equals(BigDecimal.ZERO)
-                                                                        ? anterior.totalExpenses().doubleValue()
+                                                        && !anterior.totalIncome().equals(BigDecimal.ZERO)
+                                                                        ? anterior.totalIncome().doubleValue()
                                                                         : 0.00;
 
                                         Double variacionIngresos = actualIngreso != 0.00 && anteriorIngreso != 0.00
@@ -123,8 +123,6 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                                                         * 100
                                                         : 0.00;
 
-                                        System.out.println("ingreso actual: " + actualIngreso);
-                                        System.out.println("anterior ingreso: " + anteriorIngreso);
                                         System.out.println(variacionIngresos);
 
                                         Double actualGasto = actual.totalExpenses() != null
@@ -159,7 +157,8 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                         return Flux.fromIterable(budget.categories()).flatMap(category -> {
 
                                 return retrieveAllTransactionsPort
-                                                .retrieveAllTransactionByCategory(userId, category.id(), from, until);
+                                                .retrieveAllTransactionByCategory(userId, category.categoryId(), from,
+                                                                until);
                         });
                 });
 

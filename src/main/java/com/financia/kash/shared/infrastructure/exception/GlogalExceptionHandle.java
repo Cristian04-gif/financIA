@@ -54,7 +54,7 @@ public class GlogalExceptionHandle {
 
         ErrorResponse response = new ErrorResponse(exception.getMessage(), exception.getClass().getSimpleName());
 
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
     }
 
     @ExceptionHandler({ JwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class })

@@ -42,9 +42,6 @@ public class MovementEntity implements HasUuid {
     @Column(value = "monto")
     private BigDecimal amount;
 
-    // @Column(value = "fecha_emision")
-    // private LocalDate date;
-
     @Column(value = "descripcion")
     private String description;
 

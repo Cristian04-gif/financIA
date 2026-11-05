@@ -43,7 +43,7 @@ public class MovementAuthorizationManager implements ReactiveAuthorizationManage
         return authentication.flatMap(auth -> {
             String emailUser = auth.getName();
 
-            return userStatusUseCase.isBloked(emailUser).flatMap(blocked -> {
+            return userStatusUseCase.isActive(emailUser).flatMap(blocked -> {
                 if (!blocked) {
                     return Mono.just(new AuthorizationDecision(false));
                 }

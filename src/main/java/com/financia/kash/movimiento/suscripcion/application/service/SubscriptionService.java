@@ -83,9 +83,9 @@ public class SubscriptionService
                                                         command.name(),
                                                         command.amount(), command.frequency(), command.type(),
                                                         command.payDay()))
-                                        .doOnSuccess(sub -> CacheKeys.deleteAllCacheUserSubscription(
+                                        .flatMap(sub -> CacheKeys.deleteAllCacheUserSubscription(
                                                         cacheService.redisTemplate(),
-                                                        sub.getUserId()));
+                                                        sub.getUserId()).thenReturn(sub));
                 });
         }
 
@@ -94,8 +94,8 @@ public class SubscriptionService
                 return subscriptionRepositoryPort.findById(subsId).flatMap(subs -> {
                         subs.changeStatus();
                         return subscriptionRepositoryPort.save(subs)
-                                        .doOnSuccess(e -> CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
-                                                        subs.getUserId(), subsId));
+                                        .flatMap(saved -> CacheKeys.clearCacheSubscription(cacheService.redisTemplate(),
+                                                        saved.getUserId(), subsId));
                 }).then();
         }
 
@@ -122,15 +122,18 @@ public class SubscriptionService
                                                                                         + " con la cuenta "
                                                                                         + account.getName());
 
+                                                        sub.setNextPayDay();
                                                         return movementRepositoryPort
                                                                         .save(movement)
+                                                                        .then(subscriptionRepositoryPort.save(sub))
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .doOnSuccess(e -> CacheKeys.clearAllCacheSubscription(
+                                                                        .then(CacheKeys.clearAllCacheSubscription(
                                                                                         cacheService.redisTemplate(),
                                                                                         sub.getUserId(),
                                                                                         sub.getId(),
                                                                                         sub.getPayingAccountId()))
-                                                                        .then(sendNotification(sub, account.getName(), false));
+                                                                        .then(sendNotification(sub, account.getName(),
+                                                                                        false));
                                                 }))
                                 .then();
         }
@@ -156,15 +159,18 @@ public class SubscriptionService
                                                                                         + ingreso.getName()
                                                                                         + " a la cuenta "
                                                                                         + account.getName());
+
+                                                        ingreso.setNextPayDay();
                                                         return movementRepositoryPort.save(movement)
+                                                                        .then(subscriptionRepositoryPort.save(ingreso))
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .doOnSuccess(e -> CacheKeys
-                                                                                        .clearAllCacheSubscription(
-                                                                                                        cacheService.redisTemplate(),
-                                                                                                        ingreso.getUserId(),
-                                                                                                        ingreso.getId(),
-                                                                                                        ingreso.getPayingAccountId()))
-                                                                        .then(sendNotification(ingreso, account.getName(), true));
+                                                                        .then(CacheKeys.clearAllCacheSubscription(
+                                                                                        cacheService.redisTemplate(),
+                                                                                        ingreso.getUserId(),
+                                                                                        ingreso.getId(),
+                                                                                        ingreso.getPayingAccountId()))
+                                                                        .then(sendNotification(ingreso,
+                                                                                        account.getName(), true));
                                                 }))
                                 .then();
         }

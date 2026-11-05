@@ -2,6 +2,7 @@ package com.financia.kash.movimiento.movimiento.infrastructure.adapter.database.
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -67,7 +68,7 @@ public class MovementEntityQueryrepository {
                                         String category_type = row.get("category_type", String.class);
                                         BigDecimal monto = row.get("monto", BigDecimal.class);
                                         String descripcion = row.get("descripcion", String.class);
-                                        LocalDate date_issue = row.get("date_issue", LocalDate.class);
+                                        LocalDateTime date_issue = row.get("date_issue", LocalDateTime.class);
                                         String url_comprobate = row.get("url_comprobate", String.class);
                                         return new MovementProject(movement_id, account_id, account_name, category_id,
                                                         category_name,
@@ -115,7 +116,7 @@ public class MovementEntityQueryrepository {
                                         String category_type = row.get("category_type", String.class);
                                         BigDecimal monto = row.get("monto", BigDecimal.class);
                                         String descripcion = row.get("descripcion", String.class);
-                                        LocalDate date_issue = row.get("date_issue", LocalDate.class);
+                                        LocalDateTime date_issue = row.get("date_issue", LocalDateTime.class);
                                         String url_comprobate = row.get("url_comprobate", String.class);
                                         return new MovementProject(movement_id, account_id, account_name, category_id,
                                                         category_name,

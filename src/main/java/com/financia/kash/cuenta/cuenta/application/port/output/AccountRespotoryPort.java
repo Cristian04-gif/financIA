@@ -18,4 +18,6 @@ public interface AccountRespotoryPort {
 
     Mono<Void> delete(UUID accountId);
 
+    Flux<Account> findAccountsMakeTransfers(UUID sourceId, UUID targetId, UUID userId);
+
 }

@@ -9,7 +9,7 @@ CREATE TYPE tipo_categoria AS ENUM ('INGRESOS', 'GASTOS', 'AHORRO');
 CREATE TYPE tipo_cuenta AS ENUM ('EFECTIVO', 'BANCO', 'BILLETERA_DIGITAL', 'OTRO');
 CREATE TYPE tipo_movimiento AS ENUM ('INGRESO', 'EGRESO', 'AHORRO');
 CREATE TYPE frecuencia_suscripcion AS ENUM ('MENSUAL', 'ANUAL', 'SEMANAL');
-CREATE TYPE estado_meta AS ENUM ('INICIADA', 'EN_PROCESO', 'PAUSADA', 'REANUDADA', 'COMPLETADA', 'CANCELADA');
+CREATE TYPE estado_meta AS ENUM ('INICIADA', 'EN_PROCESO', 'PAUSADA', 'REANUDADA', 'COMPLETADA', 'CANCELADA', 'FINALIZADA');
 
 
 -- ============================================================
@@ -209,7 +209,7 @@ CREATE INDEX IF NOT EXISTS idx_movimientos_usuario_cat_fecha
 CREATE TABLE IF NOT EXISTS transferencias (
     id UUID NOT NULL,
     monto NUMERIC(14,2) NOT NULL,
-    fecha_creacion DATE NOT NULL,
+    fecha_creacion TIMESTAMP(6) WITHOUT TIME ZONE NOT NULL,
     descripcion VARCHAR(255),
     cuenta_destino_id UUID NOT NULL,
     cuenta_origen_id UUID NOT NULL,

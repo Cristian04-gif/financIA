@@ -41,7 +41,7 @@ public class TransferAuthorizationManager implements ReactiveAuthorizationManage
         return authentication.flatMap(auth -> {
             String emailuser = auth.getName();
 
-            return userStatusUseCase.isBloked(emailuser).flatMap(blocked -> {
+            return userStatusUseCase.isActive(emailuser).flatMap(blocked -> {
                 if (!blocked) {
                     return Mono.just(new AuthorizationDecision(false));
                 }

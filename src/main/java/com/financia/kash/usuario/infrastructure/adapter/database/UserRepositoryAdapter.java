@@ -73,8 +73,8 @@ public class UserRepositoryAdapter
     }
 
     @Override
-    public Mono<Boolean> isBlocked(String email) {
-        return userRepository.isBlocked(email);
+    public Mono<Boolean> isActive(String email) {
+        return userRepository.isActive(email);
     }
 
 }

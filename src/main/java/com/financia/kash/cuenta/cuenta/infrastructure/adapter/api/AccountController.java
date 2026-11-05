@@ -75,7 +75,8 @@ public class AccountController {
             @RequestBody @Valid TransferMoneyRequest request,
             @AuthenticationPrincipal UserEntity user) {
         return transferMoneyUseCase
-                .transfer(new TransferMoneyCommand(user.getUsername(), request.idSource(), request.idTarget(),
+                .transfer(new TransferMoneyCommand(user.getUsername(), user.getId(), request.idSource(),
+                        request.idTarget(),
                         request.amount(),
                         request.description()))
                 .thenReturn(ResponseEntity.noContent().build());
