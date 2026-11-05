@@ -83,9 +83,9 @@ public class SubscriptionService
                                                         command.name(),
                                                         command.amount(), command.frequency(), command.type(),
                                                         command.payDay()))
-                                        .doOnSuccess(sub -> CacheKeys.deleteAllCacheUserSubscription(
+                                        .flatMap(sub -> CacheKeys.deleteAllCacheUserSubscription(
                                                         cacheService.redisTemplate(),
-                                                        sub.getUserId()));
+                                                        sub.getUserId()).thenReturn(sub));
                 });
         }
 

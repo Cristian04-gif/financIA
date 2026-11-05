@@ -73,16 +73,7 @@ public class AccountService
                                                                         .then(accountRespotoryPort.save(target)
                                                                                         .thenReturn(trans)));
 
-                                }).doOnSuccess(trans -> {
-                                        CacheKeys.clearAllCacheTransfers(
-                                                        cacheService.redisTemplate(),
-                                                        command.userId(),
-                                                        trans.getSourceAccount(),
-                                                        trans.getDestinationAccount(),
-                                                        trans.getId());
-                                        log.info("Caché de transferencias invalidado para usuario: {}",
-                                                        command.userId());
-
+                                }).flatMap(trans -> {
                                         Map<String, Object> metadata = Map.of(
                                                         "transferId", trans.getId(),
                                                         "sourceAccount", trans.getSourceAccount(),
@@ -94,7 +85,16 @@ public class AccountService
                                                                         .sendNotificationSuccessfulTransfer(metadata));
                                         log.info("Notificación de transferencia exitosa enviada a: {}",
                                                         command.username());
-                                }).then();
+
+                                        return CacheKeys.clearAllCacheTransfers(
+                                                        cacheService.redisTemplate(),
+                                                        command.userId(),
+                                                        trans.getSourceAccount(),
+                                                        trans.getDestinationAccount(),
+                                                        trans.getId());
+                                }
+
+                ).then();
 
                 /////
 

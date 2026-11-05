@@ -80,9 +80,9 @@ public class FinancialObjectiveService
                         return new FinancialObjectives(command.userId(), command.name(), command.description(),
                                         command.targetAmount(), command.targetDate());
                 }).flatMap(financialObjectiveRepositoryPort::save)
-                                .doOnSuccess(objective -> CacheKeys.deleteAllObjectivesUser(
+                                .flatMap(objective -> CacheKeys.deleteAllObjectivesUser(
                                                 cacheService.redisTemplate(),
-                                                objective.getUserId())
+                                                objective.getUserId()).thenReturn(objective)
                                 // return Mono.when(borrarTodo).thenReturn(objective);
                                 );
         }

@@ -92,7 +92,7 @@ public class TransferService implements GetTransferUserCase, UpdateTransferUseCa
 
                                 return accountRespotoryPort.save(origin).then(accountRespotoryPort.save(detination))
                                                 .then(transferRepositoryPort.save(transfer))
-                                                .doOnSuccess(transfe -> CacheKeys.clearAllCacheTransfers(
+                                                .flatMap(transfe -> CacheKeys.clearAllCacheTransfers(
                                                                 cacheService.redisTemplate(), transfe.getUserId(),
                                                                 transfe.getSourceAccount(),
                                                                 transfe.getDestinationAccount(), transfe.getId()));

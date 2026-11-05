@@ -28,6 +28,7 @@ import com.financia.kash.movimiento.movimiento.application.port.output.MovementR
 import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
+import com.financia.kash.movimiento.movimiento.domain.exception.AccountNotBelongUserException;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
@@ -121,6 +122,9 @@ public class MovementService
         private Mono<Movement> saveMovement(CreateMovementCommand command, Category category) {
                 return accountForMovementPort.findMyAccountById(command.accountId())
                                 .flatMap(account -> {
+                                        if (account.getUserId().equals(command.userId())) {
+                                                return Mono.error(new AccountNotBelongUserException());
+                                        }
                                         account.validateAccountIsActive();
                                         account.validateSufficientFunds(command.amount());
                                         account.transfer(command.amount());
