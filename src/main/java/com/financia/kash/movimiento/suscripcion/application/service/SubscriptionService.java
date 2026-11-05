@@ -122,15 +122,19 @@ public class SubscriptionService
                                                                                         + " con la cuenta "
                                                                                         + account.getName());
 
+                                                        sub.setNextPayDay();
                                                         return movementRepositoryPort
                                                                         .save(movement)
+                                                                        .then(subscriptionRepositoryPort.save(sub))
                                                                         .then(saveAccountoForSubscription.save(account))
-                                                                        .doOnSuccess(e -> CacheKeys.clearAllCacheSubscription(
-                                                                                        cacheService.redisTemplate(),
-                                                                                        sub.getUserId(),
-                                                                                        sub.getId(),
-                                                                                        sub.getPayingAccountId()))
-                                                                        .then(sendNotification(sub, account.getName(), false));
+                                                                        .doOnSuccess(e -> CacheKeys
+                                                                                        .clearAllCacheSubscription(
+                                                                                                        cacheService.redisTemplate(),
+                                                                                                        sub.getUserId(),
+                                                                                                        sub.getId(),
+                                                                                                        sub.getPayingAccountId()))
+                                                                        .then(sendNotification(sub, account.getName(),
+                                                                                        false));
                                                 }))
                                 .then();
         }
@@ -156,7 +160,10 @@ public class SubscriptionService
                                                                                         + ingreso.getName()
                                                                                         + " a la cuenta "
                                                                                         + account.getName());
+
+                                                        ingreso.setNextPayDay();
                                                         return movementRepositoryPort.save(movement)
+                                                                        .then(subscriptionRepositoryPort.save(ingreso))
                                                                         .then(saveAccountoForSubscription.save(account))
                                                                         .doOnSuccess(e -> CacheKeys
                                                                                         .clearAllCacheSubscription(
@@ -164,7 +171,8 @@ public class SubscriptionService
                                                                                                         ingreso.getUserId(),
                                                                                                         ingreso.getId(),
                                                                                                         ingreso.getPayingAccountId()))
-                                                                        .then(sendNotification(ingreso, account.getName(), true));
+                                                                        .then(sendNotification(ingreso,
+                                                                                        account.getName(), true));
                                                 }))
                                 .then();
         }

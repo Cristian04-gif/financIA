@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financia.kash.shared.domain.PaginationResponse;
 import com.financia.kash.shared.domain.exception.RedisException;
@@ -31,8 +31,9 @@ public class CacheService<T> {
         return redisTemplate.opsForValue().get(cacheKey)
                 .map(json -> {
                     try {
-                        return objectMapper.readValue(json, new TypeReference<PaginationResponse<T>>() {
-                        });
+                        JavaType javaType = objectMapper.getTypeFactory()
+                                .constructParametricType(PaginationResponse.class, type);
+                        return objectMapper.readValue(json, javaType);
                     } catch (JsonProcessingException e) {
                         throw new RedisException(e);
                     }

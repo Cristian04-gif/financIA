@@ -446,7 +446,7 @@ public class CacheKeys {
         Mono<Boolean> borrarIndividualObjetivo = deleteIndividualObjective(redisTemplate, objectiveId);
         Mono<Long> borrarTodoTransfers = deleteAllTranasferUser(redisTemplate, userId);
         Mono<Long> borrarTodoTransfersAccount = deleteAllTransfersAccount(redisTemplate, accountId);
-        Mono<Long> borrarTodoAccount = deleteAllCacheAccounts(redisTemplate, accountId);
+        Mono<Long> borrarTodoAccount = deleteAllCacheAccounts(redisTemplate, userId);
         Mono<Boolean> borrarIndividualAccount = deleteInidividualAccount(redisTemplate, accountId);
         Mono<Long> borrarTodoContribution = deleteAllContributionObjective(redisTemplate, objectiveId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
@@ -476,9 +476,11 @@ public class CacheKeys {
     public static Mono<Boolean> clearAllCacheMovements(ReactiveStringRedisTemplate redisTemplate, UUID userId,
             UUID movementId, UUID accountId, UUID budgetId) {
         Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
-        Mono<Boolean> borrarIndividual = movementId != null ? deleteMovement(redisTemplate, movementId) : Mono.just(Boolean.TRUE);
+        Mono<Boolean> borrarIndividual = movementId != null ? deleteMovement(redisTemplate, movementId)
+                : Mono.just(Boolean.TRUE);
         Mono<Long> borrarCuentas = deleteAllCacheAccounts(redisTemplate, userId);
-        Mono<Boolean> borrarCuentaIndividual = accountId != null ? deleteInidividualAccount(redisTemplate, accountId) : Mono.just(Boolean.TRUE);
+        Mono<Boolean> borrarCuentaIndividual = accountId != null ? deleteInidividualAccount(redisTemplate, accountId)
+                : Mono.just(Boolean.TRUE);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
         Mono<Boolean> borrarConsumption = budgetId != null
                 ? deleteIndividualBudgetConsumption(redisTemplate, userId, budgetId)

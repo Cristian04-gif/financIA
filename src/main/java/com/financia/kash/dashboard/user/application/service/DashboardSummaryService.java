@@ -110,11 +110,11 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                         MovementsMonth anterior = list.getLast();
 
                                         Double actualIngreso = actual.totalIncome() != null
-                                                        || !actual.totalIncome().equals(BigDecimal.ZERO)
+                                                        && !actual.totalIncome().equals(BigDecimal.ZERO)
                                                                         ? actual.totalIncome().doubleValue()
                                                                         : 0.00;
                                         Double anteriorIngreso = anterior.totalIncome() != null
-                                                        || !anterior.totalExpenses().equals(BigDecimal.ZERO)
+                                                        && !anterior.totalExpenses().equals(BigDecimal.ZERO)
                                                                         ? anterior.totalExpenses().doubleValue()
                                                                         : 0.00;
 
@@ -159,7 +159,8 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                         return Flux.fromIterable(budget.categories()).flatMap(category -> {
 
                                 return retrieveAllTransactionsPort
-                                                .retrieveAllTransactionByCategory(userId, category.id(), from, until);
+                                                .retrieveAllTransactionByCategory(userId, category.categoryId(), from,
+                                                                until);
                         });
                 });
 

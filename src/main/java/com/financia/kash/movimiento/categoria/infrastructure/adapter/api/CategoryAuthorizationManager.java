@@ -44,7 +44,7 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
         return authentication.flatMap(auth -> {
             String emailuser = auth.getName();
             log.info("email. {}", emailuser);
-            return userStatusUseCase.isBloked(emailuser).flatMap(blocked -> {
+            return userStatusUseCase.isActive(emailuser).flatMap(blocked -> {
 
                 if (!blocked) {
                     return Mono.just(new AuthorizationDecision(false));

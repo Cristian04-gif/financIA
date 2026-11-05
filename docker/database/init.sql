@@ -9,7 +9,7 @@ CREATE TYPE tipo_categoria AS ENUM ('INGRESOS', 'GASTOS', 'AHORRO');
 CREATE TYPE tipo_cuenta AS ENUM ('EFECTIVO', 'BANCO', 'BILLETERA_DIGITAL', 'OTRO');
 CREATE TYPE tipo_movimiento AS ENUM ('INGRESO', 'EGRESO', 'AHORRO');
 CREATE TYPE frecuencia_suscripcion AS ENUM ('MENSUAL', 'ANUAL', 'SEMANAL');
-CREATE TYPE estado_meta AS ENUM ('INICIADA', 'EN_PROCESO', 'PAUSADA', 'REANUDADA', 'COMPLETADA', 'CANCELADA');
+CREATE TYPE estado_meta AS ENUM ('INICIADA', 'EN_PROCESO', 'PAUSADA', 'REANUDADA', 'COMPLETADA', 'CANCELADA', 'FINALIZADA');
 
 
 -- ============================================================

@@ -26,6 +26,6 @@ public interface UserEntityRepository extends ReactiveCrudRepository<UserEntity,
                 where u.email = :email AND u.estado ='ACTIVO'
             )
             """)
-    Mono<Boolean> isBlocked(String email);
+    Mono<Boolean> isActive(String email);
 
 }
