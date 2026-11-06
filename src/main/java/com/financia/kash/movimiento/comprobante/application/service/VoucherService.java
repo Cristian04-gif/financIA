@@ -1,5 +1,6 @@
 package com.financia.kash.movimiento.comprobante.application.service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,13 +44,14 @@ public class VoucherService implements OcrUseCase {
 
         @Override
         public Mono<Voucher> OcrProcess(OrcProcessCommand command) {
-                List<String> models = aiCascadeProperties.getModelsCascade();
+                List<String> models = aiCascadeProperties.getOcrModels();
                 Resource imageResource = new ByteArrayResource(command.imageByte());
 
                 return Flux.fromIterable(models)
                                 .concatMap(modelName -> {
                                         log.info("probando OCR con modelo IA: {}", modelName);
                                         return ocrIA(imageResource, modelName, command.mimeType())
+                                                        .timeout(Duration.ofSeconds(30))
                                                         .onErrorResume(e -> {
                                                                 log.warn("Fallo con el modelo {} Buscando respaldo... Error: {}",
                                                                                 modelName,
@@ -63,11 +65,12 @@ public class VoucherService implements OcrUseCase {
         }
 
         private Mono<String> ocrIA(Resource image, String modelName, MimeType mimeType) {
-
-                return Mono.fromSupplier(() -> chatClient.prompt()
+                return Mono.fromCallable(() -> chatClient.prompt()
                                 .options(GoogleGenAiChatOptions.builder()
                                                 .model(modelName)
-                                                .temperature(0.2))
+                                                .temperature(0.2)
+                                                .thinkingBudget(0)
+                                                .responseMimeType("application/json"))
                                 .user(userSpec -> userSpec.text(Ocr.PROMPT_ANALIZER_VOUCHER)
                                                 .media(mimeType, image))
                                 .call()
@@ -84,8 +87,7 @@ public class VoucherService implements OcrUseCase {
                         Flux<Category> categoryFlux = categoryForVoucherPort.findCategoryForVoucher(userId,
                                         voucher.getExpenseCategory());
                         Flux<Account> accountFlux = accoutsForVoucherPort
-                                        .findAllMyAccountsAndType(userId, voucher.getPaymentMethod())
-                                        .switchIfEmpty(accoutsForVoucherPort.findAllMyAccounts(userId));
+                                        .findAllMyAccountsAndType(userId, voucher.getPaymentMethod());
 
                         return Mono.zip(categoryFlux
                                         .map(c -> new CategoryVoucher(c.getId(), c.getName(), c.getType().name()))

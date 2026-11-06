@@ -10,8 +10,6 @@ import com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundE
 import com.financia.kash.movimiento.categoria.domain.model.Category;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.mapping.CategoryMapper;
 import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryEntityRepository;
-import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.repository.CategoryentityQueryRepository;
-import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -20,11 +18,10 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 public class CategoryRepositoryAdapter
-        implements CategoryRepositoryPort, CategoryForVoucherPort, CategoryForObjectivesPort {
+        implements CategoryRepositoryPort, CategoryForObjectivesPort {
 
     private final CategoryEntityRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final CategoryentityQueryRepository categoryentityQueryRepository;
 
     @Override
     public Flux<Category> findGlobalCategories() {
@@ -57,11 +54,6 @@ public class CategoryRepositoryAdapter
     @Override
     public Mono<Void> delete(UUID id) {
         return categoryRepository.deleteById(id);
-    }
-
-    @Override
-    public Flux<Category> findCategoryForVoucher(UUID userId, String name) {
-        return categoryentityQueryRepository.findCategoryForVoucher(userId, name).map(categoryMapper::mapToDomain);
     }
 
 }

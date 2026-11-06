@@ -13,9 +13,11 @@ import com.financia.kash.cuenta.cuenta.application.port.input.TransferMoneyUseCa
 import com.financia.kash.cuenta.cuenta.application.port.input.command.CreateAccountCommand;
 import com.financia.kash.cuenta.cuenta.application.port.input.command.TransferMoneyCommand;
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
+import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.transferencia.application.port.output.TransferRepositoryPort;
 import com.financia.kash.cuenta.transferencia.domain.model.Transfer;
+import com.financia.kash.movimiento.comprobante.application.port.output.AccoutsForVoucherPort;
 import com.financia.kash.notificacion.application.service.NotificationService;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
@@ -30,7 +32,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Log4j2
 public class AccountService
-                implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase {
+                implements CreateAccountUseCase, DeleteAccountUseCase, GetAccountUseCase, TransferMoneyUseCase,
+                AccoutsForVoucherPort {
 
         private final AccountRespotoryPort accountRespotoryPort;
         private final TransferRepositoryPort transferRepositoryPort;
@@ -166,6 +169,13 @@ public class AccountService
                                         .then();
                 });
 
+        }
+
+        @Override
+        public Flux<Account> findAllMyAccountsAndType(UUID userId, String typeAccount) {
+                return this.getAllMyAccount(userId)
+                                .filter(account -> account.getType().equals(AccountType.valueOf(typeAccount)))
+                                .switchIfEmpty(getAllMyAccount(userId));
         }
 
 }

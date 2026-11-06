@@ -6,17 +6,15 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Configuration
 @ConfigurationProperties(prefix = "app.ai")
+@Getter
+@Setter
 public class AiCascadeProperties {
 
-    private List<String> modelsCascade = new ArrayList<>();
-
-    public List<String> getModelsCascade() {
-        return modelsCascade;
-    }
-
-    public void setModelsCascade(List<String> modelsCascade) {
-        this.modelsCascade = modelsCascade;
-    }
+    private List<String> ocrModels = new ArrayList<>();
+    private List<String> analysisModels = new ArrayList<>();
 }

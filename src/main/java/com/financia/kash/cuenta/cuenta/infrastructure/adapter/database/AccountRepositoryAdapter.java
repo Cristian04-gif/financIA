@@ -5,13 +5,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import com.financia.kash.cuenta.cuenta.application.port.output.AccountRespotoryPort;
-import com.financia.kash.cuenta.cuenta.domain.enums.AccountType;
 import com.financia.kash.cuenta.cuenta.domain.exception.AccountNotFoundException;
 import com.financia.kash.cuenta.cuenta.domain.model.Account;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.mapping.AccountMapper;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.database.repository.AccountEntityRepository;
 import com.financia.kash.meta.application.port.output.RetriveAccountForObjectivesPort;
-import com.financia.kash.movimiento.comprobante.application.port.output.AccoutsForVoucherPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.AccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.suscripcion.application.port.output.FindAccountForSubscription;
@@ -25,7 +23,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AccountRepositoryAdapter
         implements AccountRespotoryPort, AccountForMovementPort, SaveAccountForMovementPort,
-        FindAccountForSubscription, SaveAccountoForSubscription, AccoutsForVoucherPort,
+        FindAccountForSubscription, SaveAccountoForSubscription,
         RetriveAccountForObjectivesPort {
 
     private final AccountEntityRepository accountRepository;
@@ -57,12 +55,6 @@ public class AccountRepositoryAdapter
     @Override
     public Mono<Void> delete(UUID accountId) {
         return accountRepository.deleteById(accountId);
-    }
-
-    @Override
-    public Flux<Account> findAllMyAccountsAndType(UUID userId, String typeAccount) {
-        return accountRepository.findAllByUserIdAndType(userId, AccountType.valueOf(typeAccount.toUpperCase()))
-                .map(accountMapper::mapToDomain);
     }
 
     @Override

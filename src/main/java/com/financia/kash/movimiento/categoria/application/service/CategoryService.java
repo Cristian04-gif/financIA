@@ -15,6 +15,7 @@ import com.financia.kash.movimiento.categoria.application.port.input.command.Upd
 import com.financia.kash.movimiento.categoria.application.port.output.CategoryRepositoryPort;
 import com.financia.kash.movimiento.categoria.application.port.output.UserForCategoryPort;
 import com.financia.kash.movimiento.categoria.domain.model.Category;
+import com.financia.kash.movimiento.comprobante.application.port.output.CategoryForVoucherPort;
 import com.financia.kash.shared.application.service.CacheService;
 import com.financia.kash.shared.domain.utils.statics.CacheKeys;
 import com.financia.kash.usuario.domain.model.User;
@@ -27,7 +28,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CategoryService
         implements GetCategoriesUseCase, CreateCategoryUseCase, UpdateCategoryUseCase, DeleteMyCategoryUseCase,
-        ChangeStatusUseCase {
+        ChangeStatusUseCase, CategoryForVoucherPort {
 
     private final CategoryRepositoryPort categoryRepositoryPort;
     private final UserForCategoryPort userForCategoryPort;
@@ -117,6 +118,18 @@ public class CategoryService
         }).flatMap(category -> category.getUserId() == null
                 ? CacheKeys.clearAllGlobalCategories(cacheService.redisTemplate(), id)
                 : CacheKeys.clearAllUserCategories(cacheService.redisTemplate(), category.getUserId(), id)).then();
+    }
+
+    @Override
+    public Flux<Category> findCategoryForVoucher(UUID userId, String name) {
+        return getAllMyCategory(userId)
+                .filter(category -> category.getName().equalsIgnoreCase(name))
+                .switchIfEmpty(
+                        getGlobalCategories()
+                                .filter(category -> category.getName().equalsIgnoreCase(name))
+                                .switchIfEmpty(
+                                        getGlobalCategories()
+                                                .filter(category -> category.getParentCategoryId() == null)));
     }
 
 }
