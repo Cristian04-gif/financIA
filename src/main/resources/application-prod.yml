@@ -40,6 +40,7 @@ spring:
           max-idle: 10
           min-idle: 2
 
+
 security:
   secret-key: ${SECRET_KEY_SECURITY}
 
@@ -68,3 +69,8 @@ url:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+management:
+        health:
+          redis:
+            enabled: false
