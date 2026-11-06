@@ -34,11 +34,15 @@ public class RedisConfig {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host.trim(), port);
         redisConfig.setPassword(password.trim());
 
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .clientResources(clientResources)
-                .useSsl()
-                .build();
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder()
+                .clientResources(clientResources);
 
-        return new LettuceConnectionFactory(redisConfig, clientConfig);
+        boolean isLocal = host.contains("localhost") || host.contains("127.0.0.1");
+        if (!isLocal) {
+            builder.useSsl();
+
+        }
+        return new LettuceConnectionFactory(redisConfig, builder.build());
+
     }
 }
