@@ -82,8 +82,8 @@ public class FinancialObjectives {
     }
 
     private void calculatePercentage() {
-        this.percentageProgress = (this.currentAmount.divide(this.targetAmount))
-                .multiply(BigDecimal.valueOf(100)).doubleValue();
+        double percentege = (this.currentAmount.doubleValue() / this.targetAmount.doubleValue()) * 100;
+        this.percentageProgress = Math.round(percentege * 100.00) / 100.00;
     }
 
     @Default

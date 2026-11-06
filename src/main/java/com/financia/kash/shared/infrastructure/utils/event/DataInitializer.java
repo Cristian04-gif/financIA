@@ -30,9 +30,7 @@ public class DataInitializer implements CommandLineRunner {
                     null, false);
 
             return entity;
-        }).flatMap(userEntityRepository::save).doOnNext(e -> {
-            System.out.println("Se guardo el admin: " + e.getEmail());
-        })).subscribe();
+        }).flatMap(userEntityRepository::save)).subscribe();
     }
 
 }

@@ -76,11 +76,9 @@ public class VoucherService implements OcrUseCase {
         }
 
         private Mono<Voucher> mapModel(UUID userId, String res) {
-                log.info("Respuesta IA recibida: {}", res);
                 try {
                         // Limpieza preventiva en caso de que el modelo devuelva bloques ```json ... ```
                         String cleanJson = res.replaceAll("(?s)^```json\\s*", "").replaceAll("(?s)```$", "").trim();
-                        log.info("clean: {}", cleanJson);
                         Voucher voucher = objectMapper.readValue(cleanJson, Voucher.class);
 
                         Flux<Category> categoryFlux = categoryForVoucherPort.findCategoryForVoucher(userId,

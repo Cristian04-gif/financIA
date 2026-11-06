@@ -5,7 +5,10 @@ import java.util.UUID;
 
 import com.financia.kash.presupuesto.domain.exception.BudgetValidationException;
 
-public record BudgetCategory(UUID id, UUID categoryId, BigDecimal amountLimit) {
+public record BudgetCategory(
+        UUID id,
+        UUID categoryId,
+        BigDecimal amountLimit) {
     public BudgetCategory {
         if (categoryId == null) {
             throw new BudgetValidationException("La categoria es obligatoria");

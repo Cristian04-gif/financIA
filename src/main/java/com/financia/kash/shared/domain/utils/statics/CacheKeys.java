@@ -37,6 +37,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteInidividualAccount(ReactiveStringRedisTemplate redisTemplate, UUID accountId) {
+        if (accountId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String cacheIndividual = account(accountId);
         return redisTemplate.opsForValue().delete(cacheIndividual);
 
@@ -80,6 +83,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteIndividualTransfer(ReactiveStringRedisTemplate redisTemplate, UUID transferId) {
+        if (transferId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = transfer(transferId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -114,6 +120,9 @@ public class CacheKeys {
 
     private static Mono<Boolean> deleteIndividualObjective(ReactiveStringRedisTemplate redisTemplate,
             UUID objectiveId) {
+        if (objectiveId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = objective(objectiveId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -182,6 +191,9 @@ public class CacheKeys {
     }
 
     public static Mono<Boolean> deleteCategory(ReactiveStringRedisTemplate redisTemplate, UUID categoryId) {
+        if (categoryId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = category(categoryId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -227,6 +239,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteMovement(ReactiveStringRedisTemplate redisTemplate, UUID movementId) {
+        if (movementId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = movements(movementId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -253,6 +268,9 @@ public class CacheKeys {
     }
 
     private static Mono<Boolean> deleteIndividualSub(ReactiveStringRedisTemplate redisTemplate, UUID subId) {
+        if (subId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = subscription(subId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -284,18 +302,18 @@ public class CacheKeys {
     }
 
     public static Mono<Boolean> deleteIndividualBudget(ReactiveStringRedisTemplate redisTemplate, UUID budgetId) {
+        if (budgetId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = budget(budgetId);
         return redisTemplate.opsForValue().delete(key);
     }
 
-    public static Mono<Long> deleteAllCacheBudgetConsumption(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
-        Flux<String> keys = redisTemplate.scan(
-                ScanOptions.scanOptions().match("budget:consumption:user:%s:*".formatted(userId)).build());
-        return redisTemplate.delete(keys);
-    }
-
     public static Mono<Boolean> deleteIndividualBudgetConsumption(ReactiveStringRedisTemplate redisTemplate,
             UUID userId, UUID budgetId) {
+        if (budgetId == null) {
+            return Mono.just(Boolean.TRUE);
+        }
         String key = budgetConsumption(userId, budgetId);
         return redisTemplate.opsForValue().delete(key);
     }
@@ -384,17 +402,15 @@ public class CacheKeys {
             UUID budgetId) {
         Mono<Long> borrarBudgets = deleteAllCacheBudgets(redisTemplate, userId);
         Mono<Boolean> borrarBudgetIndividual = deleteIndividualBudget(redisTemplate, budgetId);
-        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
-        return Mono.when(borrarBudgets, borrarBudgetIndividual, borrarConsumption, borrarDashboard)
+        return Mono.when(borrarBudgets, borrarBudgetIndividual, borrarDashboard)
                 .thenReturn(Boolean.TRUE);
     }
 
     public static Mono<Boolean> clearAllCacheBudgets(ReactiveStringRedisTemplate redisTemplate, UUID userId) {
         Mono<Long> borrarBudgets = deleteAllCacheBudgets(redisTemplate, userId);
-        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
-        return Mono.when(borrarBudgets, borrarConsumption, borrarDashboard)
+        return Mono.when(borrarBudgets, borrarDashboard)
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -451,7 +467,7 @@ public class CacheKeys {
         Mono<Boolean> borrarIndividualObjetivo = deleteIndividualObjective(redisTemplate, objectiveId);
         Mono<Long> borrarTodoTransfers = deleteAllTranasferUser(redisTemplate, userId);
         Mono<Long> borrarTodoTransfersAccount = deleteAllTransfersAccount(redisTemplate, accountId);
-        Mono<Long> borrarTodoAccount = deleteAllCacheAccounts(redisTemplate, accountId);
+        Mono<Long> borrarTodoAccount = deleteAllCacheAccounts(redisTemplate, userId);
         Mono<Boolean> borrarIndividualAccount = deleteInidividualAccount(redisTemplate, accountId);
         Mono<Long> borrarTodoContribution = deleteAllContributionObjective(redisTemplate, objectiveId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
@@ -459,7 +475,6 @@ public class CacheKeys {
                 .when(borrarIndividualAccount, borrarIndividualObjetivo, borrarTodoAccount, borrarTodoTransfers,
                         borrarTodoTransfersAccount,
                         borratTodoObjetivo, borrarTodoContribution, borrarDashboard)
-                .doOnSuccess(e -> System.out.println("se borro todo el cache de objectives"))
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -479,13 +494,17 @@ public class CacheKeys {
 
     // MOVEMENTS
     public static Mono<Boolean> clearAllCacheMovements(ReactiveStringRedisTemplate redisTemplate, UUID userId,
-            UUID movementId, UUID accountId) {
+            UUID movementId, UUID accountId, UUID budgetId) {
         Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
-        Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
+        Mono<Boolean> borrarIndividual = movementId != null ? deleteMovement(redisTemplate, movementId)
+                : Mono.just(Boolean.TRUE);
         Mono<Long> borrarCuentas = deleteAllCacheAccounts(redisTemplate, userId);
-        Mono<Boolean> borrarCuentaIndividual = deleteInidividualAccount(redisTemplate, accountId);
+        Mono<Boolean> borrarCuentaIndividual = accountId != null ? deleteInidividualAccount(redisTemplate, accountId)
+                : Mono.just(Boolean.TRUE);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
-        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
+        Mono<Boolean> borrarConsumption = budgetId != null
+                ? deleteIndividualBudgetConsumption(redisTemplate, userId, budgetId)
+                : Mono.just(Boolean.TRUE);
         return Mono.when(borrarCacheTodo, borrarIndividual, borrarCuentas, borrarCuentaIndividual, borrarDashboard,
                 borrarConsumption)
                 .thenReturn(Boolean.TRUE);
@@ -496,9 +515,8 @@ public class CacheKeys {
         Mono<Long> borrarCacheTodo = deleteAllCacheMovementesUser(redisTemplate, userId);
         Mono<Boolean> borrarIndividual = deleteMovement(redisTemplate, movementId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
-        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
 
-        return Mono.when(borrarCacheTodo, borrarIndividual, borrarDashboard, borrarConsumption)
+        return Mono.when(borrarCacheTodo, borrarIndividual, borrarDashboard)
                 .thenReturn(Boolean.TRUE);
     }
 
@@ -511,9 +529,8 @@ public class CacheKeys {
         Mono<Long> borrarTodoacount = deleteAllCacheAccounts(redisTemplate, userId);
         Mono<Boolean> borrarIndividualAccount = deleteInidividualAccount(redisTemplate, accountId);
         Mono<Long> borrarDashboard = deleteAllCacheDashboard(redisTemplate, userId);
-        Mono<Long> borrarConsumption = deleteAllCacheBudgetConsumption(redisTemplate, userId);
         return Mono.when(borratTodoSubs, borrarSubIndividual, borrarTodoMovements, borrarTodoacount,
-                borrarIndividualAccount, borrarDashboard, borrarConsumption).thenReturn(Boolean.TRUE);
+                borrarIndividualAccount, borrarDashboard).thenReturn(Boolean.TRUE);
     }
 
     public static Mono<Boolean> clearCacheSubscription(ReactiveStringRedisTemplate redisTemplate, UUID userId,

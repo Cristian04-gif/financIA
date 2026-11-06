@@ -19,6 +19,9 @@ public interface ContributionObjectiveMapper {
 
     @Mapping(target = "objectiveId", ignore = true)
     @Mapping(target = "movementId", ignore = true)
+    @Mapping(source = "monto", target = "amount")
+    @Mapping(source = "fecha", target = "date")
+    @Mapping(source = "descripcion", target = "description")
     ContributeObjetive mapToDomain(ContributionProject contributionProject);
 
     @Mapping(source = "objective_id", target = "objective.id")
@@ -28,5 +31,8 @@ public interface ContributionObjectiveMapper {
     @Mapping(source = "target_amount", target = "objective.targetAmount")
     @Mapping(source = "percentage_progress", target = "objective.percentageProgress")
     @Mapping(source = "status", target = "objective.status")
+    @Mapping(source = "monto", target = "amount")
+    @Mapping(source = "fecha", target = "date")
+    @Mapping(source = "descripcion", target = "description")
     ContributionDTO mapToDomainDTO(ContributionProject contributionProject);
 }

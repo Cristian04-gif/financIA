@@ -53,9 +53,9 @@ public class JwtFilter implements WebFilter {
                 try {
                         boolean isTokenExpired = jwtService.isTokenExpired(token);
 
-                        boolean canByTokenRenewed = jwtService.canByTokenRenewed(token);
+                        // boolean canByTokenRenewed = jwtService.canByTokenRenewed(token);
 
-                        if (isTokenExpired && !canByTokenRenewed) {
+                        if (isTokenExpired) {
                                 return unauthorized(exchange,
                                                 "Token no válido o usuario ya autenticado");
                         }

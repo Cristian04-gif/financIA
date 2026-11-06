@@ -62,7 +62,7 @@ public class UserService
 
     @Override
     public Mono<Void> changePassword(ChangePasswordCommand command) {
-        return repositoryPort.getMe(command.id()).flatMap(user -> {
+        return findMe(command.id()).flatMap(user -> {
             user.changePassword(encoderForUserPort.ecoderPassword(command.newPassword()));
             return repositoryPort.save(user);
         }).flatMap(user -> CacheKeys.clearAllCacheUser(cacheService.redisTemplate(), user.getId(), user.getEmail()))

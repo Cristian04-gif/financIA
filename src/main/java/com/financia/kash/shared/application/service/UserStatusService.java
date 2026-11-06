@@ -18,10 +18,10 @@ public class UserStatusService implements UserStatusUseCase {
     private final CacheService<Boolean> cacheService;
 
     @Override
-    public Mono<Boolean> isBloked(String emailUser) {
+    public Mono<Boolean> isActive(String emailUser) {
         String cacheKey = CacheKeys.userStatusBlocked(emailUser);
         return cacheService.retrieveMonoCache(cacheKey, Boolean.class)
-                .switchIfEmpty(blockedForAuthPort.isBlocked(emailUser)
+                .switchIfEmpty(blockedForAuthPort.isActive(emailUser)
                         .flatMap(blocked -> cacheService.saveMonoCache(cacheKey, blocked, 30)));
     }
 }

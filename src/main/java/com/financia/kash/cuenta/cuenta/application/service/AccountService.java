@@ -41,52 +41,64 @@ public class AccountService
         @Transactional
         public Mono<Void> transfer(TransferMoneyCommand command) {
 
-                Mono<Account> accountSource = accountRespotoryPort.findMyAccountById(command.idSource());
-                Mono<Account> accountTarget = accountRespotoryPort.findMyAccountById(command.idTarget());
+                return accountRespotoryPort.findAccountsMakeTransfers(command.idSource(),
+                                command.idTarget(), command.userId()).collectList().flatMap(accounts -> {
+                                        if (accounts.size() != 2) {
+                                                return Mono.error(new IllegalArgumentException(
+                                                                "Ambas cuentas tienen que pertenecer al usuario"));
+                                        }
+                                        Account source = accounts.getFirst();
+                                        Account target = accounts.getLast();
 
-                return Mono.zip(accountSource, accountTarget).flatMap(tupla -> {
-                        Account source = tupla.getT1();
-                        Account target = tupla.getT2();
+                                        if (source.getId().equals(target.getId())) {
+                                                return Mono.error(
+                                                                new IllegalArgumentException(
+                                                                                "No puedes hacer una trasnferencia entre las mismas cuentas"));
+                                        }
 
-                        if (source.getId().equals(target.getId())) {
-                                return Mono.error(
-                                                new IllegalArgumentException(
-                                                                "No puedes hacer una trasnferencia entre las mismas cuentas"));
-                        }
+                                        source.validateAccountIsActive();
+                                        source.validateSufficientFunds(command.amount());
 
-                        source.validateAccountIsActive();
-                        source.validateSufficientFunds(command.amount());
+                                        source.transfer(command.amount());
+                                        target.receive(command.amount());
 
-                        source.transfer(command.amount());
-                        target.receive(command.amount());
+                                        Transfer transfer = new Transfer(command.userId(), command.idSource(),
+                                                        command.idTarget(),
+                                                        command.amount(), command.description());
 
-                        Transfer transfer = new Transfer(source.getUserId(), command.idSource(), command.idTarget(),
-                                        command.amount(), command.description());
+                                        return transferRepositoryPort.save(transfer)
+                                                        .flatMap(trans -> accountRespotoryPort.save(source)
+                                                                        .then(accountRespotoryPort.save(target)
+                                                                                        .thenReturn(trans)));
 
-                        return transferRepositoryPort.save(transfer)
-                                        .flatMap(trans -> accountRespotoryPort.save(source)
-                                                        .then(accountRespotoryPort.save(target).thenReturn(trans)));
+                                })
+                                .flatMap(trans -> sendNotification(trans, command.username())
+                                                .then(CacheKeys.clearAllCacheTransfers(
+                                                                cacheService.redisTemplate(),
+                                                                command.userId(),
+                                                                trans.getSourceAccount(),
+                                                                trans.getDestinationAccount(),
+                                                                trans.getId())))
+                                .then();
 
-                }).doOnSuccess(trans -> {
-                        CacheKeys.clearAllCacheTransfers(
-                                        cacheService.redisTemplate(),
-                                        trans.getUserId(),
-                                        trans.getSourceAccount(),
-                                        trans.getDestinationAccount(),
-                                        trans.getId());
-                        log.info("Caché de transferencias invalidado para usuario: {}", trans.getUserId());
+                /////
 
-                        Map<String, Object> metadata = Map.of(
-                                        "transferId", trans.getId(),
-                                        "sourceAccount", trans.getSourceAccount(),
-                                        "destinationAccount", trans.getDestinationAccount(),
-                                        "amount", trans.getAmount());
+        }
 
-                        notificationService.sendToUser(command.username(),
-                                        NotificationMessage.sendNotificationSuccessfulTransfer(metadata));
-                        log.info("Notificación de transferencia exitosa enviada a: {}", command.username());
-                }).then();
+        private Mono<Void> sendNotification(Transfer trans, String username) {
+                Map<String, Object> metadata = Map.of(
+                                "transferId", trans.getId(),
+                                "sourceAccount", trans.getSourceAccount(),
+                                "destinationAccount", trans.getDestinationAccount(),
+                                "amount", trans.getAmount());
 
+                notificationService.sendToUser(username,
+                                NotificationMessage
+                                                .sendNotificationSuccessfulTransfer(metadata));
+                log.info("Notificación de transferencia exitosa enviada a: {}",
+                                username);
+
+                return Mono.empty();
         }
 
         @Override
@@ -112,7 +124,7 @@ public class AccountService
         public Mono<Void> deleteMyAccount(UUID accountId) {
                 return accountRespotoryPort.findMyAccountById(accountId)
                                 .flatMap(account -> accountRespotoryPort.delete(accountId)
-                                                .doOnSuccess(e -> CacheKeys.clearAllCacheAccounts(
+                                                .then(CacheKeys.clearAllCacheAccounts(
                                                                 cacheService.redisTemplate(),
                                                                 account.getUserId(), accountId)))
                                 .then();
@@ -124,11 +136,7 @@ public class AccountService
                                 command.initialBalance());
 
                 return accountRespotoryPort.save(account)
-                                .doOnSuccess(accountSaved -> {
-                                        CacheKeys.clearAllCacheAccounts(
-                                                        cacheService.redisTemplate(),
-                                                        accountSaved.getUserId(), accountSaved.getId());
-
+                                .flatMap(accountSaved -> {
                                         Map<String, Object> data = Map.of(
                                                         "id", accountSaved.getId(),
                                                         "userId", accountSaved.getUserId(),
@@ -138,6 +146,11 @@ public class AccountService
 
                                         notificationService.sendToUser(command.username(),
                                                         NotificationMessage.sendAccountCreationNotification(data));
+
+                                        return CacheKeys.clearAllCacheAccounts(
+                                                        cacheService.redisTemplate(),
+                                                        accountSaved.getUserId(), accountSaved.getId())
+                                                        .thenReturn(accountSaved);
                                 });
         }
 
@@ -145,8 +158,10 @@ public class AccountService
         public Mono<Void> changeStatusAcount(UUID accountId) {
                 return getMyAccountById(accountId).flatMap(account -> {
                         account.changeStatus();
-                        return accountRespotoryPort.save(account).doOnSuccess(accountSaved -> CacheKeys
-                                        .clearAllCacheAccounts(cacheService.redisTemplate(), accountSaved.getUserId(),
+                        return accountRespotoryPort.save(account)
+                                        .flatMap(accountSaved -> CacheKeys.clearAllCacheAccounts(
+                                                        cacheService.redisTemplate(),
+                                                        accountSaved.getUserId(),
                                                         accountId))
                                         .then();
                 });

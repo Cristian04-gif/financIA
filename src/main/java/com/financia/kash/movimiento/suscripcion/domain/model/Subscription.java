@@ -72,7 +72,12 @@ public class Subscription {
 
         switch (frequency) {
             case MENSUAL -> {
-                LocalDate nextPay = today.plusMonths(1);
+                LocalDate nextPay = null;
+                if (today.getDayOfMonth() < payDay) {
+                    nextPay = today.plusMonths(1);
+                } else {
+                    nextPay = LocalDate.of(today.getYear(), today.getMonth(), payDay);
+                }
                 int day = Math.min(payDay, nextPay.lengthOfMonth());
                 return nextPay.withDayOfMonth(day);
             }
@@ -120,4 +125,40 @@ public class Subscription {
         this.active = active;
     }
 
+    public void setNextPayDay() {
+        switch (this.frequency) {
+            case MENSUAL -> {
+                LocalDate nextPay = this.dateNextPayment.plusMonths(1);
+                int day = Math.min(this.payDay, nextPay.lengthOfMonth());
+                this.dateNextPayment = nextPay.withDayOfMonth(day);
+            }
+
+            case ANUAL -> {
+                LocalDate nextPay = this.dateNextPayment.plusYears(1);
+                int day = Math.min(this.payDay, nextPay.lengthOfMonth());
+                this.dateNextPayment = nextPay.withDayOfMonth(day);
+            }
+
+            case SEMANAL -> {
+                LocalDate nextPay = this.dateNextPayment.plusWeeks(1);
+                int day = Math.min(this.payDay, nextPay.lengthOfMonth());
+                this.dateNextPayment = nextPay.withDayOfMonth(day);
+            }
+        }
+    }
+
+    /*
+     * suscripcion
+     * -------------------------
+     * id
+     * usuario_id
+     * nombre
+     * monto
+     * periodicidad
+     * fecha_inicio
+     * proxima_fecha
+     * fecha_fin
+     * estado
+     * 
+     */
 }

@@ -60,7 +60,6 @@ public class SecurityConfig {
 
                                                                 .pathMatchers(Endpoints.OWNER_ACCESS_SUBSCRIPTIONS)
                                                                 .access(subscriptionAuthorizationManager)
-
                                                                 .pathMatchers(Endpoints.OWNER_ACCESS_FINANCIAL_OBJECTIVES)
                                                                 .access(objectiveAuthorizationManager)
 

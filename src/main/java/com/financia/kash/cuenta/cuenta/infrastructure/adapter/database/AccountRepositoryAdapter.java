@@ -65,4 +65,10 @@ public class AccountRepositoryAdapter
                 .map(accountMapper::mapToDomain);
     }
 
+    @Override
+    public Flux<Account> findAccountsMakeTransfers(UUID sourceId, UUID targetId, UUID userId) {
+        return accountRepository.findAccountsForIdAndUser(sourceId, targetId, userId)
+                .map(accountMapper::mapToDomain);
+    }
+
 }

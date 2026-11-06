@@ -80,9 +80,9 @@ public class FinancialObjectiveService
                         return new FinancialObjectives(command.userId(), command.name(), command.description(),
                                         command.targetAmount(), command.targetDate());
                 }).flatMap(financialObjectiveRepositoryPort::save)
-                                .doOnSuccess(objective -> CacheKeys.deleteAllObjectivesUser(
+                                .flatMap(objective -> CacheKeys.deleteAllObjectivesUser(
                                                 cacheService.redisTemplate(),
-                                                objective.getUserId())
+                                                objective.getUserId()).thenReturn(objective)
                                 // return Mono.when(borrarTodo).thenReturn(objective);
                                 );
         }
@@ -91,9 +91,11 @@ public class FinancialObjectiveService
         public Mono<Void> updateStatus(UpdateStatusCommand command) {
                 return financialObjectiveRepositoryPort.findById(command.id()).flatMap(objective -> {
                         objective.changeStatus(command.objectiveState());
-                        return financialObjectiveRepositoryPort.save(objective);
-                }).doOnSuccess(objective -> CacheKeys.clearAllCacheFinancialObjectives(cacheService.redisTemplate(),
-                                objective.getUserId(), objective.getId())).then();
+                        return financialObjectiveRepositoryPort.save(objective)
+                                        .flatMap(saved -> CacheKeys.clearAllCacheFinancialObjectives(
+                                                        cacheService.redisTemplate(),
+                                                        saved.getUserId(), saved.getId()));
+                }).then();
         }
 
         @Override
@@ -119,7 +121,6 @@ public class FinancialObjectiveService
                         return movementSaveForObjective.save(movement)
                                         .flatMap(movementSaved -> retriveAccountForObjectives.save(account)
                                                         .flatMap(accountSaved -> {
-
                                                                 ContributeObjetive contributeObjetive = objective
                                                                                 .contributeObjetive(
                                                                                                 movementSaved.getId(),
@@ -130,7 +131,7 @@ public class FinancialObjectiveService
                                                                                 .save(contributeObjetive)
                                                                                 .then(financialObjectiveRepositoryPort
                                                                                                 .save(objective))
-                                                                                .doOnSuccess(e -> CacheKeys
+                                                                                .flatMap(saved -> CacheKeys
                                                                                                 .clearAllCacheFinancialObjectivesContribution(
                                                                                                                 cacheService.redisTemplate(),
                                                                                                                 accountSaved.getUserId(),
@@ -157,10 +158,10 @@ public class FinancialObjectiveService
                 return financialObjectiveRepositoryPort.findExpired(LocalDate.now())
                                 .filter(obj -> obj.getStatus().equals(ObjectiveState.EN_PROCESO)).flatMap(obj -> {
                                         obj.changeStatus(ObjectiveState.FINALIZADA);
-                                        return financialObjectiveRepositoryPort.save(obj).doOnSuccess(
-                                                        objective -> CacheKeys.clearAllCacheFinancialObjectives(
+                                        return financialObjectiveRepositoryPort.save(obj)
+                                                        .flatMap(saved -> CacheKeys.clearAllCacheFinancialObjectives(
                                                                         cacheService.redisTemplate(),
-                                                                        objective.getUserId(), objective.getId()))
+                                                                        saved.getUserId(), saved.getId()))
                                                         .then(sendNotificacion(obj));
                                 }).then();
         }
