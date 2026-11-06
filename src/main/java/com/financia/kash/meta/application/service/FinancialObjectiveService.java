@@ -121,7 +121,6 @@ public class FinancialObjectiveService
                         return movementSaveForObjective.save(movement)
                                         .flatMap(movementSaved -> retriveAccountForObjectives.save(account)
                                                         .flatMap(accountSaved -> {
-
                                                                 ContributeObjetive contributeObjetive = objective
                                                                                 .contributeObjetive(
                                                                                                 movementSaved.getId(),
