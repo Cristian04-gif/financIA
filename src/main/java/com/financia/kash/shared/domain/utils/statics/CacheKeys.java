@@ -475,7 +475,6 @@ public class CacheKeys {
                 .when(borrarIndividualAccount, borrarIndividualObjetivo, borrarTodoAccount, borrarTodoTransfers,
                         borrarTodoTransfersAccount,
                         borratTodoObjetivo, borrarTodoContribution, borrarDashboard)
-                .doOnSuccess(e -> System.out.println("se borro todo el cache de objectives"))
                 .thenReturn(Boolean.TRUE);
     }
 

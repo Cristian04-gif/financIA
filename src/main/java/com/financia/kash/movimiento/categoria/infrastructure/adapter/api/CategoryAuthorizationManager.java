@@ -14,12 +14,10 @@ import com.financia.kash.movimiento.categoria.infrastructure.adapter.database.re
 import com.financia.kash.shared.application.port.output.UserStatusUseCase;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-@Log4j2
 public class CategoryAuthorizationManager implements ReactiveAuthorizationManager<AuthorizationContext> {
 
     private final CategoryEntityRepository categoryEntityRepository;
@@ -30,7 +28,6 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
             @Nullable AuthorizationContext object) {
 
         String categoryIdString = (String) object.getVariables().get("id");
-        log.info("categoryId: {}", categoryIdString);
         if (categoryIdString == null) {
             return Mono.just(new AuthorizationDecision(false));
         }
@@ -43,7 +40,6 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
         }
         return authentication.flatMap(auth -> {
             String emailuser = auth.getName();
-            log.info("email. {}", emailuser);
             return userStatusUseCase.isActive(emailuser).flatMap(blocked -> {
 
                 if (!blocked) {

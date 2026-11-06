@@ -123,8 +123,6 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                                                         * 100
                                                         : 0.00;
 
-                                        System.out.println(variacionIngresos);
-
                                         Double actualGasto = actual.totalExpenses() != null
                                                         && !actual.totalExpenses().equals(BigDecimal.ZERO)
                                                                         ? actual.totalExpenses().doubleValue()
@@ -140,7 +138,8 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                                                                         * 100)
                                                         : 0.00;
 
-                                        return new ComparisonPreviousPeriod(variacionIngresos,
+                                        return new ComparisonPreviousPeriod(
+                                                        Math.round(variacionIngresos * 100.00) / 100.00,
                                                         (double) Math.round(variaciongastos * 100) / 100);
 
                                 });
@@ -148,6 +147,8 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
         }
 
         private Mono<BudgetDashboard> budget(UUID userId, LocalDateTime from, LocalDateTime until) {
+
+                ///////////////////////////
                 Flux<Budget> budgetFlux = retrieveAllBudgetPort.findAllUserId(userId, from, until);
 
                 Mono<BigDecimal> budgetAmountTotalMono = budgetFlux.map(Budget::amountLimitTotal)
@@ -163,6 +164,7 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                 });
 
                 return Mono.zip(budgetAmountTotalMono, movementsFlux.collectList()).map(tuple -> {
+
                         BigDecimal montoTotal = tuple.getT1();
                         List<Movement> list = tuple.getT2();
 
