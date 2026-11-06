@@ -72,7 +72,12 @@ public class Subscription {
 
         switch (frequency) {
             case MENSUAL -> {
-                LocalDate nextPay = today.plusMonths(1);
+                LocalDate nextPay = null;
+                if (today.getDayOfMonth() < payDay) {
+                    nextPay = today.plusMonths(1);
+                } else {
+                    nextPay = LocalDate.of(today.getYear(), today.getMonth(), payDay);
+                }
                 int day = Math.min(payDay, nextPay.lengthOfMonth());
                 return nextPay.withDayOfMonth(day);
             }
