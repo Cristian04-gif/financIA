@@ -75,4 +75,9 @@ public class UserEntity implements UserDetails, HasUuid {
     public String getUsername() {
         return this.email;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return status == UserStatus.ACTIVO;
+    }
 }

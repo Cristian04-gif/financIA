@@ -46,17 +46,12 @@ public class CategoryAuthorizationManager implements ReactiveAuthorizationManage
                     return Mono.just(new AuthorizationDecision(false));
                 }
 
-                if (isAdmin(auth)) {
-                    return Mono.just(new AuthorizationDecision(true));
-                }
-
-                return categoryEntityRepository.existsByIdAndOwnerEmail(categoryId, emailuser)
+                return (object.getExchange().getRequest().getMethod() == org.springframework.http.HttpMethod.GET
+                        ? categoryEntityRepository.existsByIdAndOwnerEmail(categoryId, emailuser)
+                        : categoryEntityRepository.existsOwnedByIdAndEmail(categoryId, emailuser))
                         .map(AuthorizationDecision::new);
             });
         });
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
-    }
 }

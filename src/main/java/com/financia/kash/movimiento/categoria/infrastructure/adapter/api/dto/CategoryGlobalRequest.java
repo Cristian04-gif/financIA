@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record CategoryGlobalRequest(
-        @NotBlank @Size(min = 5) @CharactersOnly String name,
-        @NotBlank @CharactersOnly String type) {
+        @NotBlank @Size(min = 5, max = 255) @CharactersOnly String name,
+        @NotBlank @jakarta.validation.constraints.Pattern(regexp = "INGRESOS|GASTOS|AHORRO") String type) {
 
 }

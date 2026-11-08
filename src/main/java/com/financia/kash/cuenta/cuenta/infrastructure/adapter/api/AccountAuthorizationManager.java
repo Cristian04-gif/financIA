@@ -45,18 +45,11 @@ public class AccountAuthorizationManager implements ReactiveAuthorizationManager
                     return Mono.just(new AuthorizationDecision(false));
                 }
 
-                if (isAdmin(auth)) {
-                    return Mono.just(new AuthorizationDecision(true));
-                }
-
                 return accountEntityRepository.existaByIdAndOwnerEmail(accountId, emailuser)
                         .map(AuthorizationDecision::new);
             });
         });
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
-    }
 
 }
