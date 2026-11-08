@@ -45,7 +45,6 @@ public class ExpensesCategoryService implements ExpensesCategoryUseCase {
                         category.setProcentage((double) Math.round(procentage * 100) / 100);
                         return category;
                     }).toList();
-
                     return new ExpensesCategory(totalExpences, "PEN", categoriesExcenses);
                 });
     }

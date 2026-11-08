@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.financia.kash.analisis.application.port.input.AnalyzeObjectivesUseCase;
 import com.financia.kash.analisis.application.service.CompareFinancialPeriodsService;
 import com.financia.kash.analisis.application.service.GetBudgetIndicatorsService;
 import com.financia.kash.analisis.application.service.GetFinancialIndicatorsService;
 import com.financia.kash.analisis.domain.model.budgetConsumtion.BudgetIndicators;
 import com.financia.kash.analisis.domain.model.indicators.FinancialIndicators;
+import com.financia.kash.analisis.domain.model.objectives.ObjectiveIndicators;
 import com.financia.kash.analisis.domain.model.period.FinancialPeriodComparison;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
@@ -30,6 +32,7 @@ public class FinancialAnalysisController {
     private final GetFinancialIndicatorsService financialIndicatorsService;
     private final CompareFinancialPeriodsService compareFinancialPeriodsService;
     private final GetBudgetIndicatorsService getBudgetIndicatorsService;
+    private final AnalyzeObjectivesUseCase analyzeObjectivesUseCase;
 
     @GetMapping("/indicators")
     public Mono<ResponseEntity<FinancialIndicators>> financialIndicators(@AuthenticationPrincipal UserEntity user,
@@ -50,6 +53,11 @@ public class FinancialAnalysisController {
     public Mono<ResponseEntity<BudgetIndicators>> budgetIndicators(@AuthenticationPrincipal UserEntity user,
             @PathVariable UUID id) {
         return getBudgetIndicatorsService.execute(id, user.getId()).map(ResponseEntity::ok);
+    }
+
+    @GetMapping("/objectives")
+    public Mono<ResponseEntity<ObjectiveIndicators>> objectiveIndicators(@AuthenticationPrincipal UserEntity user) {
+        return analyzeObjectivesUseCase.analyze(user.getId()).map(ResponseEntity::ok);
     }
 
 }
