@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 public interface FinancialObjectiveRepositoryPort {
     Mono<PaginationResponse<FinancialObjectives>> findAllByUserId(UUID userId, PaginationRequest request);
 
-    Flux<FinancialObjectives> findAllByUser(UUID userId, LocalDate from, LocalDate until);
+    Flux<FinancialObjectives> findAllByUser(UUID userId);
 
     Mono<FinancialObjectives> findById(UUID id);
 

@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 public interface ObjectiveRepository extends ReactiveCrudRepository<FinancialObjectiveEntity, UUID> {
     Flux<FinancialObjectiveEntity> findAllByUserId(UUID userId, Pageable pageable);
 
-    Flux<FinancialObjectiveEntity> findAllByUserIdAndStartDateBetween(UUID userId, LocalDate from, LocalDate until);
+    Flux<FinancialObjectiveEntity> findAllByUserId(UUID userId);
 
     Flux<FinancialObjectiveEntity> findAllByTargetDate(LocalDate date);
 
