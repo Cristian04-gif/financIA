@@ -46,9 +46,6 @@ public class SubscriptionAuthorizationManager implements ReactiveAuthorizationMa
                 if (!blocked) {
                     return Mono.just(new AuthorizationDecision(false));
                 }
-                if (isAdmin(auth)) {
-                    return Mono.just(new AuthorizationDecision(true));
-                }
 
                 return subscriptionEntityRepository.existsByIdAndOwnerEmail(subId, emailUser)
                         .map(AuthorizationDecision::new);
@@ -56,7 +53,4 @@ public class SubscriptionAuthorizationManager implements ReactiveAuthorizationMa
         });
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
-    }
 }

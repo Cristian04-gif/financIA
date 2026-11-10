@@ -13,13 +13,13 @@ import io.netty.resolver.DefaultAddressResolverGroup;
 
 @Configuration
 public class RedisConfig {
-    @Value("${spring.data.redis.host}")
+    @Value("${spring.data.redis.host:localhost}")
     private String host;
 
     @Value("${spring.data.redis.port:6379}")
     private int port;
 
-    @Value("${spring.data.redis.password}")
+    @Value("${spring.data.redis.password:}")
     private String password;
 
     @Bean(destroyMethod = "shutdown")
@@ -32,7 +32,9 @@ public class RedisConfig {
     @Bean
     public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(ClientResources clientResources) {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host.trim(), port);
-        redisConfig.setPassword(password.trim());
+        if (password != null && !password.trim().isEmpty()) {
+            redisConfig.setPassword(password.trim());
+        }
 
         LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder()
                 .clientResources(clientResources);
