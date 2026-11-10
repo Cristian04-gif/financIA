@@ -17,7 +17,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CharactersOnly {
 
-    String message() default "Solo se eaceptan caracteres";
+    String message() default "Solo se aceptan caracteres";
 
     Class<?>[] groups() default {};
 
