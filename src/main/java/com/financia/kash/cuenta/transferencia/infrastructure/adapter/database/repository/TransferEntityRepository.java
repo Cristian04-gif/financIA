@@ -63,6 +63,14 @@ public interface TransferEntityRepository extends ReactiveCrudRepository<Transfe
 
     Mono<Long> countBySourceAccount(UUID accountId);
 
-    @Query("SELECT verificar_transferencia_usuario(:id, :email)")
+    @Query("""
+                SELECT EXISTS(
+                        SELECT 1
+                        FROM transferencias t
+                        INNER JOIN usuarios u ON u.id = t.usuario_id
+                        WHERE t.id = :id
+                        AND u.email = :email
+                    )
+            """)
     Mono<Boolean> existsByIdAndOwnerEmail(UUID id, String email);
 }
