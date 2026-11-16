@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import com.financia.kash.auth.application.port.output.PasswordEncoderPort;
 import com.financia.kash.usuario.domain.enums.RoleUser;
@@ -13,22 +12,27 @@ import com.financia.kash.usuario.domain.enums.UserStatus;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 import com.financia.kash.usuario.infrastructure.adapter.database.repository.UserEntityRepository;
 
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.admin.bootstrap.enabled", havingValue = "true")
+
 public class DataInitializer implements CommandLineRunner {
 
     private final UserEntityRepository userEntityRepository;
     private final PasswordEncoderPort passwordEncoderPort;
 
-    @Value("${app.admin.bootstrap.email}")
     private String email;
 
-    @Value("${app.admin.bootstrap.password}")
     private String password;
+
+    public DataInitializer(UserEntityRepository userEntityRepository, PasswordEncoderPort passwordEncoderPort,
+            @Value("${app.admin.bootstrap.email}") String email,
+            @Value("${app.admin.bootstrap.password}") String password) {
+        this.userEntityRepository = userEntityRepository;
+        this.passwordEncoderPort = passwordEncoderPort;
+        this.email = email;
+        this.password = password;
+    }
 
     @Override
     public void run(String... args) throws Exception {
