@@ -44,7 +44,7 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
             }
 
             User user = new User(auth.getName(), auth.getLastName(), auth.getEmail(),
-                    passwordEncoderPort.ecoderPassword(auth.getPassword()), auth.getRole().toUpperCase());
+                    passwordEncoderPort.ecoderPassword(auth.getPassword()), "USER");
 
             return userSaveForAuthPort.save(user).then(authenticationPort.authenticate(
                     auth.getEmail(),
@@ -83,7 +83,7 @@ public class AuthService implements LoginUserUseCase, RegisterUserUseCase, Verif
             return Mono.zip(userDetails, userMono).flatMap(tupla -> {
                 UserDetails details = tupla.getT1();
                 User user = tupla.getT2();
-                if (!authenticationPort.validatePreAuthToken(command.preToken(), details)) {
+                if (!details.isEnabled() || !authenticationPort.validatePreAuthToken(command.preToken(), details)) {
                     return Mono.error(new IllegalArgumentException("Token temporal inválido o expirado"));
                 }
 

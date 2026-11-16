@@ -181,7 +181,7 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
         }
 
         private Mono<Goals> goals(UUID userId, LocalDate from, LocalDate until) {
-                Flux<FinancialObjectives> goalsFlux = retrieveAllGoalsPort.retrieveAllGoals(userId, from, until);
+                Flux<FinancialObjectives> goalsFlux = retrieveAllGoalsPort.retrieveAllGoals(userId);
 
                 Flux<FinancialObjectives> activasFlux = goalsFlux
                                 .filter(obj -> !obj.getStatus().equals(ObjectiveState.CANCELADA)
@@ -197,7 +197,8 @@ public class DashboardSummaryService implements DashboardSummaryUseCase {
                         Double porcentajeCompletado = list.stream().map(FinancialObjectives::getPercentageProgress)
                                         .reduce(0.00, Double::sum) / activas;
 
-                        return new Goals(activas, tuple.getT2().intValue(), porcentajeCompletado);
+                        return new Goals(activas, tuple.getT2().intValue(),
+                                        (double) Math.round(porcentajeCompletado * 100) / 100);
                 });
         }
 

@@ -145,10 +145,10 @@ public class FinancialObjectiveService
 
         // DASHBOARD
         @Override
-        public Flux<FinancialObjectives> retrieveAllGoals(UUID userId, LocalDate from, LocalDate until) {
+        public Flux<FinancialObjectives> retrieveAllGoals(UUID userId) {
                 String cachekey = CacheKeys.allObjectives(userId);
                 return cacheService.getCacheList(cachekey, FinancialObjectives.class)
-                                .switchIfEmpty(financialObjectiveRepositoryPort.findAllByUser(userId, from, until)
+                                .switchIfEmpty(financialObjectiveRepositoryPort.findAllByUser(userId)
                                                 .collectList()
                                                 .flatMapMany(flux -> cacheService.saveListCache(cachekey, flux)));
         }

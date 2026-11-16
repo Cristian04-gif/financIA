@@ -79,6 +79,108 @@ class BudgetControllerTest {
                 context.close();
         }
 
+        @Test
+        void administrativeRoutesRejectUsersAndAllowAdmins() {
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isForbidden();
+                client.post().uri("/api/v1/categories/global").exchange().expectStatus().isForbidden();
+                UserEntity admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isOk();
+                client.post().uri("/api/v1/categories/global").exchange().expectStatus().isOk();
+                admin.setStatus(UserStatus.SUSPENDIDO);
+                client.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isUnauthorized();
+        }
+
+        @Test
+        void administrativeRoutesRequireAuthentication() {
+                WebTestClient anonymous = WebTestClient.bindToApplicationContext(context).build();
+                anonymous.get().uri("/api/v1/admin/security-probe").exchange().expectStatus().isUnauthorized();
+                anonymous.post().uri("/api/v1/categories/global").exchange().expectStatus().isUnauthorized();
+        }
+
+        @Test
+        void globalCategoryApiValidatesRequestsAndRejectsPersonalIds() {
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var categories = context.getBean(com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase.class);
+                client.post().uri("/api/v1/admin/categories").header("Content-Type", "application/json")
+                                .bodyValue("{\"name\":\"\",\"type\":\"GASTOS\"}")
+                                .exchange().expectStatus().isBadRequest();
+                client.patch().uri("/api/v1/admin/categories/" + categoryId + "/status")
+                                .header("Content-Type", "application/json").bodyValue("{}")
+                                .exchange().expectStatus().isBadRequest();
+                verifyNoInteractions(categories);
+                when(categories.rename(userId, categoryId, "Alimentos"))
+                                .thenReturn(Mono.error(new com.financia.kash.movimiento.categoria.domain.exception.CategoryNotFoundException(categoryId)));
+                client.put().uri("/api/v1/admin/categories/" + categoryId)
+                                .header("Content-Type", "application/json").bodyValue("{\"name\":\"Alimentos\"}")
+                                .exchange().expectStatus().isNotFound();
+        }
+
+        @org.springframework.web.bind.annotation.RestController
+        static class SecurityProbe {
+                @org.springframework.web.bind.annotation.GetMapping("/api/v1/admin/security-probe")
+                Mono<String> admin() { return Mono.just("ok"); }
+
+                @org.springframework.web.bind.annotation.PostMapping("/api/v1/categories/global")
+                Mono<String> global() { return Mono.just("ok"); }
+        }
+
+        @Test
+        void auditApiUsesAuthenticatedAdminAndPreservesFilters() {
+                client.get().uri("/api/v1/admin/audit").exchange().expectStatus().isForbidden();
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var audit = context.getBean(com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase.class);
+                when(audit.get(userId, com.financia.kash.administracion.domain.model.AuditAction.USER_STATUS_CHANGED, 0, 20))
+                                .thenReturn(Mono.just(com.financia.kash.administracion.domain.model.AdminPage.of(List.of(), 0, 20, 0)));
+                client.get().uri("/api/v1/admin/audit?actorId=" + userId + "&action=USER_STATUS_CHANGED")
+                                .exchange().expectStatus().isOk().expectBody().jsonPath("$.totalElements").isEqualTo(0);
+        }
+
+        @Test
+        void userAdministrationOmitsCredentialsAndRequiresAReason() {
+                var admin = new UserEntity();
+                admin.setId(userId);
+                admin.setEmail("budget@example.com");
+                admin.setRole(RoleUser.ADMIN);
+                admin.setStatus(UserStatus.ACTIVO);
+                when(context.getBean(ReactiveUserDetailsService.class).findByUsername(admin.getEmail()))
+                                .thenReturn(Mono.just(admin));
+                var users = context.getBean(com.financia.kash.administracion.application.port.input.ManageUsersUseCase.class);
+                var profile = new com.financia.kash.administracion.domain.model.AdminUser(categoryId, "Nombre", "Apellido",
+                                "user@example.com", RoleUser.USER, UserStatus.ACTIVO, LocalDate.now(), null);
+                when(users.get(categoryId)).thenReturn(Mono.just(profile));
+                client.get().uri("/api/v1/admin/users/" + categoryId).exchange().expectStatus().isOk()
+                                .expectBody().jsonPath("$.email").isEqualTo("user@example.com")
+                                .jsonPath("$.password").doesNotExist().jsonPath("$.secret2fa").doesNotExist();
+                client.patch().uri("/api/v1/admin/users/" + categoryId + "/status")
+                                .header("Content-Type", "application/json").bodyValue("{\"status\":\"SUSPENDIDO\"}")
+                                .exchange().expectStatus().isBadRequest();
+                verify(users, never()).changeStatus(any(), any(), any(), any());
+                when(users.changeStatus(userId, categoryId, UserStatus.SUSPENDIDO, "Motivo"))
+                                .thenReturn(Mono.error(new com.financia.kash.administracion.domain.exception.AdminConflictException("Conflicto")));
+                client.patch().uri("/api/v1/admin/users/" + categoryId + "/status")
+                                .header("Content-Type", "application/json")
+                                .bodyValue("{\"status\":\"SUSPENDIDO\",\"reason\":\"Motivo\"}")
+                                .exchange().expectStatus().isEqualTo(409);
+        }
+
         private Budget budget() {
                 return new Budget(budgetId, userId, "Octubre", LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 31), new BigDecimal("100"), true,
@@ -168,8 +270,25 @@ class BudgetControllerTest {
         @EnableWebFlux
         @Import({ SecurityConfig.class, JwtService.class,
                         CustomAuthenticationEntryPoint.class, CustomAccessDeniedHandler.class,
-                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class })
+                        BudgetController.class, BudgetExceptionHandler.class, BudgetApiMapperImpl.class, SecurityProbe.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminCategoryController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminUserController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminAuditController.class,
+                        com.financia.kash.administracion.infrastructure.api.AdminExceptionHandler.class,
+                        com.financia.kash.movimiento.categoria.infrastructure.adapter.api.CategoryExceptionhandle.class })
         static class TestConfiguration {
+                @Bean
+                com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase adminAudit() {
+                        return mock(com.financia.kash.administracion.application.port.input.GetAdminAuditUseCase.class);
+                }
+                @Bean
+                com.financia.kash.administracion.application.port.input.ManageUsersUseCase adminUsers() {
+                        return mock(com.financia.kash.administracion.application.port.input.ManageUsersUseCase.class);
+                }
+                @Bean
+                com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase adminCategories() {
+                        return mock(com.financia.kash.administracion.application.port.input.ManageGlobalCategoriesUseCase.class);
+                }
                 @Bean
                 BudgetService budgets() {
                         return mock(BudgetService.class);

@@ -28,6 +28,7 @@ import com.financia.kash.movimiento.movimiento.application.port.output.MovementR
 import com.financia.kash.movimiento.movimiento.application.port.output.RetriveBudgetForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.output.SaveAccountForMovementPort;
 import com.financia.kash.movimiento.movimiento.application.port.response.MovementDTO;
+import com.financia.kash.movimiento.movimiento.domain.enums.TypeMovement;
 import com.financia.kash.movimiento.movimiento.domain.exception.AccountNotBelongUserException;
 import com.financia.kash.movimiento.movimiento.domain.model.Movement;
 import com.financia.kash.notificacion.application.service.NotificationService;
@@ -125,9 +126,15 @@ public class MovementService
                                         if (!account.getUserId().equals(command.userId())) {
                                                 return Mono.error(new AccountNotBelongUserException());
                                         }
-                                        account.validateAccountIsActive();
-                                        account.validateSufficientFunds(command.amount());
-                                        account.transfer(command.amount());
+
+                                        if (TypeMovement.EGRESO.equals(command.type())) {
+                                                account.validateAccountIsActive();
+                                                account.validateSufficientFunds(command.amount());
+                                                account.transfer(command.amount());
+
+                                        } else {
+                                                account.receive(command.amount());
+                                        }
 
                                         Movement motion = new Movement(command.userId(),
                                                         command.accountId(),

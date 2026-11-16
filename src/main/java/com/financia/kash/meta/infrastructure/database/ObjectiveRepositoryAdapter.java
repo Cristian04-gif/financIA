@@ -68,8 +68,8 @@ public class ObjectiveRepositoryAdapter implements FinancialObjectiveRepositoryP
     }
 
     @Override
-    public Flux<FinancialObjectives> findAllByUser(UUID userId, LocalDate from, LocalDate until) {
-        return objectiveRepository.findAllByUserIdAndStartDateBetween(userId, from, until)
+    public Flux<FinancialObjectives> findAllByUser(UUID userId) {
+        return objectiveRepository.findAllByUserId(userId)
                 .map(financialObjectiveMapper::mapToDomain);
     }
 
