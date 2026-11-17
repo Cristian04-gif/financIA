@@ -7,11 +7,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.financia.kash.analisis.application.port.input.AnalyzeFinancialFindingsUseCase;
-import com.financia.kash.analisis.domain.model.FinancialFinding;
-import com.financia.kash.analisis.domain.model.FinancialFindings;
 import com.financia.kash.analisis.domain.model.FinancialSummary;
-import com.financia.kash.analisis.domain.model.FindingSeverity;
-import com.financia.kash.analisis.domain.model.FindingType;
+import com.financia.kash.analisis.domain.model.finging.FinancialFinding;
+import com.financia.kash.analisis.domain.model.finging.FinancialFindings;
+import com.financia.kash.analisis.domain.model.finging.FindingSeverity;
+import com.financia.kash.analisis.domain.model.finging.FindingType;
 import com.financia.kash.analisis.domain.model.objectives.ObjectiveIndicators;
 
 import lombok.RequiredArgsConstructor;

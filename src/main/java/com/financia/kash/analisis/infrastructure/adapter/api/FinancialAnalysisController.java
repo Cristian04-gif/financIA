@@ -21,9 +21,9 @@ import com.financia.kash.analisis.application.port.input.GetFinancialSummaryUseC
 import com.financia.kash.analisis.application.service.CompareFinancialPeriodsService;
 import com.financia.kash.analisis.application.service.GetBudgetIndicatorsService;
 import com.financia.kash.analisis.application.service.GetFinancialIndicatorsService;
-import com.financia.kash.analisis.domain.model.FinancialFindings;
 import com.financia.kash.analisis.domain.model.FinancialSummary;
 import com.financia.kash.analisis.domain.model.budgetConsumtion.BudgetIndicators;
+import com.financia.kash.analisis.domain.model.finging.FinancialFindings;
 import com.financia.kash.analisis.domain.model.indicators.FinancialIndicators;
 import com.financia.kash.analisis.domain.model.objectives.ObjectiveIndicators;
 import com.financia.kash.analisis.domain.model.period.FinancialPeriodComparison;

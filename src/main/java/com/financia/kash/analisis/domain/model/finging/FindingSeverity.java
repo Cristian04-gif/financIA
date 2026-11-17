@@ -1,4 +1,4 @@
-package com.financia.kash.analisis.domain.model;
+package com.financia.kash.analisis.domain.model.finging;
 
 public enum FindingSeverity {
     INFO,
