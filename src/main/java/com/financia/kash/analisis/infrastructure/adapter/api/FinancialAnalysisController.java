@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.financia.kash.analisis.application.port.input.AnalyzeFinancialDiagnosisUseCase;
 import com.financia.kash.analisis.application.port.input.AnalyzeFinancialFindingsUseCase;
 import com.financia.kash.analisis.application.port.input.AnalyzeObjectivesUseCase;
 import com.financia.kash.analisis.application.port.input.AnalyzeSavingsRateUseCase;
@@ -23,11 +24,13 @@ import com.financia.kash.analisis.application.service.GetBudgetIndicatorsService
 import com.financia.kash.analisis.application.service.GetFinancialIndicatorsService;
 import com.financia.kash.analisis.domain.model.FinancialSummary;
 import com.financia.kash.analisis.domain.model.budgetConsumtion.BudgetIndicators;
+import com.financia.kash.analisis.domain.model.diagnosis.FinancialDiagnosis;
 import com.financia.kash.analisis.domain.model.finging.FinancialFindings;
 import com.financia.kash.analisis.domain.model.indicators.FinancialIndicators;
 import com.financia.kash.analisis.domain.model.objectives.ObjectiveIndicators;
 import com.financia.kash.analisis.domain.model.period.FinancialPeriodComparison;
 import com.financia.kash.analisis.domain.model.savingsRate.SavingsRateIndicators;
+import com.financia.kash.analisis.infrastructure.adapter.api.dto.FinancialDiagnosisRequest;
 import com.financia.kash.usuario.infrastructure.adapter.database.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;
@@ -46,6 +49,8 @@ public class FinancialAnalysisController {
     private final GetFinancialSummaryUseCase getFinancialSummaryUseCase;
 
     private final AnalyzeFinancialFindingsUseCase analyzeFinancialFindingsUseCase;
+
+    private final AnalyzeFinancialDiagnosisUseCase analyzeFinancialDiagnosisUseCase;
 
     @GetMapping("/indicators")
     public Mono<ResponseEntity<FinancialIndicators>> financialIndicators(@AuthenticationPrincipal UserEntity user,
@@ -91,6 +96,12 @@ public class FinancialAnalysisController {
     public Mono<ResponseEntity<FinancialFindings>> financialFindings(@RequestBody FinancialSummary summary) {
 
         return analyzeFinancialFindingsUseCase.analyze(summary).map(ResponseEntity::ok);
+    }
+
+    @PostMapping("/financial-diagnosis")
+    public Mono<ResponseEntity<FinancialDiagnosis>> financialDiagnosis(
+            @RequestBody FinancialDiagnosisRequest request) {
+        return analyzeFinancialDiagnosisUseCase.analyze(request.summary(), request.findings()).map(ResponseEntity::ok);
     }
 
 }
