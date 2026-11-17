@@ -137,7 +137,11 @@ public class MovementEntityQueryrepository {
                                 	CASE WHEN tipo = 'EGRESO' THEN monto
                                 	ELSE 0
                                 	END
-                                	) AS suma_egreso
+                                	) AS suma_egreso,
+                                        SUM(CASE WHEN tipo = 'AHORRO' THEN monto
+                                        	ELSE 0
+                                        	END
+                                        	) AS suma_ahorro
                                 FROM movimientos WHERE usuario_id = :userId
                                 GROUP BY DATE_TRUNC('month', fecha_registro)
                                 ORDER BY periodo desc LIMIT :limit
@@ -149,7 +153,8 @@ public class MovementEntityQueryrepository {
                                         LocalDate period = row.get("periodo", LocalDate.class);
                                         BigDecimal totalIncome = row.get("suma_ingreso", BigDecimal.class);
                                         BigDecimal totalExpencess = row.get("suma_egreso", BigDecimal.class);
-                                        return new MovementsMonth(period, totalIncome, totalExpencess);
+                                        BigDecimal totalSaving = row.get("suma_ahorro", BigDecimal.class);
+                                        return new MovementsMonth(period, totalIncome, totalExpencess, totalSaving);
                                 }).all();
         }
 

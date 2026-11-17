@@ -118,7 +118,7 @@ public class AnalyzeObjectivesService implements AnalyzeObjectivesUseCase {
                         Collectors.reducing(BigDecimal.ZERO, ContributionData::amount, BigDecimal::add)));
 
         return monthlyContributions.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(monthlyContributions.size()));
+                .divide(BigDecimal.valueOf(monthlyContributions.size()), 2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculaterequiredMonthlyAmount(BigDecimal remainingAmount, long daysRemaining) {

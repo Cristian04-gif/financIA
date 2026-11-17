@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.financia.kash.analisis.application.port.input.CompareFinancialPeriodsUseCase;
 import com.financia.kash.analisis.application.port.output.FinancialDataPort;
 import com.financia.kash.analisis.application.port.output.FinancialDataPort.FinancialTotals;
 import com.financia.kash.analisis.domain.model.period.FinancialPeriodComparison;
@@ -20,7 +21,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-public class CompareFinancialPeriodsService {
+public class CompareFinancialPeriodsService implements CompareFinancialPeriodsUseCase {
 
     private final FinancialDataPort financialDataPort;
 
