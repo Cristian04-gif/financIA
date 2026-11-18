@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.financia.kash.chatIa.application.port.output.SourceUserForChatPort;
 import com.financia.kash.meta.application.port.output.RetriveUserForSObjectivesPort;
 import com.financia.kash.movimiento.suscripcion.application.port.output.RetriveUserForSubcriptionPort;
 import com.financia.kash.shared.application.service.CacheService;
@@ -24,7 +25,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService
         implements ChangePasswordUseCase, MyInformationUseCase, DeleteUserUseCase, RetriveUserForSubcriptionPort,
-        RetriveUserForSObjectivesPort {
+        RetriveUserForSObjectivesPort, SourceUserForChatPort {
 
     private final UserRepositoryPort repositoryPort;
     private final PasswordEncoderForUserPort encoderForUserPort;
