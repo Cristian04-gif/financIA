@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kash · Chat financiero</title>
+  <style>
+    :root {
+      --primary: #4A708B;
+      --green: #5F9E7D;
+      --bg: #F4F7F9;
+      --text: #263238;
+      --muted: #718096;
+      --line: #E5E7E9;
+      --white: #fff;
+      --danger: #C0392B;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 28px 14px;
+    }
+
+    .app {
+      width: min(920px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #9AA5B1;
+    }
+
+    .dot.connected {
+      background: var(--green);
+    }
+
+    .dot.error {
+      background: var(--danger);
+    }
+
+    .panel,
+    .chat {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      color: #52616B;
+      font-size: 12px;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #D7DEE3;
+      border-radius: 9px;
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      background: white;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px #4A708B1A;
+    }
+
+    .config-actions {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 15px;
+      font-weight: 650;
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity .15s;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .secondary {
+      background: #EDF2F5;
+      color: #425563;
+    }
+
+    .chat {
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-head {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .chat-head strong {
+      font-size: 14px;
+    }
+
+    .chat-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    #messages {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: auto;
+      max-height: 58vh;
+    }
+
+    .empty {
+      margin: auto;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 360px;
+    }
+
+    .message {
+      max-width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .message.user {
+      align-self: flex-end;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      width: min(85%, 680px);
+    }
+
+    .bubble {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.55;
+      font-size: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+    }
+
+    .user .bubble {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .assistant .bubble {
+      background: #F0F4F6;
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .meta {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .composer textarea {
+      resize: vertical;
+      min-height: 46px;
+      max-height: 130px;
+    }
+
+    .composer button {
+      min-width: 92px;
+      height: 46px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .events {
+      font: 11px ui-monospace, SFMono-Regular, Consolas, monospace;
+      color: #65727C;
+      background: #F7F9FA;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      max-height: 110px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: #52616B;
+    }
+
+    @media (max-width:650px) {
+      body {
+        padding: 14px 9px;
+      }
+
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .config-actions {
+        align-items: stretch;
+      }
+
+      .config-actions button {
+        flex: 1;
+      }
+
+      .message.assistant,
+      .message {
+        max-width: 95%;
+        width: 95%;
+      }
+
+      #messages {
+        padding: 14px;
+      }
+
+      .status {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">K</div>
+        <div>
+          <h1>Kash · Asistente financiero</h1>
+          <div class="subtitle">Prueba visual de chat en tiempo real</div>
+        </div>
+      </div>
+      <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Desconectado</span></div>
+    </header>
+
+    <section class="panel">
+      <div class="config-grid">
+        <div>
+          <label for="wsUrl">URL del WebSocket</label>
+          <input id="wsUrl" value="ws://localhost:8080/ws/financial-chat" placeholder="ws://localhost:8080/ruta">
+        </div>
+        <div>
+          <label for="conversationId">ID de conversación</label>
+          <input id="conversationId" placeholder="UUID de una conversación existente">
+        </div>
+      </div>
+      <div class="config-actions" style="margin-top:12px">
+        <button class="primary" id="connectBtn">Conectar</button>
+        <button class="secondary" id="disconnectBtn" disabled>Desconectar</button>
+        <button class="secondary" id="clearBtn">Limpiar chat</button>
+      </div>
+      <div class="hint">
+        Introduce la ruta real de tu WebSocket y el UUID de una conversación existente.
+        Este cliente envía el JSON <code>{"conversationId":"...","message":"..."}</code>.
+        La autenticación debe estar disponible para el handshake (por ejemplo, mediante cookie o el mecanismo que hayas
+        configurado en el backend).
+      </div>
+    </section>
+
+    <section class="chat">
+      <div class="chat-head">
+        <strong>Conversación</strong>
+        <span id="streamStatus">Esperando conexión</span>
+      </div>
+      <div id="messages">
+        <div class="empty" id="emptyState">Conecta con tu backend e inicia una conversación.<br>Los fragmentos de la
+          respuesta aparecerán en tiempo real.</div>
+      </div>
+      <form class="composer" id="composer">
+        <textarea id="messageInput" placeholder="Escribe tu consulta financiera..." rows="1" disabled></textarea>
+        <button class="primary" id="sendBtn" type="submit" disabled>Enviar</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Eventos recibidos</p>
+      <div class="events" id="events">Aún no hay eventos.</div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let socket = null;
+    let currentAssistantBubble = null;
+    let currentAssistantMeta = null;
+    let isStreaming = false;
+
+    function setStatus(text, state = "") {
+      $("statusText").textContent = text;
+      $("statusDot").className = "dot " + state;
+    }
+
+    function logEvent(text) {
+      const box = $("events");
+      if (box.textContent === "Aún no hay eventos.") box.textContent = "";
+      box.textContent += `[${new Date().toLocaleTimeString()}] ${text}\n`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function removeEmptyState() {
+      const empty = $("emptyState");
+      if (empty) empty.remove();
+    }
+
+    function addMessage(role, content, metaText) {
+      removeEmptyState();
+      const wrapper = document.createElement("div");
+      wrapper.className = `message ${role}`;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = content || "";
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = metaText || (role === "user" ? "Tú" : "Kash");
+      wrapper.append(bubble, meta);
+      $("messages").appendChild(wrapper);
+      $("messages").scrollTop = $("messages").scrollHeight;
+      return { wrapper, bubble, meta };
+    }
+
+    function setComposerEnabled(enabled) {
+      $("messageInput").disabled = !enabled;
+      $("sendBtn").disabled = !enabled || isStreaming;
+    }
+
+    function connect() {
+      const url = $("wsUrl").value.trim();
+      if (!url) return alert("Ingresa la URL del WebSocket.");
+      if (socket && socket.readyState === WebSocket.OPEN) return;
+
+      try {
+        socket = new WebSocket(url);
+      } catch (error) {
+        setStatus("URL inválida", "error");
+        logEvent("No se pudo crear el WebSocket: " + error.message);
+        return;
+      }
+
+      setStatus("Conectando...");
+      $("connectBtn").disabled = true;
+      $("streamStatus").textContent = "Estableciendo conexión";
+
+      socket.onopen = () => {
+        setStatus("Conectado", "connected");
+        $("streamStatus").textContent = "Conectado · listo para enviar";
+        $("disconnectBtn").disabled = false;
+        setComposerEnabled(true);
+        logEvent("WebSocket conectado.");
+      };
+
+      socket.onmessage = (event) => {
+        let data;
+        try { data = JSON.parse(event.data); }
+        catch {
+          logEvent("Mensaje no JSON: " + event.data);
+          return;
+        }
+
+        const type = data.type || "UNKNOWN";
+        logEvent(`${type}${data.messageId ? " · " + data.messageId : ""}`);
+
+        if (type === "START") {
+          isStreaming = true;
+          currentAssistantBubble = addMessage("assistant", "", "Kash · generando respuesta...");
+          currentAssistantMeta = currentAssistantBubble.meta;
+          $("streamStatus").textContent = "Generando respuesta...";
+          setComposerEnabled(true);
+        } else if (type === "CHUNK") {
+          if (!currentAssistantBubble) {
+            currentAssistantBubble = addMessage("assistant", "", "Kash · respuesta en curso...");
+            currentAssistantMeta = currentAssistantBubble.meta;
+          }
+          currentAssistantBubble.bubble.textContent += data.content || "";
+          $("messages").scrollTop = $("messages").scrollHeight;
+        } else if (type === "COMPLETE") {
+          if (!currentAssistantBubble) {
+            currentAssistantBubble = addMessage("assistant", data.content || "", "Kash");
+          } else {
+            // COMPLETE contiene el texto íntegro persistido; se usa como confirmación final.
+            currentAssistantBubble.bubble.textContent = data.content || currentAssistantBubble.bubble.textContent;
+          }
+          currentAssistantBubble.meta.textContent = data.creationDate
+            ? "Kash · " + new Date(data.creationDate).toLocaleString()
+            : "Kash · respuesta completada";
+          isStreaming = false;
+          currentAssistantBubble = null;
+          currentAssistantMeta = null;
+          $("streamStatus").textContent = "Respuesta completada";
+          setComposerEnabled(true);
+        } else if (type === "ERROR") {
+          if (currentAssistantBubble) {
+            currentAssistantBubble.meta.textContent = "Kash · error";
+            currentAssistantBubble = null;
+            currentAssistantMeta = null;
+          } else {
+            addMessage("assistant", data.content || "Ocurrió un error.", "Kash · error");
+          }
+          isStreaming = false;
+          $("streamStatus").textContent = "Error al generar respuesta";
+          setComposerEnabled(true);
+        } else {
+          logEvent("Evento recibido: " + JSON.stringify(data));
+        }
+      };
+
+      socket.onerror = (event) => {
+        console.error("Error WebSocket:", event);
+
+        setStatus("Error de conexión", "error");
+        $("streamStatus").textContent = "Error durante el handshake";
+        logEvent("Error WebSocket. Revisar Network → WS y backend.");
+      };
+
+      socket.onclose = (event) => {
+        console.log("WebSocket cerrado:", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
+
+        setStatus("Desconectado");
+        $("connectBtn").disabled = false;
+        $("disconnectBtn").disabled = true;
+        setComposerEnabled(false);
+
+        $("streamStatus").textContent =
+          `Conexión cerrada (código ${event.code})`;
+
+        logEvent(
+          `WebSocket cerrado. Código: ${event.code}, ` +
+          `Motivo: ${event.reason || "Sin motivo"}`
+        );
+
+        socket = null;
+      };
+    }
+
+    function disconnect() {
+      if (socket) socket.close(1000, "Desconexión solicitada");
+    }
+
+    function sendMessage(event) {
+      event.preventDefault();
+      const content = $("messageInput").value.trim();
+      const conversationId = $("conversationId").value.trim();
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) return alert("Primero conecta el WebSocket.");
+      if (!conversationId) return alert("Ingresa el ID de una conversación existente.");
+      if (!content) return;
+      if (isStreaming) return alert("Espera a que termine la respuesta actual.");
+
+      const payload = { conversationId, message: content };
+      socket.send(JSON.stringify(payload));
+      addMessage("user", content, "Tú · " + new Date().toLocaleTimeString());
+      logEvent("USER enviado.");
+      $("messageInput").value = "";
+      isStreaming = true;
+      $("sendBtn").disabled = true;
+      $("streamStatus").textContent = "Esperando respuesta del servidor...";
+    }
+
+    $("connectBtn").addEventListener("click", connect);
+    $("disconnectBtn").addEventListener("click", disconnect);
+    $("clearBtn").addEventListener("click", () => {
+      $("messages").innerHTML = '<div class="empty" id="emptyState">Chat limpio. Puedes continuar enviando mensajes.</div>';
+      $("events").textContent = "Aún no hay eventos.";
+    });
+    $("composer").addEventListener("submit", sendMessage);
+    $("messageInput").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        $("composer").requestSubmit();
+      }
+    });
+  </script>
+</body>
+
+</html>

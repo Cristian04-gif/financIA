@@ -8,8 +8,8 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.web.server.WebFilter;
 
+import com.financia.kash.auth.infrastructure.security.filters.JwtFilter;
 import com.financia.kash.cuenta.cuenta.infrastructure.adapter.api.AccountAuthorizationManager;
 import com.financia.kash.cuenta.transferencia.infrastructure.adapter.api.TransferAuthorizationManager;
 import com.financia.kash.meta.infrastructure.api.contribution.ContributionObjectiveAuthorizationManager;
@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final WebFilter jwtFilter;
+        private final JwtFilter jwtFilter;
         private final CustomAuthenticationEntryPoint authenticationEntryPoint;
         private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
@@ -45,7 +45,6 @@ public class SecurityConfig {
                                 .authorizeExchange(
                                                 exchange -> exchange.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                                 .pathMatchers(Endpoints.ENDPOINTS_FREE).permitAll()
-
                                                                 .pathMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
                                                                 .pathMatchers(HttpMethod.POST,
                                                                                 "/api/v1/categories/global")

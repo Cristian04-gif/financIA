@@ -1,5 +1,6 @@
 package com.financia.kash.chatIa.application.port.output;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.financia.kash.chatIa.domain.model.FinancialChatMessage;
@@ -8,13 +9,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface FinancialChatMessageRepositoryPort {
-    Mono<FinancialChatMessage> save(
-            FinancialChatMessage message);
+        Mono<FinancialChatMessage> save(
+                        FinancialChatMessage message);
 
-    Flux<FinancialChatMessage> findAllByConversationId(
-            UUID conversationId);
+        Flux<FinancialChatMessage> findAllByConversationId(
+                        UUID conversationId);
 
-    Flux<FinancialChatMessage> findRecentByConversationId(
-            UUID conversationId,
-            int limit);
+        Flux<FinancialChatMessage> findRecentByConversationId(
+                        UUID conversationId,
+                        int limit);
+
+        Mono<Long> countUserMessagesByUserIdSince(
+                        UUID userId,
+                        LocalDateTime startOfDay);
 }

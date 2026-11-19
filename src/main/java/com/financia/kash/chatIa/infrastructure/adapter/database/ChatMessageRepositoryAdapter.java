@@ -1,5 +1,7 @@
 package com.financia.kash.chatIa.infrastructure.adapter.database;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -36,7 +38,13 @@ public class ChatMessageRepositoryAdapter implements FinancialChatMessageReposit
     @Override
     public Flux<FinancialChatMessage> findRecentByConversationId(UUID conversationId, int limit) {
         return chatMessageEntityRepository.findRecentByConversationId(conversationId, limit)
-                .map(chatMessageMapper::mapToDomain);
+                .map(chatMessageMapper::mapToDomain).sort(Comparator.comparing(FinancialChatMessage::creationDate));
+    }
+
+    @Override
+    public Mono<Long> countUserMessagesByUserIdSince(UUID userId, LocalDateTime startOfDay) {
+        return chatMessageEntityRepository
+                .countUserMessagesByUserIdSince(userId, startOfDay);
     }
 
 }

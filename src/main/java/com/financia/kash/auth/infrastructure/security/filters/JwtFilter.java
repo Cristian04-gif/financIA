@@ -7,7 +7,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-@Component
 @Log4j2
 @RequiredArgsConstructor
 public class JwtFilter implements WebFilter {
@@ -28,7 +26,8 @@ public class JwtFilter implements WebFilter {
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-
+                log.info("Solicitud recibida en JwtFilter: {}",
+                                exchange.getRequest().getURI().getPath());
                 if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
                         return chain.filter(exchange);
                 }
@@ -49,7 +48,7 @@ public class JwtFilter implements WebFilter {
                 } else {
                         return chain.filter(exchange);
                 }
-
+                log.info("Token recibido: {}", token != null);
                 try {
                         boolean isTokenExpired = jwtService.isTokenExpired(token);
 
@@ -69,6 +68,8 @@ public class JwtFilter implements WebFilter {
                         String username = jwtService.getUsername(token);
                         return userDetailsService.findByUsername(username)
                                         .flatMap(userDetails -> {
+                                                log.info("Usuario encontrado: {}", userDetails.getUsername());
+                                                log.info("Usuario habilitado: {}", userDetails.isEnabled());
                                                 if (!userDetails.isEnabled()) {
                                                         return unauthorized(exchange, "Usuario inactivo");
                                                 }
@@ -108,7 +109,8 @@ public class JwtFilter implements WebFilter {
                         ServerWebExchange exchange,
                         WebFilterChain chain,
                         Authentication authentication) {
-
+                log.info("JWT validado correctamente");
+                log.info("Propagando autenticación: {}", authentication.getName());
                 return chain.filter(exchange)
                                 .contextWrite(
                                                 ReactiveSecurityContextHolder

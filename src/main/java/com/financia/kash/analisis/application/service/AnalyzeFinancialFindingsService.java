@@ -1,6 +1,7 @@
 package com.financia.kash.analisis.application.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +84,11 @@ public class AnalyzeFinancialFindingsService implements AnalyzeFinancialFindings
                         return;
                 }
 
-                BigDecimal rate = summary.savingsRate();
+                BigDecimal incomes = summary.savingsRate().periods().stream().map(period -> period.totalIncome())
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal expences = summary.savingsRate().periods().stream().map(period -> period.totalSavings())
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal rate = calculateSavingsRate(incomes, expences);
 
                 if (rate.compareTo(LOW_SAVINGS_THRESHOLD) < 0) {
                         findings.add(new FinancialFinding(
@@ -151,5 +156,20 @@ public class AnalyzeFinancialFindingsService implements AnalyzeFinancialFindings
                                                 objective.targetAmount()));
                         }
                 });
+        }
+
+        private BigDecimal calculateSavingsRate(
+                        BigDecimal income,
+                        BigDecimal savings) {
+
+                if (income == null ||
+                                income.compareTo(BigDecimal.ZERO) <= 0) {
+                        return BigDecimal.ZERO;
+                }
+
+                return savings
+                                .divide(income, 4, RoundingMode.HALF_UP)
+                                .multiply(BigDecimal.valueOf(100))
+                                .setScale(2, RoundingMode.HALF_UP);
         }
 }

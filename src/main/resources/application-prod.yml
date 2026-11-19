@@ -63,6 +63,9 @@ app:
       - gemini-3.6-flash
       - gemini-3-flash-preview
       - gemini-2.5-flash
+    chat:
+      daily-message-limit: 20
+      history-message-limit: 20
 
   reporting:
     time-zone: ${REPORTING_TIME_ZONE:America/Lima}
