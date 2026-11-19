@@ -9,14 +9,18 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 
+import com.financia.kash.chatIa.infrastructure.config.FinancialChatWebSocketHandler;
 import com.financia.kash.notificacion.infrastructure.websocket.NotificationWebSocketHandler;
 
 @Configuration
 public class WebSocketConfig {
     @Bean
-    public HandlerMapping webSocketMapping(NotificationWebSocketHandler notificationHandler) {
+    public HandlerMapping webSocketMapping(NotificationWebSocketHandler notificationHandler,
+            FinancialChatWebSocketHandler chatHandler) {
         SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
-        mapping.setUrlMap(Map.of("/ws/notifications", notificationHandler));
+        mapping.setUrlMap(Map.of(
+                "/ws/notifications", notificationHandler,
+                "/ws/financial-chat", chatHandler));
         mapping.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return mapping;
     }

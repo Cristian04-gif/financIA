@@ -15,7 +15,7 @@ public record FinancialConversation(
         LocalDateTime now = LocalDateTime.now();
 
         return new FinancialConversation(
-                UUID.randomUUID(),
+                null,
                 userId,
                 "Nueva conversación",
                 true,

@@ -17,7 +17,7 @@ public record FinancialChatMessage(
             String content) {
 
         return new FinancialChatMessage(
-                UUID.randomUUID(),
+                null,
                 conversationId,
                 type,
                 content,

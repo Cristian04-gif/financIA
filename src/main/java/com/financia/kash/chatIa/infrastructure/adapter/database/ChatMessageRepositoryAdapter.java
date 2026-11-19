@@ -10,11 +10,13 @@ import com.financia.kash.chatIa.infrastructure.adapter.database.mapping.ChatMess
 import com.financia.kash.chatIa.infrastructure.adapter.database.repository.FinancialChatMessageEntityRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
+@Log4j2
 public class ChatMessageRepositoryAdapter implements FinancialChatMessageRepositoryPort {
 
     private final FinancialChatMessageEntityRepository chatMessageEntityRepository;

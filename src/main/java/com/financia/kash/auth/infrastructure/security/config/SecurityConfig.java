@@ -54,9 +54,6 @@ public class SecurityConfig {
                                                                                 "/api/v1/categories/{id}")
                                                                 .access(categoryAuthorizationManager)
 
-                                                                // .pathMatchers(Endpoints.ACCESS_USER_ACTIVE)
-                                                                // .access(statusAuthorizationManager)
-
                                                                 .pathMatchers(Endpoints.OWNER_ACCESS_ACCOUNT)
                                                                 .access(accountAuthorizationManager)
 
